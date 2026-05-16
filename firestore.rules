@@ -1,0 +1,35 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Account record — owner read/write only.
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Athlete profile — owner read/write only.
+    match /userProfiles/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Reference catalog — authenticated read; no client writes.
+    match /sportProfiles/{sportId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    match /teamPrograms/{programId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+  }
+}

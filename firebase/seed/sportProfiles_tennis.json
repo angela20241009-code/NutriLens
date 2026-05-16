@@ -1,0 +1,21 @@
+{
+  "sportId": "tennis",
+  "displayName": "Tennis",
+  "iconAsset": "assets/images/sport_tennis.png",
+  "defaultDailyTargets": {
+    "caloriesKcal": 3200,
+    "proteinG": 180,
+    "carbsG": 440,
+    "fatsG": 90,
+    "hydrationLiters": 3.5,
+    "sleepHours": 8,
+    "source": "sport_defaults",
+    "effectiveFrom": "2026-05-16T00:00:00.000Z"
+  },
+  "fuelingWindowTemplateIds": [
+    "pre_practice_carbs",
+    "match_day_hydration",
+    "post_match_protein"
+  ],
+  "activityLevelHints": ["moderate", "high"]
+}
