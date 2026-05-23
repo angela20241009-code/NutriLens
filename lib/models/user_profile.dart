@@ -28,6 +28,7 @@ class UserProfile {
     this.lastName,
     this.avatarStoragePath,
     this.avatarUrl,
+    this.phoneNumber,
     this.schoolName,
     this.graduationYear,
     required this.timezone,
@@ -64,6 +65,7 @@ class UserProfile {
   final String? lastName;
   final String? avatarStoragePath;
   final String? avatarUrl;
+  final String? phoneNumber;
   final String? schoolName;
   final int? graduationYear;
   final String timezone;
@@ -102,6 +104,7 @@ class UserProfile {
       lastName: map['lastName'] as String?,
       avatarStoragePath: map['avatarStoragePath'] as String?,
       avatarUrl: map['avatarUrl'] as String?,
+      phoneNumber: map['phoneNumber'] as String?,
       schoolName: map['schoolName'] as String?,
       graduationYear: parseInt(map['graduationYear']),
       timezone: map['timezone'] as String? ?? 'UTC',
@@ -156,6 +159,7 @@ class UserProfile {
     'lastName': lastName,
     'avatarStoragePath': avatarStoragePath,
     'avatarUrl': avatarUrl,
+    'phoneNumber': phoneNumber,
     'schoolName': schoolName,
     'graduationYear': graduationYear,
     'timezone': timezone,
@@ -207,6 +211,7 @@ class UserProfile {
         source: DailyTargetsSource.sportDefaults,
         effectiveFrom: now,
       ),
+      phoneNumber: null,
       createdAt: now,
       updatedAt: now,
     );
@@ -250,6 +255,7 @@ class UserProfile {
     String? lastName,
     String? avatarStoragePath,
     String? avatarUrl,
+    String? phoneNumber,
     String? schoolName,
     int? graduationYear,
     String? timezone,
@@ -285,6 +291,7 @@ class UserProfile {
       lastName: lastName ?? this.lastName,
       avatarStoragePath: avatarStoragePath ?? this.avatarStoragePath,
       avatarUrl: avatarUrl ?? this.avatarUrl,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
       schoolName: schoolName ?? this.schoolName,
       graduationYear: graduationYear ?? this.graduationYear,
       timezone: timezone ?? this.timezone,
