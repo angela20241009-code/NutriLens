@@ -1,0 +1,82 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+import 'package:nutrilens/app.dart';
+import 'package:nutrilens/app/user_scope.dart';
+import 'package:nutrilens/services/firestore_user_repository.dart';
+import 'package:nutrilens/services/user_repository.dart';
+
+class AppBootstrap extends StatefulWidget {
+  const AppBootstrap({super.key});
+
+  @override
+  State<AppBootstrap> createState() => _AppBootstrapState();
+}
+
+class _AppBootstrapState extends State<AppBootstrap> {
+  late final Future<_BootstrapResult> _bootstrapFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _bootstrapFuture = _initializeApp();
+  }
+
+  Future<_BootstrapResult> _initializeApp() async {
+    // Use native platform configuration when firebase_options.dart is not generated.
+    // Replace with DefaultFirebaseOptions.currentPlatform after running flutterfire configure.
+    await Firebase.initializeApp();
+    final repository = FirestoreUserRepository();
+    const timezone = 'America/Los_Angeles';
+    final account = await repository.signInAnonymously(timezone: timezone);
+    return _BootstrapResult(repository: repository, uid: account.uid);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<_BootstrapResult>(
+      future: _bootstrapFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const MaterialApp(
+            home: Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            ),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Text(
+                    'Failed to initialize the app:\n${snapshot.error}',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
+        final result = snapshot.requireData;
+        return UserScope(
+          repository: result.repository,
+          uid: result.uid,
+          child: const NutriLensApp(),
+        );
+      },
+    );
+  }
+}
+
+class _BootstrapResult {
+  _BootstrapResult({
+    required this.repository,
+    required this.uid,
+  });
+
+  final UserRepository repository;
+  final String uid;
+}
