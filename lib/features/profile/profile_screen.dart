@@ -516,6 +516,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           label: 'Height (cm)',
                                           controller: _heightController,
                                           keyboardType: TextInputType.number,
+                                          allowDecimal: true,
                                           validator: (value) {
                                             if (value != null && value.trim().isNotEmpty && double.tryParse(value.trim()) == null) {
                                               return 'Enter a valid number';
@@ -530,6 +531,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           label: 'Weight (kg)',
                                           controller: _weightController,
                                           keyboardType: TextInputType.number,
+                                          allowDecimal: true,
                                           validator: (value) {
                                             if (value != null && value.trim().isNotEmpty && double.tryParse(value.trim()) == null) {
                                               return 'Enter a valid number';

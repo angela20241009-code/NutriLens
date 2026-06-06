@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:nutrilens/theme/app_colors.dart';
+import 'package:nutrilens/widgets/numeric_input_formatters.dart';
 
 class ProfileTextField extends StatelessWidget {
   const ProfileTextField({
@@ -7,6 +9,8 @@ class ProfileTextField extends StatelessWidget {
     required this.label,
     required this.controller,
     this.keyboardType = TextInputType.text,
+    this.allowDecimal = false,
+    this.inputFormatters,
     this.maxLines = 1,
     this.helperText,
     this.enabled = true,
@@ -17,6 +21,8 @@ class ProfileTextField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
   final TextInputType keyboardType;
+  final bool allowDecimal;
+  final List<TextInputFormatter>? inputFormatters;
   final int maxLines;
   final String? helperText;
   final bool enabled;
@@ -36,6 +42,11 @@ class ProfileTextField extends StatelessWidget {
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
+          inputFormatters: inputFormatters ??
+              NumericInputFormatters.forKeyboard(
+                keyboardType,
+                allowDecimal: allowDecimal,
+              ),
           maxLines: maxLines,
           enabled: enabled,
           validator: validator,
