@@ -51,5 +51,14 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Meals'), findsWidgets);
+
+    await tester.tap(find.text('Schedule'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Schedule'), findsWidgets);
+    expect(find.text('Train · Match · Fuel'), findsOneWidget);
+    expect(find.text("Today's Match"), findsOneWidget);
+    expect(find.text('Timeline'), findsOneWidget);
+    expect(find.text('Conference Finals'), findsOneWidget);
   });
 }

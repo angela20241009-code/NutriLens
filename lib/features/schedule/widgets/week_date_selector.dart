@@ -21,11 +21,11 @@ class WeekDateSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 72,
+      height: 76,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: dates.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (context, index) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           final date = dates[index];
           final selected = _isSameDay(date, selectedDate);
@@ -36,7 +36,7 @@ class WeekDateSelector extends StatelessWidget {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               width: 52,
-              padding: const EdgeInsets.symmetric(vertical: 10),
+              padding: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(
                 color: selected ? AppColors.lime : AppColors.cardDark,
                 borderRadius: BorderRadius.circular(16),

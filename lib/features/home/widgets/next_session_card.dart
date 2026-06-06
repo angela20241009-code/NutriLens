@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nutrilens/data/mock_home_data.dart';
+import 'package:nutrilens/data/mock_schedule_data.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
 class NextSessionCard extends StatelessWidget {
@@ -44,12 +44,12 @@ class NextSessionCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  MockHomeData.sessionTitle,
+                  MockScheduleData.sessionTitle,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  MockHomeData.sessionSubtitle,
+                  MockScheduleData.sessionSubtitle,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontSize: 12,
                       ),
