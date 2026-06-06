@@ -2,7 +2,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:nutrilens/app.dart';
 import 'package:nutrilens/app/user_scope.dart';
+import 'package:nutrilens/data/catalog_seed_data.dart';
+import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/services/firestore_user_repository.dart';
+import 'package:nutrilens/services/in_memory_user_repository.dart';
 import 'package:nutrilens/services/user_repository.dart';
 
 class AppBootstrap extends StatefulWidget {
@@ -22,12 +25,35 @@ class _AppBootstrapState extends State<AppBootstrap> {
   }
 
   Future<_BootstrapResult> _initializeApp() async {
-    // Use native platform configuration when firebase_options.dart is not generated.
-    // Replace with DefaultFirebaseOptions.currentPlatform after running flutterfire configure.
-    await Firebase.initializeApp();
-    final repository = FirestoreUserRepository();
     const timezone = 'America/Los_Angeles';
+
+    try {
+      // Use native platform configuration when firebase_options.dart is not generated.
+      // Replace with DefaultFirebaseOptions.currentPlatform after running flutterfire configure.
+      await Firebase.initializeApp();
+      final repository = FirestoreUserRepository();
+      final account = await repository.signInAnonymously(timezone: timezone);
+      return _BootstrapResult(repository: repository, uid: account.uid);
+    } catch (error) {
+      debugPrint('Firebase unavailable, using local demo data: $error');
+      return _initializeLocalDemo(timezone: timezone);
+    }
+  }
+
+  Future<_BootstrapResult> _initializeLocalDemo({required String timezone}) async {
+    final repository = InMemoryUserRepository();
+    repository.seedCatalog(
+      sportProfile: CatalogSeedData.tennisSport(),
+      teamProgram: CatalogSeedData.lincolnHighTennis(),
+    );
     final account = await repository.signInAnonymously(timezone: timezone);
+    await repository.completeOnboarding(
+      uid: account.uid,
+      profile: UserProfile.demoAngela(
+        userId: account.uid,
+        now: DateTime.now().toUtc(),
+      ),
+    );
     return _BootstrapResult(repository: repository, uid: account.uid);
   }
 
