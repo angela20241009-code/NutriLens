@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:nutrilens/firebase_options.dart';
 import 'package:nutrilens/app.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/data/catalog_seed_data.dart';
@@ -28,9 +29,7 @@ class _AppBootstrapState extends State<AppBootstrap> {
     const timezone = 'America/Los_Angeles';
 
     try {
-      // Use native platform configuration when firebase_options.dart is not generated.
-      // Replace with DefaultFirebaseOptions.currentPlatform after running flutterfire configure.
-      await Firebase.initializeApp();
+      await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
       final repository = FirestoreUserRepository();
       final account = await repository.signInAnonymously(timezone: timezone);
       return _BootstrapResult(repository: repository, uid: account.uid);
