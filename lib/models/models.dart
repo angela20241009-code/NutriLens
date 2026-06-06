@@ -3,6 +3,7 @@ export 'package:nutrilens/models/dietary_profile.dart';
 export 'package:nutrilens/models/firestore_map.dart';
 export 'package:nutrilens/models/health_sync.dart';
 export 'package:nutrilens/models/nutrition_settings.dart';
+export 'package:nutrilens/models/schedule_event.dart';
 export 'package:nutrilens/models/sport_profile.dart';
 export 'package:nutrilens/models/stats_cache.dart';
 export 'package:nutrilens/models/team_program.dart';
