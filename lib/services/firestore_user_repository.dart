@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nutrilens/models/models.dart';
+import 'package:nutrilens/services/date_key.dart';
 import 'package:nutrilens/services/firestore_paths.dart';
 import 'package:nutrilens/services/firestore_serializer.dart';
 import 'package:nutrilens/services/user_repository.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 class FirestoreUserRepository implements UserRepository {
   FirestoreUserRepository({
@@ -173,5 +175,155 @@ class FirestoreUserRepository implements UserRepository {
     await _col(FirestorePaths.users)
         .doc(account.uid)
         .set(toFirestoreMap(data), SetOptions(merge: true));
+  }
+
+  // ── Meal logging ──────────────────────────────────────────────────────────
+
+  @override
+  Future<Meal> logMeal(String uid, Meal meal, String timezone) async {
+    final dateKey = dateKeyFor(meal.loggedAt, timezone);
+
+    // Create the auto-ID doc ref BEFORE entering the transaction so the ID
+    // is known when we construct the saved Meal to return.
+    final mealRef = _firestore
+        .collection(FirestorePaths.meals(uid))
+        .doc();
+    final mealId = mealRef.id;
+    final savedMeal = meal.copyWith(mealId: mealId);
+
+    final summaryRef = _firestore
+        .doc(FirestorePaths.dailySummaryDoc(uid, dateKey));
+
+    await _firestore.runTransaction((tx) async {
+      // All reads must come before any write in a Firestore transaction.
+      final summarySnap = await tx.get(summaryRef);
+
+      // Compute updated summary.
+      final now = firestoreNow();
+      final Map<String, dynamic> summaryData;
+      if (summarySnap.exists && summarySnap.data() != null) {
+        final existing = DailySummary.fromMap(
+          fromFirestoreMap(summarySnap.data()!),
+        );
+        final updated = existing.copyWith(
+          totals: existing.totals + meal.nutrition,
+          mealCount: existing.mealCount + 1,
+          updatedAt: now,
+        );
+        summaryData = toFirestoreMap(updated.toMap());
+      } else {
+        final created = DailySummary(
+          uid: uid,
+          dateKey: dateKey,
+          totals: meal.nutrition,
+          mealCount: 1,
+          updatedAt: now,
+        );
+        summaryData = toFirestoreMap(created.toMap());
+      }
+
+      // Writes.
+      tx.set(mealRef, toFirestoreMap(savedMeal.toMap()));
+      tx.set(summaryRef, summaryData);
+    });
+
+    return savedMeal;
+  }
+
+  @override
+  Future<List<Meal>> getMealsForDay(
+    String uid,
+    DateTime date,
+    String timezone,
+  ) async {
+    // Compute the UTC bounds for the start and end of the calendar day in
+    // the given timezone (handles DST correctly).
+    DateTime startUtc;
+    DateTime endUtc;
+    try {
+      final location = tz.getLocation(timezone);
+      final tzDate = tz.TZDateTime.from(date.toUtc(), location);
+      final dayStart = tz.TZDateTime(
+        location,
+        tzDate.year,
+        tzDate.month,
+        tzDate.day,
+      );
+      // Use the TZDateTime constructor to compute "next local midnight" so that
+      // DST transitions (23-hour and 25-hour days) are handled correctly.
+      // Day overflow (e.g. day 32) normalises exactly as DateTime does.
+      final dayEnd = tz.TZDateTime(
+        location,
+        tzDate.year,
+        tzDate.month,
+        tzDate.day + 1,
+      );
+      startUtc = dayStart.toUtc();
+      endUtc = dayEnd.toUtc();
+    } catch (_) {
+      // Unknown timezone — fall back to UTC.
+      final d = date.toUtc();
+      startUtc = DateTime.utc(d.year, d.month, d.day);
+      endUtc = startUtc.add(const Duration(days: 1));
+    }
+
+    final snap = await _firestore
+        .collection(FirestorePaths.meals(uid))
+        .where(
+          'loggedAt',
+          isGreaterThanOrEqualTo: Timestamp.fromDate(startUtc),
+          isLessThan: Timestamp.fromDate(endUtc),
+        )
+        .orderBy('loggedAt')
+        .get();
+
+    return snap.docs.map((doc) {
+      return Meal.fromMap(fromFirestoreMap(doc.data()), mealId: doc.id);
+    }).toList();
+  }
+
+  // ── Daily summaries ───────────────────────────────────────────────────────
+
+  @override
+  Future<DailySummary?> getDailySummary(String uid, String dateKey) async {
+    final snap = await _firestore
+        .doc(FirestorePaths.dailySummaryDoc(uid, dateKey))
+        .get();
+    if (!snap.exists || snap.data() == null) return null;
+    return DailySummary.fromMap(fromFirestoreMap(snap.data()!));
+  }
+
+  @override
+  Future<void> updateDailySummary(
+    String uid,
+    String dateKey, {
+    double? hydrationLiters,
+    double? sleepHours,
+  }) async {
+    final ref = _firestore.doc(FirestorePaths.dailySummaryDoc(uid, dateKey));
+    final snap = await ref.get();
+    final now = firestoreNow();
+
+    if (!snap.exists || snap.data() == null) {
+      // Create a well-formed summary with zero totals.
+      final created = DailySummary(
+        uid: uid,
+        dateKey: dateKey,
+        totals: const NutritionEntry(),
+        mealCount: 0,
+        hydrationLiters: hydrationLiters ?? 0,
+        sleepHours: sleepHours ?? 0,
+        updatedAt: now,
+      );
+      await ref.set(toFirestoreMap(created.toMap()));
+    } else {
+      // Partial update — only touch the provided fields + updatedAt.
+      final updates = <String, dynamic>{
+        'updatedAt': Timestamp.fromDate(now),
+      };
+      if (hydrationLiters != null) updates['hydrationLiters'] = hydrationLiters;
+      if (sleepHours != null) updates['sleepHours'] = sleepHours;
+      await ref.set(updates, SetOptions(merge: true));
+    }
   }
 }

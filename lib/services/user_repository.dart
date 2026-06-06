@@ -33,4 +33,35 @@ abstract class UserRepository {
   Future<void> saveProfile(UserProfile profile);
 
   Future<void> saveAccount(UserAccount account);
+
+  // ── Meal logging ──────────────────────────────────────────────────────────
+
+  /// Persists [meal] under `meals/{uid}/entries` and updates the
+  /// `DailySummary` for the meal's calendar day in a single transaction.
+  ///
+  /// [timezone] (IANA name) is used to derive the `dateKey` for the summary.
+  /// Returns the saved [Meal] with the assigned `mealId`.
+  Future<Meal> logMeal(String uid, Meal meal, String timezone);
+
+  /// Returns all meals for [uid] on the calendar day of [date] in [timezone],
+  /// ordered by [Meal.loggedAt] ascending.
+  Future<List<Meal>> getMealsForDay(String uid, DateTime date, String timezone);
+
+  // ── Daily summaries ───────────────────────────────────────────────────────
+
+  /// Returns the [DailySummary] for [uid] on [dateKey] (`yyyy-MM-dd`),
+  /// or null if no summary exists for that day.
+  Future<DailySummary?> getDailySummary(String uid, String dateKey);
+
+  /// Partially updates the [DailySummary] for [uid]/[dateKey].
+  ///
+  /// If no summary exists, creates one with zero [NutritionEntry] totals,
+  /// `mealCount` 0, and the provided field(s). Only the non-null named
+  /// parameters are written.
+  Future<void> updateDailySummary(
+    String uid,
+    String dateKey, {
+    double? hydrationLiters,
+    double? sleepHours,
+  });
 }

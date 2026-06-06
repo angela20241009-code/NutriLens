@@ -1,7 +1,11 @@
+export 'package:nutrilens/models/daily_summary.dart';
 export 'package:nutrilens/models/daily_targets.dart';
 export 'package:nutrilens/models/dietary_profile.dart';
 export 'package:nutrilens/models/firestore_map.dart';
 export 'package:nutrilens/models/health_sync.dart';
+export 'package:nutrilens/models/meal.dart';
+export 'package:nutrilens/models/meal_source.dart';
+export 'package:nutrilens/models/nutrition_entry.dart';
 export 'package:nutrilens/models/nutrition_settings.dart';
 export 'package:nutrilens/models/schedule_event.dart';
 export 'package:nutrilens/models/sport_profile.dart';
