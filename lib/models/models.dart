@@ -4,6 +4,7 @@ export 'package:nutrilens/models/dietary_profile.dart';
 export 'package:nutrilens/models/firestore_map.dart';
 export 'package:nutrilens/models/health_sync.dart';
 export 'package:nutrilens/models/meal.dart';
+export 'package:nutrilens/models/meal_plan.dart';
 export 'package:nutrilens/models/meal_source.dart';
 export 'package:nutrilens/models/nutrition_entry.dart';
 export 'package:nutrilens/models/nutrition_settings.dart';
