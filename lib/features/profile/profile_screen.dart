@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nutrilens/app/user_scope.dart';
+import 'package:nutrilens/features/profile/account_settings_screen.dart';
+import 'package:nutrilens/features/profile/link_email_dialog.dart';
 import 'package:nutrilens/features/profile/widgets/profile_avatar_picker.dart';
 import 'package:nutrilens/features/profile/widgets/profile_field_card.dart';
 import 'package:nutrilens/features/profile/widgets/profile_text_field.dart';
@@ -209,77 +211,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _showLinkEmailDialog() async {
-    final emailController = TextEditingController();
-    final passwordController = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-    final repository = UserScope.of(context).repository;
-
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: AppColors.cardDark,
-          title: const Text('Link email'),
-          content: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Enter an email';
-                    }
-                    if (!value.contains('@')) {
-                      return 'Enter a valid email';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().length < 6) {
-                      return 'Password must be at least 6 characters';
-                    }
-                    return null;
-                  },
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                if (formKey.currentState!.validate()) {
-                  Navigator.of(context).pop(true);
-                }
-              },
-              child: const Text('Link'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (result != true) {
-      return;
-    }
-
     if (_account == null) {
       return;
     }
@@ -288,34 +219,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _saving = true;
     });
 
-    try {
-      final updated = await repository.linkEmail(
-        uid: _account!.uid,
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-      );
-      if (mounted) {
-        setState(() {
+    final repository = UserScope.of(context).repository;
+    final updated = await showLinkEmailDialog(
+      context: context,
+      repository: repository,
+      uid: _account!.uid,
+    );
+
+    if (mounted) {
+      setState(() {
+        _saving = false;
+        if (updated != null) {
           _account = updated;
           _emailController.text = updated.email ?? '';
-        });
+        }
+      });
+      if (updated != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Email linked successfully')),
         );
       }
-    } catch (error) {
-      if (!mounted) {
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Unable to link email: $error')),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _saving = false;
-        });
-      }
+    }
+  }
+
+  Future<void> _openSettings() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (context) => const AccountSettingsScreen(),
+      ),
+    );
+    if (mounted) {
+      await _loadProfile();
     }
   }
 
@@ -324,6 +258,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile'),
+        actions: [
+          IconButton(
+            tooltip: 'Settings',
+            onPressed: _loading ? null : _openSettings,
+            icon: const Icon(Icons.settings_outlined),
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),

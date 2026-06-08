@@ -326,4 +326,9 @@ class FirestoreUserRepository implements UserRepository {
       await ref.set(updates, SetOptions(merge: true));
     }
   }
+
+  @override
+  Future<void> signOut() async {
+    await _auth.signOut();
+  }
 }

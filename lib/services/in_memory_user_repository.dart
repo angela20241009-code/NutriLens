@@ -203,4 +203,9 @@ class InMemoryUserRepository implements UserRepository {
       );
     }
   }
+
+  @override
+  Future<void> signOut() async {
+    _uid = null;
+  }
 }

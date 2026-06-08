@@ -64,4 +64,6 @@ abstract class UserRepository {
     double? hydrationLiters,
     double? sleepHours,
   });
+
+  Future<void> signOut();
 }
