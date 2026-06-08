@@ -253,10 +253,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  bool get _isProfileDisabled {
-    final scope = UserScope.of(context);
-    return !scope.repository.isCloudConnected && (_account?.isAnonymous ?? false);
-  }
+  bool get _isProfileDisabled => _account?.isAnonymous ?? true;
 
   @override
   Widget build(BuildContext context) {
