@@ -10,12 +10,14 @@ class ProfileAvatarPicker extends StatelessWidget {
     this.avatarUrl,
     this.localImage,
     required this.onTap,
+    this.enabled = true,
   });
 
   final String displayName;
   final String? avatarUrl;
   final File? localImage;
   final VoidCallback onTap;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +34,7 @@ class ProfileAvatarPicker extends StatelessWidget {
     return Column(
       children: [
         GestureDetector(
-          onTap: onTap,
+          onTap: enabled ? onTap : null,
           child: Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
@@ -57,7 +59,7 @@ class ProfileAvatarPicker extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         TextButton.icon(
-          onPressed: onTap,
+          onPressed: enabled ? onTap : null,
           icon: const Icon(Icons.camera_alt, color: AppColors.lime),
           label: const Text(
             'Edit photo',

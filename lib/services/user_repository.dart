@@ -2,6 +2,9 @@ import 'package:nutrilens/models/models.dart';
 
 /// Persistence and auth lifecycle for user account + athlete profile.
 abstract class UserRepository {
+  /// Whether profile data is persisted to Firebase (vs. local-only storage).
+  bool get isCloudConnected;
+
   String? get currentUid;
 
   Stream<String?> watchAuthUid();

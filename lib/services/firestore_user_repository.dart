@@ -18,6 +18,9 @@ class FirestoreUserRepository implements UserRepository {
   final FirebaseFirestore _firestore;
 
   @override
+  bool get isCloudConnected => true;
+
+  @override
   String? get currentUid => _auth.currentUser?.uid;
 
   @override

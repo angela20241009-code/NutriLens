@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/features/profile/account_settings_screen.dart';
 import 'package:nutrilens/features/profile/link_email_dialog.dart';
+import 'package:nutrilens/features/profile/widgets/guest_account_notice.dart';
 import 'package:nutrilens/features/profile/widgets/profile_avatar_picker.dart';
 import 'package:nutrilens/features/profile/widgets/profile_field_card.dart';
 import 'package:nutrilens/features/profile/widgets/profile_text_field.dart';
@@ -253,6 +254,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  bool get _isProfileDisabled {
+    final scope = UserScope.of(context);
+    return !scope.repository.isCloudConnected && (_account?.isAnonymous ?? false);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -286,6 +292,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ? File(_pickedAvatar!.path)
                               : null,
                           onTap: _pickAvatar,
+                          enabled: !_isProfileDisabled,
                         ),
                         const SizedBox(width: 16),
                         Expanded(
@@ -308,6 +315,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ],
                     ),
+                    if (_isProfileDisabled) ...[
+                      const SizedBox(height: 16),
+                      const GuestAccountNotice(),
+                    ],
                     const SizedBox(height: 16),
                     SegmentedButton<int>(
                       segments: const [
@@ -316,11 +327,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ButtonSegment(value: 2, label: Text('Diet')),
                       ],
                       selected: {_selectedSection},
-                      onSelectionChanged: (selection) {
-                        setState(() {
-                          _selectedSection = selection.first;
-                        });
-                      },
+                      onSelectionChanged: _isProfileDisabled
+                          ? null
+                          : (selection) {
+                              setState(() {
+                                _selectedSection = selection.first;
+                              });
+                            },
                     ),
                     const SizedBox(height: 16),
                     Expanded(
@@ -333,6 +346,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   ProfileTextField(
                                     label: 'Full name',
                                     controller: _displayNameController,
+                                    enabled: !_isProfileDisabled,
                                     validator: (value) {
                                       if (value == null || value.trim().isEmpty) {
                                         return 'Full name is required';
@@ -345,6 +359,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     label: 'Phone number',
                                     controller: _phoneNumberController,
                                     keyboardType: TextInputType.phone,
+                                    enabled: !_isProfileDisabled,
                                   ),
                                   const SizedBox(height: 16),
                                   ProfileTextField(
@@ -355,7 +370,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         ? 'Link your email to keep your account if the app is reinstalled.'
                                         : 'Email linked to this account.',
                                   ),
-                                  if (_account?.isAnonymous == true) ...[
+                                  if (_account?.isAnonymous == true &&
+                                      !_isProfileDisabled) ...[
                                     const SizedBox(height: 8),
                                     Align(
                                       alignment: Alignment.centerRight,
@@ -385,11 +401,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         borderSide: BorderSide(color: AppColors.cardDark),
                                       ),
                                     ),
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _genderValue = value;
-                                      });
-                                    },
+                                    onChanged: _isProfileDisabled
+                                        ? null
+                                        : (value) {
+                                            setState(() {
+                                              _genderValue = value;
+                                            });
+                                          },
                                   ),
                                 ],
                               ),
@@ -424,12 +442,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   ProfileTextField(
                                     label: 'School',
                                     controller: _schoolController,
+                                    enabled: !_isProfileDisabled,
                                   ),
                                   const SizedBox(height: 16),
                                   ProfileTextField(
                                     label: 'Graduation year',
                                     controller: _graduationController,
                                     keyboardType: TextInputType.number,
+                                    enabled: !_isProfileDisabled,
                                     validator: (value) {
                                       if (value != null && value.trim().isNotEmpty && int.tryParse(value.trim()) == null) {
                                         return 'Enter a valid year';
@@ -442,6 +462,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     label: 'Birth year',
                                     controller: _birthYearController,
                                     keyboardType: TextInputType.number,
+                                    enabled: !_isProfileDisabled,
                                     validator: (value) {
                                       if (value != null && value.trim().isNotEmpty && int.tryParse(value.trim()) == null) {
                                         return 'Enter a valid year';
@@ -458,6 +479,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           controller: _heightController,
                                           keyboardType: TextInputType.number,
                                           allowDecimal: true,
+                                          enabled: !_isProfileDisabled,
                                           validator: (value) {
                                             if (value != null && value.trim().isNotEmpty && double.tryParse(value.trim()) == null) {
                                               return 'Enter a valid number';
@@ -473,6 +495,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           controller: _weightController,
                                           keyboardType: TextInputType.number,
                                           allowDecimal: true,
+                                          enabled: !_isProfileDisabled,
                                           validator: (value) {
                                             if (value != null && value.trim().isNotEmpty && double.tryParse(value.trim()) == null) {
                                               return 'Enter a valid number';
@@ -503,11 +526,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           ),
                                         )
                                         .toList(),
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _trainingDaysValue = value;
-                                      });
-                                    },
+                                    onChanged: _isProfileDisabled
+                                        ? null
+                                        : (value) {
+                                            setState(() {
+                                              _trainingDaysValue = value;
+                                            });
+                                          },
                                   ),
                                   const SizedBox(height: 16),
                                   DropdownButtonFormField<String>(
@@ -529,11 +554,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           ),
                                         )
                                         .toList(),
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _activityLevelValue = value;
-                                      });
-                                    },
+                                    onChanged: _isProfileDisabled
+                                        ? null
+                                        : (value) {
+                                            setState(() {
+                                              _activityLevelValue = value;
+                                            });
+                                          },
                                   ),
                                 ],
                               ),
@@ -547,12 +574,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     label: 'Allergies',
                                     controller: _allergensController,
                                     maxLines: 3,
+                                    enabled: !_isProfileDisabled,
                                   ),
                                   const SizedBox(height: 16),
                                   ProfileTextField(
                                     label: 'Restrictions',
                                     controller: _restrictionsController,
                                     maxLines: 3,
+                                    enabled: !_isProfileDisabled,
                                   ),
                                 ],
                               ),
@@ -564,7 +593,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     SizedBox(
                       height: 52,
                       child: FilledButton(
-                        onPressed: _saving ? null : _saveProfile,
+                        onPressed: _isProfileDisabled || _saving ? null : _saveProfile,
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.lime,
                           foregroundColor: AppColors.onLime,

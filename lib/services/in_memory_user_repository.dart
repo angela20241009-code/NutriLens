@@ -20,6 +20,9 @@ class InMemoryUserRepository implements UserRepository {
   int _mealCounter = 0;
 
   @override
+  bool get isCloudConnected => false;
+
+  @override
   String? get currentUid => _uid;
 
   @override
