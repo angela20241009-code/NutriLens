@@ -5,7 +5,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/features/profile/account_settings_screen.dart';
 import 'package:nutrilens/features/profile/link_email_dialog.dart';
-import 'package:nutrilens/features/profile/widgets/guest_account_notice.dart';
 import 'package:nutrilens/features/profile/widgets/profile_avatar_picker.dart';
 import 'package:nutrilens/features/profile/widgets/profile_field_card.dart';
 import 'package:nutrilens/features/profile/widgets/profile_text_field.dart';
@@ -272,11 +271,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
-      body: Padding(
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _isProfileDisabled
+              ? const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 40),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.person_add_outlined, size: 56),
+                        SizedBox(height: 20),
+                        Text(
+                          'Create an account',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        Text(
+                          'Sign up to set up your profile and save your data.',
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : Padding(
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-        child: _loading
-            ? const Center(child: CircularProgressIndicator())
-            : Form(
+        child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -315,10 +340,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ],
                     ),
-                    if (_isProfileDisabled) ...[
-                      const SizedBox(height: 16),
-                      const GuestAccountNotice(),
-                    ],
                     const SizedBox(height: 16),
                     SegmentedButton<int>(
                       segments: const [
