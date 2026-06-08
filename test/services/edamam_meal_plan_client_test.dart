@@ -20,6 +20,7 @@ void main() {
         final path = request.url.path;
         if (path.endsWith('/select')) {
           expect(request.method, 'POST');
+          expect(path, '/api/meal-planner/v1/app_id/select');
           expect(request.headers['Edamam-Account-User'], 'angela');
           expect(request.headers['Authorization'], startsWith('Basic '));
 

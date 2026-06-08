@@ -18,10 +18,24 @@ class EdamamMealPlanClient implements MealPlanClient {
         _client = httpClient ?? http.Client();
 
   factory EdamamMealPlanClient.fromEnvironment({http.Client? httpClient}) {
+    final appId = (dotenv.get('EDAMAM_APP_ID', fallback: '')).trim();
+    final appKey = (dotenv.get('EDAMAM_APP_KEY', fallback: '')).trim();
+    final accountUser =
+        (dotenv.get('EDAMAM_ACCOUNT_USER', fallback: '')).trim();
+
+    assert(() {
+      debugPrint(
+        'Edamam env loaded: appId=${appId.isNotEmpty}, '
+        'appKey=${appKey.isNotEmpty}, '
+        'accountUser=${accountUser.isNotEmpty}',
+      );
+      return true;
+    }());
+
     return EdamamMealPlanClient(
-      appId: dotenv.env['EDAMAM_APP_ID'] ?? '',
-      appKey: dotenv.env['EDAMAM_APP_KEY'] ?? '',
-      accountUser: dotenv.env['EDAMAM_ACCOUNT_USER'] ?? '',
+      appId: appId,
+      appKey: appKey,
+      accountUser: accountUser,
       httpClient: httpClient,
     );
   }
@@ -78,7 +92,13 @@ class EdamamMealPlanClient implements MealPlanClient {
     Map<String, dynamic> requestBody,
   ) async {
     final response = await _client.post(
-      _mealPlannerBaseUri.resolve('/${Uri.encodeComponent(_appId)}/select'),
+      _mealPlannerBaseUri.replace(
+        pathSegments: [
+          ..._mealPlannerBaseUri.pathSegments,
+          _appId,
+          'select',
+        ],
+      ),
       headers: _mealPlannerHeaders,
       body: jsonEncode(requestBody),
     );
@@ -117,6 +137,7 @@ class EdamamMealPlanClient implements MealPlanClient {
         queryParameters: {
           'app_id': _appId,
           'app_key': _appKey,
+          'user_id': _accountUser,
           'type': 'public',
         },
       ),
