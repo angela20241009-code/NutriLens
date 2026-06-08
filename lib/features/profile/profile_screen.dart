@@ -9,6 +9,7 @@ import 'package:nutrilens/features/profile/widgets/profile_avatar_picker.dart';
 import 'package:nutrilens/features/profile/widgets/profile_field_card.dart';
 import 'package:nutrilens/features/profile/widgets/profile_text_field.dart';
 import 'package:nutrilens/models/models.dart';
+import 'package:nutrilens/services/user_repository.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -32,6 +33,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _allergensController = TextEditingController();
   final _restrictionsController = TextEditingController();
 
+  late UserRepository _repository;
+  late String _uid;
+  bool _hasUserScope = false;
   UserProfile? _profile;
   UserAccount? _account;
   bool _saving = false;
@@ -65,6 +69,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final scope = UserScope.of(context);
+    final scopeChanged =
+        !_hasUserScope || _repository != scope.repository || _uid != scope.uid;
+
+    _repository = scope.repository;
+    _uid = scope.uid;
+    _hasUserScope = true;
+
+    if (scopeChanged && !_loading) {
+      setState(() {
+        _loading = true;
+      });
+      _loadProfile();
+    }
+  }
+
+  @override
   void dispose() {
     _displayNameController.dispose();
     _phoneNumberController.dispose();
@@ -80,18 +103,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadProfile() async {
-    final scope = UserScope.of(context);
-    final repository = scope.repository;
-    final uid = scope.uid;
-
     try {
-      final loadedProfile = await repository.getProfile(uid);
-      final loadedAccount = await repository.getAccount(uid);
-      final profile = loadedProfile ?? UserProfile.emptyShell(
-        userId: uid,
-        now: DateTime.now().toUtc(),
-        timezone: 'America/Los_Angeles',
-      );
+      final loadedProfile = await _repository.getProfile(_uid);
+      final loadedAccount = await _repository.getAccount(_uid);
+      final profile =
+          loadedProfile ??
+          UserProfile.emptyShell(
+            userId: _uid,
+            now: DateTime.now().toUtc(),
+            timezone: 'America/Los_Angeles',
+          );
 
       _profile = profile;
       _account = loadedAccount;
@@ -104,7 +125,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _heightController.text = profile.heightCm?.toString() ?? '';
       _weightController.text = profile.weightKg?.toString() ?? '';
       _allergensController.text = profile.dietaryProfile.allergens.join('\n');
-      _restrictionsController.text = profile.dietaryProfile.restrictions.join('\n');
+      _restrictionsController.text = profile.dietaryProfile.restrictions.join(
+        '\n',
+      );
       _genderValue = profile.sex;
       _activityLevelValue = profile.activityLevel;
       _trainingDaysValue = profile.trainingDaysPerWeek;
@@ -112,9 +135,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Unable to load profile: $error')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Unable to load profile: $error')));
     }
 
     if (mounted) {
@@ -163,7 +186,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _saving = true;
     });
 
-    final repository = UserScope.of(context).repository;
     final updated = _profile!.copyWith(
       displayName: _displayNameController.text.trim(),
       phoneNumber: _phoneNumberController.text.trim().isEmpty
@@ -186,7 +208,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
 
     try {
-      await repository.saveProfile(updated);
+      await _repository.saveProfile(updated);
       if (mounted) {
         setState(() {
           _profile = updated;
@@ -219,10 +241,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _saving = true;
     });
 
-    final repository = UserScope.of(context).repository;
     final updated = await showLinkEmailDialog(
       context: context,
-      repository: repository,
+      repository: _repository,
       uid: _account!.uid,
     );
 
@@ -271,34 +292,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _isProfileDisabled
-              ? const Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 40),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.person_add_outlined, size: 56),
-                        SizedBox(height: 20),
-                        Text(
-                          'Create an account',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        Text(
-                          'Sign up to set up your profile and save your data.',
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
+          ? const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 40),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.person_add_outlined, size: 56),
+                    SizedBox(height: 20),
+                    Text(
+                      'Create an account',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                )
-              : Padding(
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-        child: Form(
+                    SizedBox(height: 10),
+                    Text(
+                      'Sign up to set up your profile and save your data.',
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+              child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -323,7 +344,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             children: [
                               Text(
                                 'Profile',
-                                style: Theme.of(context).textTheme.headlineMedium,
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.headlineMedium,
                               ),
                               const SizedBox(height: 8),
                               Text(
@@ -358,252 +381,280 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: SingleChildScrollView(
                         child: switch (_selectedSection) {
                           0 => ProfileFieldCard(
-                              title: 'Personal info',
-                              child: Column(
-                                children: [
-                                  ProfileTextField(
-                                    label: 'Full name',
-                                    controller: _displayNameController,
-                                    enabled: !_isProfileDisabled,
-                                    validator: (value) {
-                                      if (value == null || value.trim().isEmpty) {
-                                        return 'Full name is required';
-                                      }
-                                      return null;
-                                    },
+                            title: 'Personal info',
+                            child: Column(
+                              children: [
+                                ProfileTextField(
+                                  label: 'Full name',
+                                  controller: _displayNameController,
+                                  enabled: !_isProfileDisabled,
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return 'Full name is required';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 16),
+                                ProfileTextField(
+                                  label: 'Phone number',
+                                  controller: _phoneNumberController,
+                                  keyboardType: TextInputType.phone,
+                                  enabled: !_isProfileDisabled,
+                                ),
+                                const SizedBox(height: 16),
+                                ProfileTextField(
+                                  label: 'Email',
+                                  controller: _emailController,
+                                  enabled: false,
+                                  helperText: _account?.isAnonymous == true
+                                      ? 'Link your email to keep your account if the app is reinstalled.'
+                                      : 'Email linked to this account.',
+                                ),
+                                if (_account?.isAnonymous == true &&
+                                    !_isProfileDisabled) ...[
+                                  const SizedBox(height: 8),
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: TextButton(
+                                      onPressed: _saving
+                                          ? null
+                                          : _showLinkEmailDialog,
+                                      child: const Text('Link email'),
+                                    ),
                                   ),
-                                  const SizedBox(height: 16),
-                                  ProfileTextField(
-                                    label: 'Phone number',
-                                    controller: _phoneNumberController,
-                                    keyboardType: TextInputType.phone,
-                                    enabled: !_isProfileDisabled,
+                                ],
+                                const SizedBox(height: 16),
+                                DropdownButtonFormField<String>(
+                                  initialValue: _genderValue,
+                                  items: _genderOptions.entries
+                                      .map(
+                                        (entry) => DropdownMenuItem(
+                                          value: entry.key,
+                                          child: Text(entry.value),
+                                        ),
+                                      )
+                                      .toList(),
+                                  decoration: const InputDecoration(
+                                    filled: true,
+                                    fillColor: AppColors.cardDarker,
+                                    labelText: 'Gender',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(16),
+                                      ),
+                                      borderSide: BorderSide(
+                                        color: AppColors.cardDark,
+                                      ),
+                                    ),
                                   ),
-                                  const SizedBox(height: 16),
-                                  ProfileTextField(
-                                    label: 'Email',
-                                    controller: _emailController,
-                                    enabled: false,
-                                    helperText: _account?.isAnonymous == true
-                                        ? 'Link your email to keep your account if the app is reinstalled.'
-                                        : 'Email linked to this account.',
+                                  onChanged: _isProfileDisabled
+                                      ? null
+                                      : (value) {
+                                          setState(() {
+                                            _genderValue = value;
+                                          });
+                                        },
+                                ),
+                              ],
+                            ),
+                          ),
+                          1 => ProfileFieldCard(
+                            title: 'Athlete info',
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Text(
+                                  'Primary sport',
+                                  style: Theme.of(context).textTheme.labelSmall,
+                                ),
+                                const SizedBox(height: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                    horizontal: 16,
                                   ),
-                                  if (_account?.isAnonymous == true &&
-                                      !_isProfileDisabled) ...[
-                                    const SizedBox(height: 8),
-                                    Align(
-                                      alignment: Alignment.centerRight,
-                                      child: TextButton(
-                                        onPressed: _saving ? null : _showLinkEmailDialog,
-                                        child: const Text('Link email'),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.cardDarker,
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Text(
+                                    _profile?.primarySportName.isNotEmpty ==
+                                            true
+                                        ? _profile!.primarySportName
+                                        : 'No sport selected',
+                                    style: const TextStyle(
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                ProfileTextField(
+                                  label: 'School',
+                                  controller: _schoolController,
+                                  enabled: !_isProfileDisabled,
+                                ),
+                                const SizedBox(height: 16),
+                                ProfileTextField(
+                                  label: 'Graduation year',
+                                  controller: _graduationController,
+                                  keyboardType: TextInputType.number,
+                                  enabled: !_isProfileDisabled,
+                                  validator: (value) {
+                                    if (value != null &&
+                                        value.trim().isNotEmpty &&
+                                        int.tryParse(value.trim()) == null) {
+                                      return 'Enter a valid year';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 16),
+                                ProfileTextField(
+                                  label: 'Birth year',
+                                  controller: _birthYearController,
+                                  keyboardType: TextInputType.number,
+                                  enabled: !_isProfileDisabled,
+                                  validator: (value) {
+                                    if (value != null &&
+                                        value.trim().isNotEmpty &&
+                                        int.tryParse(value.trim()) == null) {
+                                      return 'Enter a valid year';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 16),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: ProfileTextField(
+                                        label: 'Height (cm)',
+                                        controller: _heightController,
+                                        keyboardType: TextInputType.number,
+                                        allowDecimal: true,
+                                        enabled: !_isProfileDisabled,
+                                        validator: (value) {
+                                          if (value != null &&
+                                              value.trim().isNotEmpty &&
+                                              double.tryParse(value.trim()) ==
+                                                  null) {
+                                            return 'Enter a valid number';
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: ProfileTextField(
+                                        label: 'Weight (kg)',
+                                        controller: _weightController,
+                                        keyboardType: TextInputType.number,
+                                        allowDecimal: true,
+                                        enabled: !_isProfileDisabled,
+                                        validator: (value) {
+                                          if (value != null &&
+                                              value.trim().isNotEmpty &&
+                                              double.tryParse(value.trim()) ==
+                                                  null) {
+                                            return 'Enter a valid number';
+                                          }
+                                          return null;
+                                        },
                                       ),
                                     ),
                                   ],
-                                  const SizedBox(height: 16),
-                                  DropdownButtonFormField<String>(
-                                    initialValue: _genderValue,
-                                    items: _genderOptions.entries
-                                        .map(
-                                          (entry) => DropdownMenuItem(
-                                            value: entry.key,
-                                            child: Text(entry.value),
-                                          ),
-                                        )
-                                        .toList(),
-                                    decoration: const InputDecoration(
-                                      filled: true,
-                                      fillColor: AppColors.cardDarker,
-                                      labelText: 'Gender',
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(Radius.circular(16)),
-                                        borderSide: BorderSide(color: AppColors.cardDark),
+                                ),
+                                const SizedBox(height: 16),
+                                DropdownButtonFormField<int>(
+                                  initialValue: _trainingDaysValue,
+                                  decoration: const InputDecoration(
+                                    filled: true,
+                                    fillColor: AppColors.cardDarker,
+                                    labelText: 'Training days per week',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(16),
+                                      ),
+                                      borderSide: BorderSide(
+                                        color: AppColors.cardDark,
                                       ),
                                     ),
-                                    onChanged: _isProfileDisabled
-                                        ? null
-                                        : (value) {
-                                            setState(() {
-                                              _genderValue = value;
-                                            });
-                                          },
                                   ),
-                                ],
-                              ),
-                            ),
-                          1 => ProfileFieldCard(
-                              title: 'Athlete info',
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Text(
-                                    'Primary sport',
-                                    style: Theme.of(context).textTheme.labelSmall,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 16,
-                                      horizontal: 16,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.cardDarker,
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    child: Text(
-                                      _profile?.primarySportName.isNotEmpty == true
-                                          ? _profile!.primarySportName
-                                          : 'No sport selected',
-                                      style: const TextStyle(color: AppColors.textPrimary),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  ProfileTextField(
-                                    label: 'School',
-                                    controller: _schoolController,
-                                    enabled: !_isProfileDisabled,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  ProfileTextField(
-                                    label: 'Graduation year',
-                                    controller: _graduationController,
-                                    keyboardType: TextInputType.number,
-                                    enabled: !_isProfileDisabled,
-                                    validator: (value) {
-                                      if (value != null && value.trim().isNotEmpty && int.tryParse(value.trim()) == null) {
-                                        return 'Enter a valid year';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  const SizedBox(height: 16),
-                                  ProfileTextField(
-                                    label: 'Birth year',
-                                    controller: _birthYearController,
-                                    keyboardType: TextInputType.number,
-                                    enabled: !_isProfileDisabled,
-                                    validator: (value) {
-                                      if (value != null && value.trim().isNotEmpty && int.tryParse(value.trim()) == null) {
-                                        return 'Enter a valid year';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: ProfileTextField(
-                                          label: 'Height (cm)',
-                                          controller: _heightController,
-                                          keyboardType: TextInputType.number,
-                                          allowDecimal: true,
-                                          enabled: !_isProfileDisabled,
-                                          validator: (value) {
-                                            if (value != null && value.trim().isNotEmpty && double.tryParse(value.trim()) == null) {
-                                              return 'Enter a valid number';
-                                            }
-                                            return null;
-                                          },
+                                  items: List.generate(8, (index) => index)
+                                      .map(
+                                        (value) => DropdownMenuItem(
+                                          value: value,
+                                          child: Text('$value days'),
                                         ),
+                                      )
+                                      .toList(),
+                                  onChanged: _isProfileDisabled
+                                      ? null
+                                      : (value) {
+                                          setState(() {
+                                            _trainingDaysValue = value;
+                                          });
+                                        },
+                                ),
+                                const SizedBox(height: 16),
+                                DropdownButtonFormField<String>(
+                                  initialValue: _activityLevelValue,
+                                  decoration: const InputDecoration(
+                                    filled: true,
+                                    fillColor: AppColors.cardDarker,
+                                    labelText: 'Activity level',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(16),
                                       ),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        child: ProfileTextField(
-                                          label: 'Weight (kg)',
-                                          controller: _weightController,
-                                          keyboardType: TextInputType.number,
-                                          allowDecimal: true,
-                                          enabled: !_isProfileDisabled,
-                                          validator: (value) {
-                                            if (value != null && value.trim().isNotEmpty && double.tryParse(value.trim()) == null) {
-                                              return 'Enter a valid number';
-                                            }
-                                            return null;
-                                          },
+                                      borderSide: BorderSide(
+                                        color: AppColors.cardDark,
+                                      ),
+                                    ),
+                                  ),
+                                  items: _activityOptions.entries
+                                      .map(
+                                        (entry) => DropdownMenuItem(
+                                          value: entry.key,
+                                          child: Text(entry.value),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 16),
-                                  DropdownButtonFormField<int>(
-                                    initialValue: _trainingDaysValue,
-                                    decoration: const InputDecoration(
-                                      filled: true,
-                                      fillColor: AppColors.cardDarker,
-                                      labelText: 'Training days per week',
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(Radius.circular(16)),
-                                        borderSide: BorderSide(color: AppColors.cardDark),
-                                      ),
-                                    ),
-                                    items: List.generate(8, (index) => index)
-                                        .map(
-                                          (value) => DropdownMenuItem(
-                                            value: value,
-                                            child: Text('$value days'),
-                                          ),
-                                        )
-                                        .toList(),
-                                    onChanged: _isProfileDisabled
-                                        ? null
-                                        : (value) {
-                                            setState(() {
-                                              _trainingDaysValue = value;
-                                            });
-                                          },
-                                  ),
-                                  const SizedBox(height: 16),
-                                  DropdownButtonFormField<String>(
-                                    initialValue: _activityLevelValue,
-                                    decoration: const InputDecoration(
-                                      filled: true,
-                                      fillColor: AppColors.cardDarker,
-                                      labelText: 'Activity level',
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(Radius.circular(16)),
-                                        borderSide: BorderSide(color: AppColors.cardDark),
-                                      ),
-                                    ),
-                                    items: _activityOptions.entries
-                                        .map(
-                                          (entry) => DropdownMenuItem(
-                                            value: entry.key,
-                                            child: Text(entry.value),
-                                          ),
-                                        )
-                                        .toList(),
-                                    onChanged: _isProfileDisabled
-                                        ? null
-                                        : (value) {
-                                            setState(() {
-                                              _activityLevelValue = value;
-                                            });
-                                          },
-                                  ),
-                                ],
-                              ),
+                                      )
+                                      .toList(),
+                                  onChanged: _isProfileDisabled
+                                      ? null
+                                      : (value) {
+                                          setState(() {
+                                            _activityLevelValue = value;
+                                          });
+                                        },
+                                ),
+                              ],
                             ),
+                          ),
                           _ => ProfileFieldCard(
-                              title: 'Dietary notes',
-                              subtitle: 'Use commas or new lines to add multiple values.',
-                              child: Column(
-                                children: [
-                                  ProfileTextField(
-                                    label: 'Allergies',
-                                    controller: _allergensController,
-                                    maxLines: 3,
-                                    enabled: !_isProfileDisabled,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  ProfileTextField(
-                                    label: 'Restrictions',
-                                    controller: _restrictionsController,
-                                    maxLines: 3,
-                                    enabled: !_isProfileDisabled,
-                                  ),
-                                ],
-                              ),
+                            title: 'Dietary notes',
+                            subtitle:
+                                'Use commas or new lines to add multiple values.',
+                            child: Column(
+                              children: [
+                                ProfileTextField(
+                                  label: 'Allergies',
+                                  controller: _allergensController,
+                                  maxLines: 3,
+                                  enabled: !_isProfileDisabled,
+                                ),
+                                const SizedBox(height: 16),
+                                ProfileTextField(
+                                  label: 'Restrictions',
+                                  controller: _restrictionsController,
+                                  maxLines: 3,
+                                  enabled: !_isProfileDisabled,
+                                ),
+                              ],
                             ),
+                          ),
                         },
                       ),
                     ),
@@ -611,7 +662,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     SizedBox(
                       height: 52,
                       child: FilledButton(
-                        onPressed: _isProfileDisabled || _saving ? null : _saveProfile,
+                        onPressed: _isProfileDisabled || _saving
+                            ? null
+                            : _saveProfile,
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.lime,
                           foregroundColor: AppColors.onLime,
@@ -626,7 +679,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
               ),
-      ),
+            ),
     );
   }
 }

@@ -5,6 +5,7 @@ import 'package:nutrilens/features/profile/link_email_dialog.dart';
 import 'package:nutrilens/features/profile/sign_out_dialog.dart';
 import 'package:nutrilens/features/profile/widgets/settings_section.dart';
 import 'package:nutrilens/models/models.dart';
+import 'package:nutrilens/services/user_repository.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
 class AccountSettingsScreen extends StatefulWidget {
@@ -15,6 +16,10 @@ class AccountSettingsScreen extends StatefulWidget {
 }
 
 class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
+  late UserRepository _repository;
+  late String _uid;
+  late Future<void> Function() _signOutUser;
+  bool _hasScopes = false;
   UserAccount? _account;
   bool _loading = true;
   bool _busy = false;
@@ -27,10 +32,33 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     });
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final userScope = UserScope.of(context);
+    final sessionScope = SessionScope.of(context);
+    final scopeChanged =
+        !_hasScopes ||
+        _repository != userScope.repository ||
+        _uid != userScope.uid ||
+        _signOutUser != sessionScope.signOut;
+
+    _repository = userScope.repository;
+    _uid = userScope.uid;
+    _signOutUser = sessionScope.signOut;
+    _hasScopes = true;
+
+    if (scopeChanged && !_loading) {
+      setState(() {
+        _loading = true;
+      });
+      _loadAccount();
+    }
+  }
+
   Future<void> _loadAccount() async {
-    final scope = UserScope.of(context);
     try {
-      final account = await scope.repository.getAccount(scope.uid);
+      final account = await _repository.getAccount(_uid);
       if (mounted) {
         setState(() {
           _account = account;
@@ -58,11 +86,10 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       _busy = true;
     });
 
-    final scope = UserScope.of(context);
     final updated = await showLinkEmailDialog(
       context: context,
-      repository: scope.repository,
-      uid: scope.uid,
+      repository: _repository,
+      uid: _uid,
     );
 
     if (mounted) {
@@ -100,23 +127,23 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     });
 
     try {
-      await SessionScope.of(context).signOut();
+      await _signOutUser();
     } catch (error) {
       if (mounted) {
         setState(() {
           _busy = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Unable to sign out: $error')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Unable to sign out: $error')));
       }
     }
   }
 
   void _showComingSoon(String feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$feature coming soon')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('$feature coming soon')));
   }
 
   String get _emailDisplay {
