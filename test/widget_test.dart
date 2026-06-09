@@ -5,6 +5,7 @@ import 'package:nutrilens/app/meal_plan_scope.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/data/catalog_seed_data.dart';
 import 'package:nutrilens/features/auth/auth_screen.dart';
+import 'package:nutrilens/features/meals/meals_screen.dart';
 import 'package:nutrilens/features/profile/profile_screen.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/services/meal_plan_client.dart';
@@ -87,8 +88,9 @@ void main() {
     expect(upgraded?.isAnonymous, false);
   });
 
-  testWidgets('Meal dashboard loads, switches days, and regenerates',
-      (WidgetTester tester) async {
+  testWidgets('Meal dashboard loads and regenerates', (
+    WidgetTester tester,
+  ) async {
     final repository = InMemoryUserRepository();
     repository.seedCatalog(
       sportProfile: CatalogSeedData.tennisSport(),
@@ -126,20 +128,9 @@ void main() {
 
     expect(find.text('Meal Plan'), findsOneWidget);
     expect(find.text('Regenerate'), findsOneWidget);
-    expect(find.text('MATCH DAY NUTRITION'), findsOneWidget);
-    expect(find.text('High-carb loading for your tennis match at 4:00 PM'),
-        findsOneWidget);
     expect(find.text('Power Oats & Berries Bowl'), findsOneWidget);
     expect(find.text('Source: Allrecipes'), findsWidgets);
     expect(mealPlanClient.callCount, 1);
-
-    await tester.tap(find.text('MON'));
-    await tester.pumpAndSettle();
-
-    expect(
-      find.text('Balanced fueling for your tennis training day'),
-      findsOneWidget,
-    );
 
     await tester.tap(find.text('Regenerate'));
     await tester.pumpAndSettle();
@@ -157,8 +148,9 @@ void main() {
     expect(find.text('Conference Finals'), findsOneWidget);
   });
 
-  testWidgets('Meal dashboard shows an error state when the API fails',
-      (WidgetTester tester) async {
+  testWidgets('Meal dashboard shows an error state when the API fails', (
+    WidgetTester tester,
+  ) async {
     final repository = InMemoryUserRepository();
     repository.seedCatalog(
       sportProfile: CatalogSeedData.tennisSport(),
@@ -193,10 +185,169 @@ void main() {
     expect(find.text('Meal plan unavailable'), findsOneWidget);
     expect(find.textContaining('Edamam failed on purpose'), findsOneWidget);
   });
+
+  testWidgets('Meal date strip starts today and shows the next six days', (
+    WidgetTester tester,
+  ) async {
+    final repository = InMemoryUserRepository();
+    repository.seedCatalog(
+      sportProfile: CatalogSeedData.tennisSport(),
+      teamProgram: CatalogSeedData.lincolnHighTennis(),
+    );
+    final account = await repository.signInAnonymously(
+      timezone: 'America/Los_Angeles',
+    );
+    await repository.completeOnboarding(
+      uid: account.uid,
+      profile: UserProfile.demoAngela(
+        userId: account.uid,
+        now: DateTime(2026, 6, 9).toUtc(),
+      ),
+    );
+
+    final mealPlanClient = _FakeMealPlanClient();
+    final fixedNow = DateTime(2026, 6, 9, 15, 42);
+
+    await tester.pumpWidget(
+      MealPlanScope(
+        client: mealPlanClient,
+        child: UserScope(
+          repository: repository,
+          uid: account.uid,
+          child: MaterialApp(
+            home: Scaffold(body: MealsScreen(now: () => fixedNow)),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(mealPlanClient.lastStartDate, DateTime(2026, 6, 9));
+    expect(find.text('TUE'), findsOneWidget);
+    expect(find.text('WED'), findsOneWidget);
+    expect(find.text('THU'), findsOneWidget);
+    expect(find.text('FRI'), findsOneWidget);
+    expect(find.text('SAT'), findsOneWidget);
+    expect(find.text('SUN'), findsOneWidget);
+    expect(find.text('MON'), findsOneWidget);
+    expect(find.text('Power Oats & Berries Bowl'), findsOneWidget);
+
+    await tester.tap(find.text('SAT'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('2102'), findsOneWidget);
+  });
+
+  testWidgets('Meal card refresh replaces one meal and updates totals', (
+    WidgetTester tester,
+  ) async {
+    final repository = InMemoryUserRepository();
+    repository.seedCatalog(
+      sportProfile: CatalogSeedData.tennisSport(),
+      teamProgram: CatalogSeedData.lincolnHighTennis(),
+    );
+    final account = await repository.signInAnonymously(
+      timezone: 'America/Los_Angeles',
+    );
+    await repository.completeOnboarding(
+      uid: account.uid,
+      profile: UserProfile.demoAngela(
+        userId: account.uid,
+        now: DateTime(2026, 6, 9).toUtc(),
+      ),
+    );
+
+    final mealPlanClient = _FakeMealPlanClient();
+    final fixedNow = DateTime(2026, 6, 9, 15, 42);
+
+    await tester.pumpWidget(
+      MealPlanScope(
+        client: mealPlanClient,
+        child: UserScope(
+          repository: repository,
+          uid: account.uid,
+          child: MaterialApp(
+            home: Scaffold(body: MealsScreen(now: () => fixedNow)),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('2090'), findsOneWidget);
+    expect(find.text('Power Oats & Berries Bowl'), findsOneWidget);
+    expect(find.text('Chicken & Sweet Potato'), findsNothing);
+    expect(find.text('Refresh meal'), findsWidgets);
+
+    final refreshMealAction = find.text('Refresh meal').first;
+    await tester.ensureVisible(refreshMealAction);
+    await tester.pumpAndSettle();
+    await tester.tap(refreshMealAction);
+    await tester.pumpAndSettle();
+
+    expect(mealPlanClient.lastRegeneratedDate, DateTime(2026, 6, 9));
+    expect(mealPlanClient.lastRegeneratedSlot, MealSlot.breakfast);
+    expect(find.text('Regenerated Breakfast Bowl'), findsOneWidget);
+    expect(find.text('Power Oats & Berries Bowl'), findsNothing);
+
+    await tester.drag(find.byType(ListView), const Offset(0, 500));
+    await tester.pumpAndSettle();
+
+    expect(find.text('2390'), findsOneWidget);
+  });
+
+  testWidgets('Meal card refresh failure keeps the old meal', (
+    WidgetTester tester,
+  ) async {
+    final repository = InMemoryUserRepository();
+    repository.seedCatalog(
+      sportProfile: CatalogSeedData.tennisSport(),
+      teamProgram: CatalogSeedData.lincolnHighTennis(),
+    );
+    final account = await repository.signInAnonymously(
+      timezone: 'America/Los_Angeles',
+    );
+    await repository.completeOnboarding(
+      uid: account.uid,
+      profile: UserProfile.demoAngela(
+        userId: account.uid,
+        now: DateTime(2026, 6, 9).toUtc(),
+      ),
+    );
+
+    final mealPlanClient = _FailingRefreshMealPlanClient();
+    final fixedNow = DateTime(2026, 6, 9, 15, 42);
+
+    await tester.pumpWidget(
+      MealPlanScope(
+        client: mealPlanClient,
+        child: UserScope(
+          repository: repository,
+          uid: account.uid,
+          child: MaterialApp(
+            home: Scaffold(body: MealsScreen(now: () => fixedNow)),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final refreshMealAction = find.text('Refresh meal').first;
+    await tester.ensureVisible(refreshMealAction);
+    await tester.pumpAndSettle();
+    await tester.tap(refreshMealAction);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Power Oats & Berries Bowl'), findsOneWidget);
+    expect(find.textContaining('Unable to refresh meal'), findsOneWidget);
+  });
 }
 
 class _FakeMealPlanClient implements MealPlanClient {
   int callCount = 0;
+  DateTime? lastStartDate;
+  DateTime? lastRegeneratedDate;
+  MealSlot? lastRegeneratedSlot;
 
   @override
   Future<MealPlanWeek> fetchWeeklyPlan({
@@ -204,6 +355,7 @@ class _FakeMealPlanClient implements MealPlanClient {
     required DateTime startDate,
   }) async {
     callCount += 1;
+    lastStartDate = startDate;
     final titles = callCount == 1
         ? const [
             'Power Oats & Berries Bowl',
@@ -217,7 +369,7 @@ class _FakeMealPlanClient implements MealPlanClient {
           ];
 
     final days = List.generate(7, (dayIndex) {
-      final date = DateTime(2026, 4, 14 + dayIndex);
+      final date = DateUtils.dateOnly(startDate).add(Duration(days: dayIndex));
       return MealPlanDay(
         date: date,
         meals: [
@@ -249,9 +401,24 @@ class _FakeMealPlanClient implements MealPlanClient {
       );
     });
 
-    return MealPlanWeek(
-      generatedAt: DateTime.now().toUtc(),
-      days: days,
+    return MealPlanWeek(generatedAt: DateTime.now().toUtc(), days: days);
+  }
+
+  @override
+  Future<MealPlanMeal> regenerateMeal({
+    required UserProfile profile,
+    required DateTime date,
+    required MealSlot slot,
+  }) async {
+    lastRegeneratedDate = DateUtils.dateOnly(date);
+    lastRegeneratedSlot = slot;
+    return _buildMeal(
+      slot: slot,
+      title: 'Regenerated ${slot.label} Bowl',
+      calories: 920,
+      protein: 50,
+      carbs: 120,
+      fats: 20,
     );
   }
 
@@ -268,8 +435,8 @@ class _FakeMealPlanClient implements MealPlanClient {
       timeLabel: slot == MealSlot.breakfast
           ? '7:00 AM'
           : slot == MealSlot.lunch
-              ? '12:30 PM'
-              : '6:30 PM',
+          ? '12:30 PM'
+          : '6:30 PM',
       badgeLabel: slot.label.toUpperCase(),
       recipe: MealPlanRecipe(
         recipeId: '${slot.label}_$title',
@@ -296,5 +463,25 @@ class _FailingMealPlanClient implements MealPlanClient {
     required DateTime startDate,
   }) async {
     throw StateError('Edamam failed on purpose');
+  }
+
+  @override
+  Future<MealPlanMeal> regenerateMeal({
+    required UserProfile profile,
+    required DateTime date,
+    required MealSlot slot,
+  }) async {
+    throw StateError('Edamam failed on purpose');
+  }
+}
+
+class _FailingRefreshMealPlanClient extends _FakeMealPlanClient {
+  @override
+  Future<MealPlanMeal> regenerateMeal({
+    required UserProfile profile,
+    required DateTime date,
+    required MealSlot slot,
+  }) async {
+    throw StateError('Refresh failed on purpose');
   }
 }

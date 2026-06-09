@@ -5,4 +5,10 @@ abstract class MealPlanClient {
     required UserProfile profile,
     required DateTime startDate,
   });
+
+  Future<MealPlanMeal> regenerateMeal({
+    required UserProfile profile,
+    required DateTime date,
+    required MealSlot slot,
+  });
 }

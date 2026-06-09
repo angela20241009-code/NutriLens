@@ -8,26 +8,32 @@ import 'package:nutrilens/theme/app_colors.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class MealsScreen extends StatefulWidget {
-  const MealsScreen({super.key});
+  const MealsScreen({super.key, DateTime Function()? now}) : _nowProvider = now;
+
+  final DateTime Function()? _nowProvider;
 
   @override
   State<MealsScreen> createState() => _MealsScreenState();
 }
 
 class _MealsScreenState extends State<MealsScreen> {
-  static final DateTime _weekStart =
-      MockScheduleData.anchorDate.subtract(const Duration(days: 1));
-
   bool _loading = true;
   bool _refreshing = false;
   String? _error;
   UserProfile? _profile;
   MealPlanWeek? _plan;
-  DateTime _selectedDate = MockScheduleData.defaultSelectedDate;
+  final Set<String> _refreshingMealKeys = {};
+  late DateTime _selectedDate;
+
+  DateTime get _today =>
+      DateUtils.dateOnly(widget._nowProvider?.call() ?? DateTime.now());
+
+  DateTime get _weekStart => _today;
 
   @override
   void initState() {
     super.initState();
+    _selectedDate = _today;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadPlan();
     });
@@ -72,9 +78,8 @@ class _MealsScreenState extends State<MealsScreen> {
       setState(() {
         _profile = profile;
         _plan = plan;
-        _selectedDate = plan.days.any(
-              (day) => _isSameDay(day.date, previousSelectedDate),
-            )
+        _selectedDate =
+            plan.days.any((day) => _isSameDay(day.date, previousSelectedDate))
             ? previousSelectedDate
             : plan.days.firstOrNull?.date ?? previousSelectedDate;
         _loading = false;
@@ -97,10 +102,86 @@ class _MealsScreenState extends State<MealsScreen> {
     await _loadPlan(regenerate: true);
   }
 
+  Future<void> _regenerateMeal(MealPlanMeal meal) async {
+    final profile = _profile;
+    final plan = _plan;
+    final selectedDay = _selectedDay;
+    if (profile == null || plan == null || selectedDay == null) {
+      return;
+    }
+
+    final key = _mealRefreshKey(selectedDay.date, meal.slot);
+    setState(() {
+      _refreshingMealKeys.add(key);
+    });
+
+    try {
+      final client =
+          MealPlanScope.maybeOf(context)?.client ??
+          EdamamMealPlanClient.fromEnvironment();
+      final refreshedMeal = await client.regenerateMeal(
+        profile: profile,
+        date: selectedDay.date,
+        slot: meal.slot,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _plan = _replaceMealInPlan(
+          plan: plan,
+          date: selectedDay.date,
+          meal: refreshedMeal,
+        );
+        _refreshingMealKeys.remove(key);
+      });
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _refreshingMealKeys.remove(key);
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Unable to refresh meal: $error')));
+    }
+  }
+
   void _selectDate(DateTime date) {
     setState(() {
       _selectedDate = date;
     });
+  }
+
+  MealPlanWeek _replaceMealInPlan({
+    required MealPlanWeek plan,
+    required DateTime date,
+    required MealPlanMeal meal,
+  }) {
+    return MealPlanWeek(
+      generatedAt: plan.generatedAt,
+      days: plan.days
+          .map((day) {
+            if (!_isSameDay(day.date, date)) {
+              return day;
+            }
+
+            return MealPlanDay(
+              date: day.date,
+              meals: day.meals
+                  .map(
+                    (currentMeal) =>
+                        currentMeal.slot == meal.slot ? meal : currentMeal,
+                  )
+                  .toList(growable: false),
+            );
+          })
+          .toList(growable: false),
+    );
   }
 
   MealPlanDay? get _selectedDay {
@@ -117,12 +198,22 @@ class _MealsScreenState extends State<MealsScreen> {
     return plan.days.isNotEmpty ? plan.days.first : null;
   }
 
-  List<DateTime> get _displayDays =>
-      _plan?.days.map((day) => day.date).toList(growable: false) ??
-      List.generate(7, (index) => _weekStart.add(Duration(days: index)));
+  List<DateTime> get _displayDays {
+    final planDays = _plan?.days.map((day) => day.date).toList(growable: false);
+    if (planDays != null && planDays.length == 7) {
+      return planDays;
+    }
+
+    return List.generate(7, (index) => _weekStart.add(Duration(days: index)));
+  }
 
   bool _isSameDay(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
+  String _mealRefreshKey(DateTime date, MealSlot slot) {
+    final normalized = DateUtils.dateOnly(date);
+    return '${normalized.toIso8601String()}_${slot.name}';
   }
 
   String get _heroLabel {
@@ -266,10 +357,7 @@ class _MealsScreenState extends State<MealsScreen> {
                   ),
                   if (_error != null) ...[
                     const SizedBox(height: 18),
-                    _InlineErrorCard(
-                      message: _error!,
-                      onRetry: _regenerate,
-                    ),
+                    _InlineErrorCard(message: _error!, onRetry: _regenerate),
                   ],
                   if (selectedDay != null) ...[
                     const SizedBox(height: 18),
@@ -289,6 +377,10 @@ class _MealsScreenState extends State<MealsScreen> {
                           meal: meal,
                           badge: _badgeFor(meal.slot),
                           timeLabel: _timeFor(meal.slot),
+                          refreshing: _refreshingMealKeys.contains(
+                            _mealRefreshKey(selectedDay.date, meal.slot),
+                          ),
+                          onRefresh: () => _regenerateMeal(meal),
                         ),
                       ),
                     ),
@@ -351,15 +443,7 @@ class _DayChip extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
-  static const _dayLabels = [
-    'MON',
-    'TUE',
-    'WED',
-    'THU',
-    'FRI',
-    'SAT',
-    'SUN',
-  ];
+  static const _dayLabels = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 
   @override
   Widget build(BuildContext context) {
@@ -446,10 +530,7 @@ class _HeroCard extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF101010),
-            Color(0xFF050505),
-          ],
+          colors: [Color(0xFF101010), Color(0xFF050505)],
         ),
         boxShadow: [
           BoxShadow(
@@ -509,10 +590,7 @@ class _HeroCard extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: _HeroStat(
-                      value: calories.toString(),
-                      label: 'kcal',
-                    ),
+                    child: _HeroStat(value: calories.toString(), label: 'kcal'),
                   ),
                   Expanded(
                     child: _HeroStat(
@@ -522,10 +600,7 @@ class _HeroCard extends StatelessWidget {
                     ),
                   ),
                   Expanded(
-                    child: _HeroStat(
-                      value: '${protein}g',
-                      label: 'Protein',
-                    ),
+                    child: _HeroStat(value: '${protein}g', label: 'Protein'),
                   ),
                   Expanded(
                     child: _HeroStat(
@@ -544,11 +619,7 @@ class _HeroCard extends StatelessWidget {
 }
 
 class _HeroStat extends StatelessWidget {
-  const _HeroStat({
-    required this.value,
-    required this.label,
-    this.valueColor,
-  });
+  const _HeroStat({required this.value, required this.label, this.valueColor});
 
   final String value;
   final String label;
@@ -587,11 +658,15 @@ class _MealCard extends StatelessWidget {
     required this.meal,
     required this.badge,
     required this.timeLabel,
+    required this.refreshing,
+    required this.onRefresh,
   });
 
   final MealPlanMeal meal;
   final String badge;
   final String timeLabel;
+  final bool refreshing;
+  final VoidCallback onRefresh;
 
   Color get _accentColor {
     switch (meal.slot) {
@@ -638,10 +713,7 @@ class _MealCard extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  _MealImage(
-                    imageUrl: meal.recipe.imageUrl,
-                    slot: meal.slot,
-                  ),
+                  _MealImage(imageUrl: meal.recipe.imageUrl, slot: meal.slot),
                   Container(
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
@@ -662,7 +734,9 @@ class _MealCard extends StatelessWidget {
                     child: _MealBadge(
                       label: badge,
                       backgroundColor: _accentColor,
-                      textColor: badge == 'BREAKFAST' ? Colors.black : Colors.white,
+                      textColor: badge == 'BREAKFAST'
+                          ? Colors.black
+                          : Colors.white,
                       icon: meal.slot == MealSlot.breakfast
                           ? Icons.wb_sunny_rounded
                           : Icons.local_fire_department_rounded,
@@ -692,10 +766,7 @@ class _MealCard extends StatelessWidget {
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
                         shadows: [
-                          Shadow(
-                            color: Color(0xCC000000),
-                            blurRadius: 14,
-                          ),
+                          Shadow(color: Color(0xCC000000), blurRadius: 14),
                         ],
                       ),
                     ),
@@ -758,6 +829,39 @@ class _MealCard extends StatelessWidget {
                           ),
                         ),
                       ),
+                      const SizedBox(width: 10),
+                      TextButton.icon(
+                        onPressed: refreshing ? null : onRefresh,
+                        icon: refreshing
+                            ? const SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppColors.lime,
+                                ),
+                              )
+                            : const Icon(Icons.refresh_rounded, size: 16),
+                        label: Text(
+                          refreshing ? 'Refreshing...' : 'Refresh meal',
+                        ),
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.lime,
+                          disabledForegroundColor: AppColors.lime.withValues(
+                            alpha: 0.7,
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 6,
+                          ),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          textStyle: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -771,10 +875,7 @@ class _MealCard extends StatelessWidget {
 }
 
 class _MealImage extends StatelessWidget {
-  const _MealImage({
-    required this.imageUrl,
-    required this.slot,
-  });
+  const _MealImage({required this.imageUrl, required this.slot});
 
   final String? imageUrl;
   final MealSlot slot;
@@ -838,8 +939,8 @@ class _PlaceholderMealImage extends StatelessWidget {
           slot == MealSlot.breakfast
               ? Icons.ramen_dining_rounded
               : slot == MealSlot.lunch
-                  ? Icons.lunch_dining_rounded
-                  : Icons.dinner_dining_rounded,
+              ? Icons.lunch_dining_rounded
+              : Icons.dinner_dining_rounded,
           size: 54,
           color: Colors.white.withValues(alpha: 0.42),
         ),
@@ -939,10 +1040,7 @@ class _MacroPill extends StatelessWidget {
 }
 
 class _MacroValue extends StatelessWidget {
-  const _MacroValue({
-    required this.value,
-    required this.label,
-  });
+  const _MacroValue({required this.value, required this.label});
 
   final String value;
   final String label;
@@ -976,10 +1074,7 @@ class _MacroValue extends StatelessWidget {
 }
 
 class _InlineErrorCard extends StatelessWidget {
-  const _InlineErrorCard({
-    required this.message,
-    required this.onRetry,
-  });
+  const _InlineErrorCard({required this.message, required this.onRetry});
 
   final String message;
   final VoidCallback onRetry;

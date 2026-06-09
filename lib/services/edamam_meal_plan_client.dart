@@ -12,16 +12,18 @@ class EdamamMealPlanClient implements MealPlanClient {
     required String appKey,
     required String accountUser,
     http.Client? httpClient,
-  })  : _appId = appId,
-        _appKey = appKey,
-        _accountUser = accountUser,
-        _client = httpClient ?? http.Client();
+  }) : _appId = appId,
+       _appKey = appKey,
+       _accountUser = accountUser,
+       _client = httpClient ?? http.Client();
 
   factory EdamamMealPlanClient.fromEnvironment({http.Client? httpClient}) {
     final appId = (dotenv.get('EDAMAM_APP_ID', fallback: '')).trim();
     final appKey = (dotenv.get('EDAMAM_APP_KEY', fallback: '')).trim();
-    final accountUser =
-        (dotenv.get('EDAMAM_ACCOUNT_USER', fallback: '')).trim();
+    final accountUser = (dotenv.get(
+      'EDAMAM_ACCOUNT_USER',
+      fallback: '',
+    )).trim();
 
     assert(() {
       debugPrint(
@@ -82,10 +84,29 @@ class EdamamMealPlanClient implements MealPlanClient {
       );
     }
 
-    return MealPlanWeek(
-      generatedAt: DateTime.now().toUtc(),
-      days: days,
-    );
+    return MealPlanWeek(generatedAt: DateTime.now().toUtc(), days: days);
+  }
+
+  @override
+  Future<MealPlanMeal> regenerateMeal({
+    required UserProfile profile,
+    required DateTime date,
+    required MealSlot slot,
+  }) async {
+    _ensureConfigured();
+
+    final requestBody = _buildSingleMealRequest(profile, slot);
+    final selection = await _loadSelections(requestBody);
+    if (selection.isEmpty) {
+      throw StateError('Edamam meal planner response did not include a meal.');
+    }
+
+    final section = selection.first.sections[slot.label];
+    if (section == null) {
+      throw StateError('Meal planner response is missing ${slot.label}.');
+    }
+
+    return _loadMeal(section: section, slot: slot);
   }
 
   Future<List<_SelectionDay>> _loadSelections(
@@ -93,11 +114,7 @@ class EdamamMealPlanClient implements MealPlanClient {
   ) async {
     final response = await _client.post(
       _mealPlannerBaseUri.replace(
-        pathSegments: [
-          ..._mealPlannerBaseUri.pathSegments,
-          _appId,
-          'select',
-        ],
+        pathSegments: [..._mealPlannerBaseUri.pathSegments, _appId, 'select'],
       ),
       headers: _mealPlannerHeaders,
       body: jsonEncode(requestBody),
@@ -195,11 +212,7 @@ class EdamamMealPlanClient implements MealPlanClient {
   }
 
   Map<String, dynamic> _buildPlanRequest(UserProfile profile) {
-    final healthLabels = <String>{
-      ...profile.dietaryProfile.allergens,
-      ...profile.dietaryProfile.restrictions,
-      ...profile.dietaryProfile.preferences,
-    }.map(_normalizeLabel).where((label) => label.isNotEmpty).toList();
+    final healthLabels = _healthLabelsFor(profile);
 
     final calories = profile.dailyTargets.caloriesKcal;
     final protein = profile.dailyTargets.proteinG;
@@ -222,27 +235,85 @@ class EdamamMealPlanClient implements MealPlanClient {
           'FAT': _fitRange(fats, minFactor: 0.9, maxFactor: 1.1),
         },
         'sections': {
-          'Breakfast': _sectionRequest(
-            minCalories: calories * 0.18,
-            maxCalories: calories * 0.28,
-            mealTypes: ['breakfast'],
-            dishTypes: ['drinks', 'egg', 'biscuits and cookies', 'bread', 'pancake', 'cereals'],
-          ),
-          'Lunch': _sectionRequest(
-            minCalories: calories * 0.28,
-            maxCalories: calories * 0.4,
-            mealTypes: ['lunch/dinner'],
-            dishTypes: ['main course', 'pasta', 'egg', 'salad', 'soup', 'sandwiches', 'pizza', 'seafood'],
-          ),
-          'Dinner': _sectionRequest(
-            minCalories: calories * 0.3,
-            maxCalories: calories * 0.42,
-            mealTypes: ['lunch/dinner'],
-            dishTypes: ['main course', 'seafood', 'salad', 'pizza', 'pasta', 'soup'],
-          ),
+          'Breakfast': _sectionRequestForSlot(profile, MealSlot.breakfast),
+          'Lunch': _sectionRequestForSlot(profile, MealSlot.lunch),
+          'Dinner': _sectionRequestForSlot(profile, MealSlot.dinner),
         },
       },
     };
+  }
+
+  Map<String, dynamic> _buildSingleMealRequest(
+    UserProfile profile,
+    MealSlot slot,
+  ) {
+    final healthLabels = _healthLabelsFor(profile);
+
+    return {
+      'size': 1,
+      'plan': {
+        if (healthLabels.isNotEmpty)
+          'accept': {
+            'all': [
+              {'health': healthLabels},
+            ],
+          },
+        'sections': {slot.label: _sectionRequestForSlot(profile, slot)},
+      },
+    };
+  }
+
+  Map<String, dynamic> _sectionRequestForSlot(
+    UserProfile profile,
+    MealSlot slot,
+  ) {
+    final calories = profile.dailyTargets.caloriesKcal;
+    switch (slot) {
+      case MealSlot.breakfast:
+        return _sectionRequest(
+          minCalories: calories * 0.18,
+          maxCalories: calories * 0.28,
+          mealTypes: ['breakfast'],
+          dishTypes: [
+            'drinks',
+            'egg',
+            'biscuits and cookies',
+            'bread',
+            'pancake',
+            'cereals',
+          ],
+        );
+      case MealSlot.lunch:
+        return _sectionRequest(
+          minCalories: calories * 0.28,
+          maxCalories: calories * 0.4,
+          mealTypes: ['lunch/dinner'],
+          dishTypes: [
+            'main course',
+            'pasta',
+            'egg',
+            'salad',
+            'soup',
+            'sandwiches',
+            'pizza',
+            'seafood',
+          ],
+        );
+      case MealSlot.dinner:
+        return _sectionRequest(
+          minCalories: calories * 0.3,
+          maxCalories: calories * 0.42,
+          mealTypes: ['lunch/dinner'],
+          dishTypes: [
+            'main course',
+            'seafood',
+            'salad',
+            'pizza',
+            'pasta',
+            'soup',
+          ],
+        );
+    }
   }
 
   Map<String, dynamic> _sectionRequest({
@@ -259,10 +330,7 @@ class EdamamMealPlanClient implements MealPlanClient {
         ],
       },
       'fit': {
-        'ENERC_KCAL': {
-          'min': minCalories.round(),
-          'max': maxCalories.round(),
-        },
+        'ENERC_KCAL': {'min': minCalories.round(), 'max': maxCalories.round()},
       },
     };
   }
@@ -284,6 +352,14 @@ class EdamamMealPlanClient implements MealPlanClient {
         .replaceAll(RegExp(r'[\s_]+'), '-')
         .replaceAll(RegExp(r'[^a-z0-9\-]+'), '');
     return normalized;
+  }
+
+  List<String> _healthLabelsFor(UserProfile profile) {
+    return <String>{
+      ...profile.dietaryProfile.allergens,
+      ...profile.dietaryProfile.restrictions,
+      ...profile.dietaryProfile.preferences,
+    }.map(_normalizeLabel).where((label) => label.isNotEmpty).toList();
   }
 
   String _recipeIdFromUri(String uri) {
@@ -398,10 +474,7 @@ class _SelectionDay {
 }
 
 class _SelectionSection {
-  const _SelectionSection({
-    required this.assigned,
-    required this.selfHref,
-  });
+  const _SelectionSection({required this.assigned, required this.selfHref});
 
   final String? assigned;
   final String? selfHref;
