@@ -23,6 +23,27 @@ void main() {
     expect(profile.dailyTargets.hydrationLiters, 3.5);
   });
 
+  test('UserProfile round-trips segment control style', () {
+    final profile = UserProfile.demoAngela(
+      userId: 'abc123',
+      now: now,
+    ).copyWith(segmentControlStyle: SegmentControlStyle.classicPill);
+
+    final restored = UserProfile.fromMap(profile.toMap(), userId: 'abc123');
+
+    expect(profile.toMap()['segmentControlStyle'], 'classic_pill');
+    expect(restored.segmentControlStyle, SegmentControlStyle.classicPill);
+  });
+
+  test('UserProfile defaults segment control style to minimal tabs', () {
+    final map = UserProfile.demoAngela(userId: 'abc123', now: now).toMap()
+      ..remove('segmentControlStyle');
+
+    final restored = UserProfile.fromMap(map, userId: 'abc123');
+
+    expect(restored.segmentControlStyle, SegmentControlStyle.minimalTabs);
+  });
+
   test('catalog seed sport and team program parse', () {
     final sport = CatalogSeedData.tennisSport(effectiveFrom: now);
     final team = CatalogSeedData.lincolnHighTennis();
