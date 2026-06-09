@@ -3,6 +3,7 @@ import 'package:nutrilens/models/dietary_profile.dart';
 import 'package:nutrilens/models/firestore_map.dart';
 import 'package:nutrilens/models/health_sync.dart';
 import 'package:nutrilens/models/nutrition_settings.dart';
+import 'package:nutrilens/models/segment_control_style.dart';
 import 'package:nutrilens/models/stats_cache.dart';
 
 enum UserRole {
@@ -50,6 +51,7 @@ class UserProfile {
     this.activeGoalId,
     this.dietaryProfile = const DietaryProfile(),
     this.nutritionSettings = const NutritionSettings(),
+    this.segmentControlStyle = SegmentControlStyle.minimalTabs,
     this.healthSync = const HealthSync(),
     this.statsCache,
     this.statsCacheUpdatedAt,
@@ -87,6 +89,7 @@ class UserProfile {
   final String? activeGoalId;
   final DietaryProfile dietaryProfile;
   final NutritionSettings nutritionSettings;
+  final SegmentControlStyle segmentControlStyle;
   final HealthSync healthSync;
   final StatsCache? statsCache;
   final DateTime? statsCacheUpdatedAt;
@@ -136,6 +139,9 @@ class UserProfile {
             ? Map<String, dynamic>.from(map['nutritionSettings'] as Map)
             : null,
       ),
+      segmentControlStyle: SegmentControlStyle.fromFirestore(
+        map['segmentControlStyle'] as String?,
+      ),
       healthSync: HealthSync.fromMap(
         map['healthSync'] != null
             ? Map<String, dynamic>.from(map['healthSync'] as Map)
@@ -181,6 +187,7 @@ class UserProfile {
     'activeGoalId': activeGoalId,
     'dietaryProfile': dietaryProfile.toMap(),
     'nutritionSettings': nutritionSettings.toMap(),
+    'segmentControlStyle': segmentControlStyle.firestoreValue,
     'healthSync': healthSync.toMap(),
     'statsCache': statsCache?.toMap(),
     'statsCacheUpdatedAt': iso8601OrNull(statsCacheUpdatedAt),
@@ -277,6 +284,7 @@ class UserProfile {
     String? activeGoalId,
     DietaryProfile? dietaryProfile,
     NutritionSettings? nutritionSettings,
+    SegmentControlStyle? segmentControlStyle,
     HealthSync? healthSync,
     StatsCache? statsCache,
     DateTime? statsCacheUpdatedAt,
@@ -313,6 +321,7 @@ class UserProfile {
       activeGoalId: activeGoalId ?? this.activeGoalId,
       dietaryProfile: dietaryProfile ?? this.dietaryProfile,
       nutritionSettings: nutritionSettings ?? this.nutritionSettings,
+      segmentControlStyle: segmentControlStyle ?? this.segmentControlStyle,
       healthSync: healthSync ?? this.healthSync,
       statsCache: statsCache ?? this.statsCache,
       statsCacheUpdatedAt: statsCacheUpdatedAt ?? this.statsCacheUpdatedAt,

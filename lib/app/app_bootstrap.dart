@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:nutrilens/firebase_options.dart';
 import 'package:nutrilens/app.dart';
+import 'package:nutrilens/app/app_settings_scope.dart';
 import 'package:nutrilens/app/meal_plan_scope.dart';
 import 'package:nutrilens/app/session_scope.dart';
 import 'package:nutrilens/app/user_scope.dart';
@@ -174,7 +175,11 @@ class _AppBootstrapState extends State<AppBootstrap> {
             child: UserScope(
               repository: result.repository,
               uid: result.uid!,
-              child: const NutriLensApp(),
+              child: AppSettingsScope(
+                repository: result.repository,
+                uid: result.uid!,
+                child: const NutriLensApp(),
+              ),
             ),
           ),
         );
