@@ -28,6 +28,13 @@ class _AppShellState extends State<AppShell> {
             ModeSegmentedControl(
               mode: _appMode,
               onModeChanged: (mode) => setState(() => _appMode = mode),
+              onProfilePressed: () => setState(() {
+                if (_appMode == AppMode.mealTracking) {
+                  _mealTabIndex = 4;
+                } else {
+                  _sleepTabIndex = 2;
+                }
+              }),
             ),
             Expanded(
               child: _appMode == AppMode.mealTracking

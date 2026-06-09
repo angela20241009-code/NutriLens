@@ -7,82 +7,155 @@ class ModeSegmentedControl extends StatelessWidget {
     super.key,
     required this.mode,
     required this.onModeChanged,
+    required this.onProfilePressed,
   });
 
   final AppMode mode;
   final ValueChanged<AppMode> onModeChanged;
+  final VoidCallback onProfilePressed;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-      child: Container(
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          color: AppColors.cardDark,
-          borderRadius: BorderRadius.circular(28),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: _Segment(
-                label: 'Meal Tracking',
-                selected: mode == AppMode.mealTracking,
-                selectedColor: AppColors.lime,
-                selectedTextColor: AppColors.onLime,
-                onTap: () => onModeChanged(AppMode.mealTracking),
-              ),
+      padding: const EdgeInsets.fromLTRB(28, 10, 28, 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: _ModeTab(
+                        label: 'Meal Tracking',
+                        selected: mode == AppMode.mealTracking,
+                        selectedColor: AppColors.lime,
+                        onTap: () => onModeChanged(AppMode.mealTracking),
+                      ),
+                    ),
+                    Expanded(
+                      child: _ModeTab(
+                        label: 'Sleep',
+                        selected: mode == AppMode.sleep,
+                        selectedColor: AppColors.sleepAccent,
+                        onTap: () => onModeChanged(AppMode.sleep),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 9),
+                Stack(
+                  children: [
+                    Container(height: 1, color: AppColors.cardDark),
+                    AnimatedAlign(
+                      duration: const Duration(milliseconds: 220),
+                      curve: Curves.easeOutCubic,
+                      alignment: mode == AppMode.mealTracking
+                          ? Alignment.centerLeft
+                          : Alignment.centerRight,
+                      child: FractionallySizedBox(
+                        widthFactor: 0.5,
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: Container(
+                            width: 156,
+                            height: 3,
+                            decoration: BoxDecoration(
+                              color: mode == AppMode.mealTracking
+                                  ? AppColors.lime
+                                  : AppColors.sleepAccent,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            Expanded(
-              child: _Segment(
-                label: 'Sleep',
-                selected: mode == AppMode.sleep,
-                selectedColor: AppColors.sleepAccent,
-                selectedTextColor: AppColors.textPrimary,
-                onTap: () => onModeChanged(AppMode.sleep),
-              ),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(width: 18),
+          _ProfileShortcut(onTap: onProfilePressed),
+        ],
       ),
     );
   }
 }
 
-class _Segment extends StatelessWidget {
-  const _Segment({
+class _ModeTab extends StatelessWidget {
+  const _ModeTab({
     required this.label,
     required this.selected,
     required this.selectedColor,
-    required this.selectedTextColor,
     required this.onTap,
   });
 
   final String label;
   final bool selected;
   final Color selectedColor;
-  final Color selectedTextColor;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: selected ? selectedColor : Colors.transparent,
-          borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(18),
+      child: AnimatedDefaultTextStyle(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOutCubic,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+          color: selected ? selectedColor : AppColors.textMuted,
         ),
-        alignment: Alignment.center,
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: selected ? selectedTextColor : AppColors.textMuted,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                width: selected ? 10 : 0,
+                height: 10,
+                margin: EdgeInsets.only(right: selected ? 8 : 0),
+                decoration: BoxDecoration(
+                  color: selectedColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
+            ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileShortcut extends StatelessWidget {
+  const _ProfileShortcut({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      customBorder: const CircleBorder(),
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: AppColors.lime, width: 2),
+          color: AppColors.cardDarker,
+        ),
+        child: const Icon(
+          Icons.person_rounded,
+          color: AppColors.textMuted,
+          size: 25,
         ),
       ),
     );
