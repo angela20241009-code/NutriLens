@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nutrilens/app/app_settings_scope.dart';
 import 'package:nutrilens/app/session_scope.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/features/profile/link_email_dialog.dart';
@@ -154,8 +155,69 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     return 'Not linked';
   }
 
+  Future<void> _showModeSwitcherPicker() async {
+    final settings = AppSettingsScope.of(context);
+    final selected = await showModalBottomSheet<SegmentControlStyle>(
+      context: context,
+      backgroundColor: AppColors.cardDark,
+      showDragHandle: true,
+      builder: (context) {
+        final current = settings.segmentControlStyle;
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Mode switcher',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+              ),
+              _ModeSwitcherOption(
+                title: 'Minimal tabs',
+                subtitle: 'Slim top tabs with an active underline.',
+                selected: current == SegmentControlStyle.minimalTabs,
+                onTap: () =>
+                    Navigator.of(context).pop(SegmentControlStyle.minimalTabs),
+              ),
+              _ModeSwitcherOption(
+                title: 'Classic pill',
+                subtitle: 'Original rounded segmented control.',
+                selected: current == SegmentControlStyle.classicPill,
+                onTap: () =>
+                    Navigator.of(context).pop(SegmentControlStyle.classicPill),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (selected == null || selected == settings.segmentControlStyle) {
+      return;
+    }
+
+    try {
+      await settings.updateSegmentControlStyle(selected);
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Unable to update mode switcher: $error')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final appSettings = AppSettingsScope.of(context);
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -199,6 +261,15 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       title: 'App',
                       children: [
                         SettingsRow(
+                          label: 'Mode switcher',
+                          value: _modeSwitcherLabel(
+                            appSettings.segmentControlStyle,
+                          ),
+                          onTap: _busy || appSettings.saving
+                              ? null
+                              : _showModeSwitcherPicker,
+                        ),
+                        SettingsRow(
                           label: 'Notifications',
                           onTap: _busy
                               ? null
@@ -220,6 +291,39 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   ),
               ],
             ),
+    );
+  }
+
+  String _modeSwitcherLabel(SegmentControlStyle style) {
+    return switch (style) {
+      SegmentControlStyle.minimalTabs => 'Minimal tabs',
+      SegmentControlStyle.classicPill => 'Classic pill',
+    };
+  }
+}
+
+class _ModeSwitcherOption extends StatelessWidget {
+  const _ModeSwitcherOption({
+    required this.title,
+    required this.subtitle,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      onTap: onTap,
+      title: Text(title),
+      subtitle: Text(subtitle),
+      trailing: selected
+          ? const Icon(Icons.check_circle_rounded, color: AppColors.lime)
+          : null,
     );
   }
 }

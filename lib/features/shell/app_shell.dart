@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nutrilens/app/app_settings_scope.dart';
 import 'package:nutrilens/features/shell/app_mode.dart';
 import 'package:nutrilens/features/shell/meal_tracking_shell.dart';
 import 'package:nutrilens/features/shell/mode_segmented_control.dart';
@@ -19,6 +20,8 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = AppSettingsScope.of(context);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -27,6 +30,7 @@ class _AppShellState extends State<AppShell> {
           children: [
             ModeSegmentedControl(
               mode: _appMode,
+              style: settings.segmentControlStyle,
               onModeChanged: (mode) => setState(() => _appMode = mode),
               onProfilePressed: () => setState(() {
                 if (_appMode == AppMode.mealTracking) {
