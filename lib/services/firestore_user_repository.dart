@@ -8,11 +8,9 @@ import 'package:nutrilens/services/user_repository.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 class FirestoreUserRepository implements UserRepository {
-  FirestoreUserRepository({
-    FirebaseAuth? auth,
-    FirebaseFirestore? firestore,
-  })  : _auth = auth ?? FirebaseAuth.instance,
-        _firestore = firestore ?? FirebaseFirestore.instance;
+  FirestoreUserRepository({FirebaseAuth? auth, FirebaseFirestore? firestore})
+    : _auth = auth ?? FirebaseAuth.instance,
+      _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
@@ -32,20 +30,14 @@ class FirestoreUserRepository implements UserRepository {
   Future<UserAccount?> getAccount(String uid) async {
     final snap = await _col(FirestorePaths.users).doc(uid).get();
     if (!snap.exists || snap.data() == null) return null;
-    return UserAccount.fromMap(
-      fromFirestoreMap(snap.data()!),
-      uid: uid,
-    );
+    return UserAccount.fromMap(fromFirestoreMap(snap.data()!), uid: uid);
   }
 
   @override
   Future<UserProfile?> getProfile(String uid) async {
     final snap = await _col(FirestorePaths.userProfiles).doc(uid).get();
     if (!snap.exists || snap.data() == null) return null;
-    return UserProfile.fromMap(
-      fromFirestoreMap(snap.data()!),
-      userId: uid,
-    );
+    return UserProfile.fromMap(fromFirestoreMap(snap.data()!), userId: uid);
   }
 
   @override
@@ -71,24 +63,115 @@ class FirestoreUserRepository implements UserRepository {
   @override
   Future<UserAccount> signInAnonymously({required String timezone}) async {
     final credential = await _auth.signInAnonymously();
-    final uid = credential.user!.uid;
-    final now = firestoreNow();
-
-    final account = UserAccount.anonymousShell(uid: uid, now: now);
-    final profile = UserProfile.emptyShell(
-      userId: uid,
-      now: now,
+    return _ensureFirebaseUserAccount(
+      user: credential.user!,
       timezone: timezone,
+      anonymous: true,
     );
+  }
+
+  @override
+  Future<UserAccount> createAccountWithEmail({
+    required String email,
+    required String password,
+    required String timezone,
+  }) async {
+    final credential = await _auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    return _ensureFirebaseUserAccount(
+      user: credential.user!,
+      timezone: timezone,
+      anonymous: false,
+    );
+  }
+
+  @override
+  Future<UserAccount> signInWithEmail({
+    required String email,
+    required String password,
+    required String timezone,
+  }) async {
+    final credential = await _auth.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    return _ensureFirebaseUserAccount(
+      user: credential.user!,
+      timezone: timezone,
+      anonymous: false,
+    );
+  }
+
+  @override
+  Future<UserAccount> ensureCurrentUserAccount({
+    required String timezone,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw StateError('No signed-in Firebase user');
+    }
+    return _ensureFirebaseUserAccount(
+      user: user,
+      timezone: timezone,
+      anonymous: user.isAnonymous,
+    );
+  }
+
+  Future<UserAccount> _ensureFirebaseUserAccount({
+    required User user,
+    required String timezone,
+    required bool anonymous,
+  }) async {
+    final uid = user.uid;
+    final now = firestoreNow();
+    final existingAccount = await getAccount(uid);
+    final existingProfile = await getProfile(uid);
+
+    final account =
+        existingAccount ??
+        UserAccount(
+          uid: uid,
+          authProviders: anonymous ? const ['anonymous'] : const ['password'],
+          email: user.email,
+          emailVerified: user.emailVerified,
+          displayName: user.displayName,
+          accountStatus: AccountStatus.active,
+          onboardingCompleted: false,
+          createdAt: now,
+          updatedAt: now,
+        );
+
+    final providers = <String>{
+      ...account.authProviders,
+      if (anonymous) 'anonymous' else 'password',
+    };
+    if (!anonymous) {
+      providers.remove('anonymous');
+    }
+
+    final updatedAccount = account.copyWith(
+      authProviders: providers.toList(),
+      email: user.email,
+      emailVerified: user.emailVerified,
+      displayName: user.displayName,
+      lastSeenAt: now,
+      updatedAt: now,
+    );
+
+    final profile =
+        existingProfile ??
+        UserProfile.emptyShell(userId: uid, now: now, timezone: timezone);
 
     await _col(FirestorePaths.users)
         .doc(uid)
-        .set(toFirestoreMap(account.toMap()), SetOptions(merge: true));
-    await _col(FirestorePaths.userProfiles)
-        .doc(uid)
-        .set(toFirestoreMap(profile.toMap()), SetOptions(merge: true));
+        .set(toFirestoreMap(updatedAccount.toMap()), SetOptions(merge: true));
+    await _col(
+      FirestorePaths.userProfiles,
+    ).doc(uid).set(toFirestoreMap(profile.toMap()), SetOptions(merge: true));
 
-    return account;
+    return updatedAccount;
   }
 
   @override
@@ -143,19 +226,17 @@ class FirestoreUserRepository implements UserRepository {
 
     final now = firestoreNow();
     final existing = await getAccount(uid);
-    final providers = <String>{
-      ...?existing?.authProviders,
-      'password',
-    }..remove('anonymous');
+    final providers = <String>{...?existing?.authProviders, 'password'}
+      ..remove('anonymous');
 
     final updated = (existing ?? UserAccount.anonymousShell(uid: uid, now: now))
         .copyWith(
-      email: email,
-      emailVerified: user.emailVerified,
-      authProviders: providers.toList(),
-      linkedAt: now,
-      updatedAt: now,
-    );
+          email: email,
+          emailVerified: user.emailVerified,
+          authProviders: providers.toList(),
+          linkedAt: now,
+          updatedAt: now,
+        );
 
     await saveAccount(updated);
     return updated;
@@ -164,17 +245,17 @@ class FirestoreUserRepository implements UserRepository {
   @override
   Future<void> saveProfile(UserProfile profile) async {
     final data = profile.copyWith(updatedAt: firestoreNow()).toMap();
-    await _col(FirestorePaths.userProfiles)
-        .doc(profile.userId)
-        .set(toFirestoreMap(data), SetOptions(merge: true));
+    await _col(
+      FirestorePaths.userProfiles,
+    ).doc(profile.userId).set(toFirestoreMap(data), SetOptions(merge: true));
   }
 
   @override
   Future<void> saveAccount(UserAccount account) async {
     final data = account.copyWith(updatedAt: firestoreNow()).toMap();
-    await _col(FirestorePaths.users)
-        .doc(account.uid)
-        .set(toFirestoreMap(data), SetOptions(merge: true));
+    await _col(
+      FirestorePaths.users,
+    ).doc(account.uid).set(toFirestoreMap(data), SetOptions(merge: true));
   }
 
   // ── Meal logging ──────────────────────────────────────────────────────────
@@ -185,14 +266,13 @@ class FirestoreUserRepository implements UserRepository {
 
     // Create the auto-ID doc ref BEFORE entering the transaction so the ID
     // is known when we construct the saved Meal to return.
-    final mealRef = _firestore
-        .collection(FirestorePaths.meals(uid))
-        .doc();
+    final mealRef = _firestore.collection(FirestorePaths.meals(uid)).doc();
     final mealId = mealRef.id;
     final savedMeal = meal.copyWith(mealId: mealId);
 
-    final summaryRef = _firestore
-        .doc(FirestorePaths.dailySummaryDoc(uid, dateKey));
+    final summaryRef = _firestore.doc(
+      FirestorePaths.dailySummaryDoc(uid, dateKey),
+    );
 
     await _firestore.runTransaction((tx) async {
       // All reads must come before any write in a Firestore transaction.
@@ -318,9 +398,7 @@ class FirestoreUserRepository implements UserRepository {
       await ref.set(toFirestoreMap(created.toMap()));
     } else {
       // Partial update — only touch the provided fields + updatedAt.
-      final updates = <String, dynamic>{
-        'updatedAt': Timestamp.fromDate(now),
-      };
+      final updates = <String, dynamic>{'updatedAt': Timestamp.fromDate(now)};
       if (hydrationLiters != null) updates['hydrationLiters'] = hydrationLiters;
       if (sleepHours != null) updates['sleepHours'] = sleepHours;
       await ref.set(updates, SetOptions(merge: true));

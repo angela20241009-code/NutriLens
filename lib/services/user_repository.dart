@@ -17,6 +17,23 @@ abstract class UserRepository {
   /// Signs in anonymously and creates `users/{uid}` + empty `userProfiles/{uid}`.
   Future<UserAccount> signInAnonymously({required String timezone});
 
+  /// Creates an email/password account and initializes account/profile docs.
+  Future<UserAccount> createAccountWithEmail({
+    required String email,
+    required String password,
+    required String timezone,
+  });
+
+  /// Signs in with email/password and ensures account/profile docs exist.
+  Future<UserAccount> signInWithEmail({
+    required String email,
+    required String password,
+    required String timezone,
+  });
+
+  /// Ensures the current authenticated user has account/profile docs.
+  Future<UserAccount> ensureCurrentUserAccount({required String timezone});
+
   /// Persists onboarding profile fields and marks account onboarding complete.
   Future<UserProfile> completeOnboarding({
     required String uid,

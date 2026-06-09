@@ -101,7 +101,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       });
       if (updated != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Email linked successfully')),
+          const SnackBar(content: Text('Account created successfully')),
         );
       }
     }
@@ -183,7 +183,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                         ),
                         if (_account?.isAnonymous == true)
                           SettingsRow(
-                            label: 'Link email',
+                            label: 'Create account',
                             onTap: _busy ? null : _linkEmail,
                           ),
                         SettingsRow(

@@ -257,7 +257,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
       if (updated != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Email linked successfully')),
+          const SnackBar(content: Text('Account created successfully')),
         );
       }
     }
@@ -292,15 +292,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _isProfileDisabled
-          ? const Center(
+          ? Center(
               child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 40),
+                padding: const EdgeInsets.symmetric(horizontal: 40),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.person_add_outlined, size: 56),
-                    SizedBox(height: 20),
-                    Text(
+                    const Icon(Icons.person_add_outlined, size: 56),
+                    const SizedBox(height: 20),
+                    const Text(
                       'Create an account',
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -308,10 +308,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    SizedBox(height: 10),
-                    Text(
+                    const SizedBox(height: 10),
+                    const Text(
                       'Sign up to set up your profile and save your data.',
                       textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    FilledButton(
+                      onPressed: _saving ? null : _showLinkEmailDialog,
+                      child: _saving
+                          ? const SizedBox.square(
+                              dimension: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text('Create account'),
                     ),
                   ],
                 ),
@@ -408,8 +418,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   controller: _emailController,
                                   enabled: false,
                                   helperText: _account?.isAnonymous == true
-                                      ? 'Link your email to keep your account if the app is reinstalled.'
-                                      : 'Email linked to this account.',
+                                      ? 'Create an account to keep your data if the app is reinstalled.'
+                                      : 'Email for this account.',
                                 ),
                                 if (_account?.isAnonymous == true &&
                                     !_isProfileDisabled) ...[
@@ -420,7 +430,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       onPressed: _saving
                                           ? null
                                           : _showLinkEmailDialog,
-                                      child: const Text('Link email'),
+                                      child: const Text('Create account'),
                                     ),
                                   ),
                                 ],

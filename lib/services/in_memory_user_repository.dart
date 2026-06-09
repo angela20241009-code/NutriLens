@@ -10,6 +10,8 @@ class InMemoryUserRepository implements UserRepository {
   String? _uid;
   final Map<String, UserAccount> _accounts = {};
   final Map<String, UserProfile> _profiles = {};
+  final Map<String, String> _emailToUid = {};
+  final Map<String, String> _passwordByUid = {};
   final Map<String, SportProfile> _sportProfiles = {};
   final Map<String, TeamProgram> _teamPrograms = {};
 
@@ -17,6 +19,7 @@ class InMemoryUserRepository implements UserRepository {
   final Map<String, List<Meal>> _meals = {};
   // uid → (dateKey → DailySummary)
   final Map<String, Map<String, DailySummary>> _dailySummaries = {};
+  int _accountCounter = 0;
   int _mealCounter = 0;
 
   @override
@@ -27,10 +30,7 @@ class InMemoryUserRepository implements UserRepository {
     yield _uid;
   }
 
-  void seedCatalog({
-    SportProfile? sportProfile,
-    TeamProgram? teamProgram,
-  }) {
+  void seedCatalog({SportProfile? sportProfile, TeamProgram? teamProgram}) {
     if (sportProfile != null) {
       _sportProfiles[sportProfile.sportId] = sportProfile;
     }
@@ -56,7 +56,7 @@ class InMemoryUserRepository implements UserRepository {
   @override
   Future<UserAccount> signInAnonymously({required String timezone}) async {
     final now = firestoreNow();
-    final uid = 'local_${now.millisecondsSinceEpoch}';
+    final uid = 'local_${++_accountCounter}';
     _uid = uid;
     final account = UserAccount.anonymousShell(uid: uid, now: now);
     final profile = UserProfile.emptyShell(
@@ -67,6 +67,92 @@ class InMemoryUserRepository implements UserRepository {
     _accounts[uid] = account;
     _profiles[uid] = profile;
     return account;
+  }
+
+  @override
+  Future<UserAccount> createAccountWithEmail({
+    required String email,
+    required String password,
+    required String timezone,
+  }) async {
+    final normalizedEmail = email.trim().toLowerCase();
+    if (_emailToUid.containsKey(normalizedEmail)) {
+      throw StateError('email-already-in-use');
+    }
+
+    final now = firestoreNow();
+    final uid = 'local_email_${++_accountCounter}';
+    _uid = uid;
+    final account = UserAccount(
+      uid: uid,
+      authProviders: const ['password'],
+      email: normalizedEmail,
+      emailVerified: false,
+      accountStatus: AccountStatus.active,
+      onboardingCompleted: false,
+      createdAt: now,
+      updatedAt: now,
+      lastSeenAt: now,
+    );
+    final profile = UserProfile.emptyShell(
+      userId: uid,
+      now: now,
+      timezone: timezone,
+    );
+
+    _accounts[uid] = account;
+    _profiles[uid] = profile;
+    _emailToUid[normalizedEmail] = uid;
+    _passwordByUid[uid] = password;
+    return account;
+  }
+
+  @override
+  Future<UserAccount> signInWithEmail({
+    required String email,
+    required String password,
+    required String timezone,
+  }) async {
+    final normalizedEmail = email.trim().toLowerCase();
+    final uid = _emailToUid[normalizedEmail];
+    if (uid == null || _passwordByUid[uid] != password) {
+      throw StateError('invalid-credential');
+    }
+    _uid = uid;
+    return ensureCurrentUserAccount(timezone: timezone);
+  }
+
+  @override
+  Future<UserAccount> ensureCurrentUserAccount({
+    required String timezone,
+  }) async {
+    final uid = _uid;
+    if (uid == null) {
+      throw StateError('No signed-in user');
+    }
+    final account = _accounts[uid];
+    if (account == null) {
+      final now = firestoreNow();
+      final created = UserAccount.anonymousShell(uid: uid, now: now);
+      _accounts[uid] = created;
+      _profiles[uid] = UserProfile.emptyShell(
+        userId: uid,
+        now: now,
+        timezone: timezone,
+      );
+      return created;
+    }
+    final updated = account.copyWith(lastSeenAt: firestoreNow());
+    _accounts[uid] = updated;
+    _profiles.putIfAbsent(
+      uid,
+      () => UserProfile.emptyShell(
+        userId: uid,
+        now: firestoreNow(),
+        timezone: timezone,
+      ),
+    );
+    return updated;
   }
 
   @override
@@ -97,6 +183,11 @@ class InMemoryUserRepository implements UserRepository {
     required String email,
     required String password,
   }) async {
+    final normalizedEmail = email.trim().toLowerCase();
+    final existingUid = _emailToUid[normalizedEmail];
+    if (existingUid != null && existingUid != uid) {
+      throw StateError('email-already-in-use');
+    }
     final account = _accounts[uid];
     if (account == null) {
       throw StateError('No account for uid $uid');
@@ -105,11 +196,16 @@ class InMemoryUserRepository implements UserRepository {
     final linked = account.copyWith(
       email: email,
       emailVerified: false,
-      authProviders: [...account.authProviders.where((p) => p != 'anonymous'), 'password'],
+      authProviders: [
+        ...account.authProviders.where((p) => p != 'anonymous'),
+        'password',
+      ],
       linkedAt: now,
       updatedAt: now,
     );
     _accounts[uid] = linked;
+    _emailToUid[normalizedEmail] = uid;
+    _passwordByUid[uid] = password;
     return linked;
   }
 

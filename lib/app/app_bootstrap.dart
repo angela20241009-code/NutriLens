@@ -6,12 +6,14 @@ import 'package:nutrilens/app/meal_plan_scope.dart';
 import 'package:nutrilens/app/session_scope.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/data/catalog_seed_data.dart';
+import 'package:nutrilens/features/auth/auth_screen.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/services/edamam_meal_plan_client.dart';
 import 'package:nutrilens/services/firestore_user_repository.dart';
 import 'package:nutrilens/services/in_memory_user_repository.dart';
 import 'package:nutrilens/services/meal_plan_client.dart';
 import 'package:nutrilens/services/user_repository.dart';
+import 'package:nutrilens/theme/app_theme.dart';
 
 class AppBootstrap extends StatefulWidget {
   const AppBootstrap({super.key});
@@ -33,8 +35,6 @@ class _AppBootstrapState extends State<AppBootstrap> {
   }
 
   Future<_BootstrapResult> _initializeApp() async {
-    const timezone = 'America/Los_Angeles';
-
     try {
       if (!_firebaseReady) {
         await Firebase.initializeApp(
@@ -42,36 +42,75 @@ class _AppBootstrapState extends State<AppBootstrap> {
         );
         _firebaseReady = true;
       }
-      return _createFirebaseSession(timezone: timezone);
+      return _restoreFirebaseSession();
     } catch (error) {
       debugPrint('Firebase unavailable, using local demo data: $error');
-      return _initializeLocalDemo(timezone: timezone);
+      return _initializeLocalDemo();
     }
   }
 
-  Future<_BootstrapResult> _createFirebaseSession({
-    required String timezone,
-  }) async {
+  Future<_BootstrapResult> _restoreFirebaseSession() async {
     final repository = FirestoreUserRepository();
-    final account = await repository.signInAnonymously(timezone: timezone);
+    if (repository.currentUid == null) {
+      return _BootstrapResult(repository: repository);
+    }
+    final account = await repository.ensureCurrentUserAccount(
+      timezone: _defaultTimezone,
+    );
     return _BootstrapResult(repository: repository, uid: account.uid);
   }
 
-  Future<_BootstrapResult> _initializeLocalDemo({required String timezone}) async {
+  Future<_BootstrapResult> _initializeLocalDemo() async {
     final repository = InMemoryUserRepository();
     repository.seedCatalog(
       sportProfile: CatalogSeedData.tennisSport(),
       teamProgram: CatalogSeedData.lincolnHighTennis(),
     );
-    final account = await repository.signInAnonymously(timezone: timezone);
-    await repository.completeOnboarding(
-      uid: account.uid,
-      profile: UserProfile.demoAngela(
-        userId: account.uid,
-        now: DateTime.now().toUtc(),
-      ),
+    return _BootstrapResult(repository: repository);
+  }
+
+  void _activateSession(UserRepository repository, UserAccount account) {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _bootstrapFuture = Future.value(
+        _BootstrapResult(repository: repository, uid: account.uid),
+      );
+    });
+  }
+
+  Future<void> _createAccount(
+    UserRepository repository,
+    String email,
+    String password,
+  ) async {
+    final account = await repository.createAccountWithEmail(
+      email: email,
+      password: password,
+      timezone: _defaultTimezone,
     );
-    return _BootstrapResult(repository: repository, uid: account.uid);
+    _activateSession(repository, account);
+  }
+
+  Future<void> _signIn(
+    UserRepository repository,
+    String email,
+    String password,
+  ) async {
+    final account = await repository.signInWithEmail(
+      email: email,
+      password: password,
+      timezone: _defaultTimezone,
+    );
+    _activateSession(repository, account);
+  }
+
+  Future<void> _continueAsGuest(UserRepository repository) async {
+    final account = await repository.signInAnonymously(
+      timezone: _defaultTimezone,
+    );
+    _activateSession(repository, account);
   }
 
   Future<void> _signOutAndRestart(UserRepository repository) async {
@@ -80,9 +119,7 @@ class _AppBootstrapState extends State<AppBootstrap> {
       return;
     }
     setState(() {
-      _bootstrapFuture = _firebaseReady
-          ? _createFirebaseSession(timezone: 'America/Los_Angeles')
-          : _initializeLocalDemo(timezone: 'America/Los_Angeles');
+      _bootstrapFuture = Future.value(_BootstrapResult(repository: repository));
     });
   }
 
@@ -93,9 +130,7 @@ class _AppBootstrapState extends State<AppBootstrap> {
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return const MaterialApp(
-            home: Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            ),
+            home: Scaffold(body: Center(child: CircularProgressIndicator())),
           );
         }
 
@@ -116,13 +151,29 @@ class _AppBootstrapState extends State<AppBootstrap> {
         }
 
         final result = snapshot.requireData;
+        if (result.uid == null) {
+          return MaterialApp(
+            title: 'NutriLens',
+            theme: AppTheme.dark,
+            themeMode: ThemeMode.dark,
+            debugShowCheckedModeBanner: false,
+            home: AuthScreen(
+              onCreateAccount: (email, password) =>
+                  _createAccount(result.repository, email, password),
+              onSignIn: (email, password) =>
+                  _signIn(result.repository, email, password),
+              onContinueAsGuest: () => _continueAsGuest(result.repository),
+            ),
+          );
+        }
+
         return MealPlanScope(
           client: _mealPlanClient,
           child: SessionScope(
             signOut: () => _signOutAndRestart(result.repository),
             child: UserScope(
               repository: result.repository,
-              uid: result.uid,
+              uid: result.uid!,
               child: const NutriLensApp(),
             ),
           ),
@@ -132,12 +183,11 @@ class _AppBootstrapState extends State<AppBootstrap> {
   }
 }
 
+const _defaultTimezone = 'America/Los_Angeles';
+
 class _BootstrapResult {
-  _BootstrapResult({
-    required this.repository,
-    required this.uid,
-  });
+  _BootstrapResult({required this.repository, this.uid});
 
   final UserRepository repository;
-  final String uid;
+  final String? uid;
 }

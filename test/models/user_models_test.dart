@@ -26,8 +26,10 @@ void main() {
   test('catalog seed sport and team program parse', () {
     final sport = CatalogSeedData.tennisSport(effectiveFrom: now);
     final team = CatalogSeedData.lincolnHighTennis();
-    expect(SportProfile.fromMap(sport.toMap(), sportId: sport.sportId).displayName,
-        'Tennis');
+    expect(
+      SportProfile.fromMap(sport.toMap(), sportId: sport.sportId).displayName,
+      'Tennis',
+    );
     expect(
       TeamProgram.fromMap(team.toMap(), programId: team.programId).tier,
       'FREE',
@@ -41,13 +43,12 @@ void main() {
       teamProgram: CatalogSeedData.lincolnHighTennis(),
     );
 
-    final account = await repo.signInAnonymously(timezone: 'America/Los_Angeles');
+    final account = await repo.signInAnonymously(
+      timezone: 'America/Los_Angeles',
+    );
     expect(account.onboardingCompleted, false);
 
-    final profile = UserProfile.demoAngela(
-      userId: account.uid,
-      now: now,
-    );
+    final profile = UserProfile.demoAngela(userId: account.uid, now: now);
     final completed = await repo.completeOnboarding(
       uid: account.uid,
       profile: profile,
@@ -60,4 +61,49 @@ void main() {
     final sport = await repo.getSportProfile(CatalogSeedData.tennisSportId);
     expect(sport?.defaultDailyTargets.caloriesKcal, 3200);
   });
+
+  test('InMemoryUserRepository creates and signs in email accounts', () async {
+    final repo = InMemoryUserRepository();
+
+    final created = await repo.createAccountWithEmail(
+      email: 'athlete@example.com',
+      password: 'secret123',
+      timezone: 'America/Los_Angeles',
+    );
+
+    expect(created.email, 'athlete@example.com');
+    expect(created.authProviders, ['password']);
+    expect(created.isAnonymous, false);
+
+    await repo.signOut();
+    final signedIn = await repo.signInWithEmail(
+      email: 'athlete@example.com',
+      password: 'secret123',
+      timezone: 'America/Los_Angeles',
+    );
+
+    expect(signedIn.uid, created.uid);
+    expect(repo.currentUid, created.uid);
+  });
+
+  test(
+    'InMemoryUserRepository upgrades anonymous account with email',
+    () async {
+      final repo = InMemoryUserRepository();
+      final guest = await repo.signInAnonymously(
+        timezone: 'America/Los_Angeles',
+      );
+
+      final upgraded = await repo.linkEmail(
+        uid: guest.uid,
+        email: 'guest@example.com',
+        password: 'secret123',
+      );
+
+      expect(upgraded.uid, guest.uid);
+      expect(upgraded.email, 'guest@example.com');
+      expect(upgraded.authProviders, ['password']);
+      expect(upgraded.isAnonymous, false);
+    },
+  );
 }

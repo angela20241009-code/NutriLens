@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nutrilens/features/auth/auth_screen.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/services/user_repository.dart';
 import 'package:nutrilens/theme/app_colors.dart';
@@ -25,9 +26,13 @@ Future<UserAccount?> showLinkEmailDialog({
     );
   } catch (error) {
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Unable to link email: $error')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Unable to create account: ${friendlyAuthError(error)}',
+          ),
+        ),
+      );
     }
     return null;
   }
@@ -76,7 +81,7 @@ class _LinkEmailDialogState extends State<_LinkEmailDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: AppColors.cardDark,
-      title: const Text('Link email'),
+      title: const Text('Create account'),
       content: Form(
         key: _formKey,
         child: Column(
@@ -117,7 +122,7 @@ class _LinkEmailDialogState extends State<_LinkEmailDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
         ),
-        FilledButton(onPressed: _submit, child: const Text('Link')),
+        FilledButton(onPressed: _submit, child: const Text('Create')),
       ],
     );
   }

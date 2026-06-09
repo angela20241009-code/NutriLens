@@ -1,13 +1,92 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nutrilens/app.dart';
 import 'package:nutrilens/app/meal_plan_scope.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/data/catalog_seed_data.dart';
+import 'package:nutrilens/features/auth/auth_screen.dart';
+import 'package:nutrilens/features/profile/profile_screen.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/services/meal_plan_client.dart';
 import 'package:nutrilens/services/in_memory_user_repository.dart';
+import 'package:nutrilens/theme/app_theme.dart';
 
 void main() {
+  testWidgets('Auth screen shows email auth and guest options', (
+    WidgetTester tester,
+  ) async {
+    var createCalled = false;
+    var signInCalled = false;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.dark,
+        home: AuthScreen(
+          onCreateAccount: (_, _) async => createCalled = true,
+          onSignIn: (_, _) async => signInCalled = true,
+          onContinueAsGuest: () async {},
+        ),
+      ),
+    );
+
+    expect(find.text('Create account'), findsOneWidget);
+    expect(find.text('Sign in'), findsWidgets);
+    expect(find.text('Continue as guest'), findsOneWidget);
+
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Email'),
+      'athlete@example.com',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Password'),
+      'secret123',
+    );
+    await tester.tap(find.text('Create account'));
+    await tester.pump();
+
+    expect(createCalled, true);
+    expect(signInCalled, false);
+  });
+
+  testWidgets('Guest profile create account unlocks profile editing', (
+    WidgetTester tester,
+  ) async {
+    final repository = InMemoryUserRepository();
+    final account = await repository.signInAnonymously(
+      timezone: 'America/Los_Angeles',
+    );
+
+    await tester.pumpWidget(
+      UserScope(
+        repository: repository,
+        uid: account.uid,
+        child: MaterialApp(theme: AppTheme.dark, home: const ProfileScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Create an account'), findsOneWidget);
+
+    await tester.tap(find.text('Create account'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Email'),
+      'guest@example.com',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Password'),
+      'secret123',
+    );
+    await tester.tap(find.text('Create'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('Full name'), findsOneWidget);
+    final upgraded = await repository.getAccount(account.uid);
+    expect(upgraded?.isAnonymous, false);
+  });
+
   testWidgets('Meal dashboard loads, switches days, and regenerates',
       (WidgetTester tester) async {
     final repository = InMemoryUserRepository();
