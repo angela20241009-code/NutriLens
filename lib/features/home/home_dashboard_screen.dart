@@ -8,11 +8,13 @@ import 'package:nutrilens/features/home/widgets/meal_plan_section.dart';
 import 'package:nutrilens/features/home/widgets/next_session_card.dart';
 import 'package:nutrilens/features/home/widgets/program_banner.dart';
 import 'package:nutrilens/features/home/widgets/todays_fuel_card.dart';
+import 'package:nutrilens/features/meals/log_meal_sheet.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/services/date_key.dart';
 import 'package:nutrilens/services/edamam_meal_plan_client.dart';
 import 'package:nutrilens/services/meal_plan_client.dart';
 import 'package:nutrilens/services/user_repository.dart';
+import 'package:nutrilens/theme/app_colors.dart';
 
 class HomeDashboardScreen extends StatefulWidget {
   const HomeDashboardScreen({super.key, DateTime Function()? now})
@@ -135,6 +137,16 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     await future;
   }
 
+  Future<void> _openLogMealSheet() async {
+    final didLogMeal = await LogMealSheet.show(context);
+    if (!mounted) {
+      return;
+    }
+    if (didLogMeal == true) {
+      await _refresh();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<HomeDashboardData>(
@@ -171,6 +183,17 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                 const SizedBox(height: 16),
                 ProgramBanner(profile: profile),
                 const SizedBox(height: 20),
+                FilledButton.icon(
+                  onPressed: _openLogMealSheet,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Log meal'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.lime,
+                    foregroundColor: AppColors.onLime,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                ),
+                const SizedBox(height: 16),
                 TodaysFuelCard(
                   sport: profile.primarySportName,
                   totals: data.summary.totals,
