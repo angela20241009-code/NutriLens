@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:nutrilens/data/mock_home_data.dart';
+import 'package:nutrilens/app/user_scope.dart';
+import 'package:nutrilens/models/user_profile.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
 class SleepDashboardScreen extends StatelessWidget {
@@ -7,19 +8,31 @@ class SleepDashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scope = UserScope.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            MockHomeData.greeting,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${MockHomeData.userName} 👋',
-            style: Theme.of(context).textTheme.headlineLarge,
+          FutureBuilder<UserProfile?>(
+            future: scope.repository.getProfile(scope.uid),
+            builder: (context, snapshot) {
+              final profile = snapshot.data;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _greetingFor(DateTime.now()),
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${_displayName(profile)} 👋',
+                    style: Theme.of(context).textTheme.headlineLarge,
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 4),
           Text(
@@ -70,9 +83,9 @@ class SleepDashboardScreen extends StatelessWidget {
                 Text(
                   'Track rest and recovery to improve performance on and off the court. '
                   'Sleep duration, quality scores, and bedtime routines will appear here.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        height: 1.5,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(height: 1.5),
                 ),
               ],
             ),
@@ -99,5 +112,30 @@ class SleepDashboardScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _displayName(UserProfile? profile) {
+    final firstName = profile?.firstName?.trim();
+    if (firstName != null && firstName.isNotEmpty) {
+      return firstName;
+    }
+
+    final displayName = profile?.displayName.trim();
+    if (displayName != null && displayName.isNotEmpty) {
+      return displayName.split(RegExp(r'\s+')).first;
+    }
+
+    return 'Athlete';
+  }
+
+  String _greetingFor(DateTime now) {
+    final hour = now.hour;
+    if (hour < 12) {
+      return 'Good Morning';
+    }
+    if (hour < 17) {
+      return 'Good Afternoon';
+    }
+    return 'Good Evening';
   }
 }
