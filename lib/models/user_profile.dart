@@ -98,7 +98,10 @@ class UserProfile {
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  factory UserProfile.fromMap(Map<String, dynamic> map, {required String userId}) {
+  factory UserProfile.fromMap(
+    Map<String, dynamic> map, {
+    required String userId,
+  }) {
     final statsRaw = map['statsCache'];
     return UserProfile(
       userId: map['userId'] as String? ?? userId,
@@ -224,7 +227,7 @@ class UserProfile {
     );
   }
 
-  /// Demo persona aligned with [MockHomeData].
+  /// Demo persona used by local fallback data.
   factory UserProfile.demoAngela({
     required String userId,
     required DateTime now,

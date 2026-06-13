@@ -14,7 +14,7 @@ void main() {
     expect(restored.onboardingCompleted, false);
   });
 
-  test('UserProfile.demoAngela matches mock home targets', () {
+  test('UserProfile.demoAngela includes default nutrition targets', () {
     final profile = UserProfile.demoAngela(userId: 'abc123', now: now);
     expect(profile.displayName, 'Angela');
     expect(profile.primarySportId, 'tennis');

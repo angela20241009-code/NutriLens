@@ -1,6 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:nutrilens/data/mock_home_data.dart';
 import 'package:nutrilens/theme/app_colors.dart';
+
+class MacroProgress {
+  const MacroProgress({
+    required this.label,
+    required this.current,
+    required this.target,
+    required this.unit,
+  });
+
+  final String label;
+  final int current;
+  final int target;
+  final String unit;
+
+  double get progress => target == 0 ? 0 : current / target;
+}
 
 class MacroProgressRow extends StatelessWidget {
   const MacroProgressRow({super.key, required this.macro});

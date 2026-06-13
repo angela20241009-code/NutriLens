@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:nutrilens/data/mock_home_data.dart';
 import 'package:nutrilens/models/schedule_event.dart';
 
 class MockScheduleData {
   static final DateTime anchorDate = DateTime(2026, 4, 15);
 
-  static List<DateTime> get weekDates => List.generate(
-        6,
-        (i) => DateTime(2026, 4, 14 + i),
-      );
+  static List<DateTime> get weekDates =>
+      List.generate(6, (i) => DateTime(2026, 4, 14 + i));
 
   static DateTime get defaultSelectedDate => anchorDate;
 
@@ -18,7 +15,7 @@ class MockScheduleData {
   static final MatchDayInfo matchDay = MatchDayInfo(
     date: anchorDate,
     badge: 'CONFERENCE FINALS',
-    matchup: '${MockHomeData.userName} vs Rivera',
+    matchup: 'Home athlete vs Rivera',
     location: 'Lincoln Courts',
     time: const TimeOfDay(hour: 16, minute: 0),
     fuelingHints: const [

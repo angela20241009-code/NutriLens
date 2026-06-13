@@ -130,12 +130,12 @@ void main() {
     expect(find.text('Regenerate'), findsOneWidget);
     expect(find.text('Power Oats & Berries Bowl'), findsOneWidget);
     expect(find.text('Source: Allrecipes'), findsWidgets);
-    expect(mealPlanClient.callCount, 1);
+    expect(mealPlanClient.callCount, 2);
 
     await tester.tap(find.text('Regenerate'));
     await tester.pumpAndSettle();
 
-    expect(mealPlanClient.callCount, 2);
+    expect(mealPlanClient.callCount, 3);
     expect(find.text('Recovery Oats & Fruit'), findsOneWidget);
 
     await tester.tap(find.text('Schedule'));

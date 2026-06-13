@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:nutrilens/data/mock_home_data.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
 class HydrationCard extends StatelessWidget {
-  const HydrationCard({super.key});
+  const HydrationCard({
+    super.key,
+    required this.currentLiters,
+    required this.targetLiters,
+  });
+
+  final double currentLiters;
+  final double targetLiters;
 
   @override
   Widget build(BuildContext context) {
-    const current = MockHomeData.hydrationCurrent;
-    const perPill = 1.0;
+    final perPill = targetLiters <= 0 ? 1.0 : targetLiters / 3;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -38,13 +43,10 @@ class HydrationCard extends StatelessWidget {
               children: [
                 const Text(
                   'Hydration',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.white70,
-                  ),
+                  style: TextStyle(fontSize: 13, color: Colors.white70),
                 ),
                 Text(
-                  '${MockHomeData.hydrationCurrent}L / ${MockHomeData.hydrationTarget}L target',
+                  '${_formatLiters(currentLiters)}L / ${_formatLiters(targetLiters)}L target',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
@@ -57,23 +59,31 @@ class HydrationCard extends StatelessWidget {
           Row(
             children: [
               _HydrationPill(
-                fillAmount: (current - 0 * perPill).clamp(0.0, perPill) / perPill,
+                fillAmount:
+                    (currentLiters - 0 * perPill).clamp(0.0, perPill) / perPill,
               ),
               const SizedBox(width: 6),
               _HydrationPill(
                 fillAmount:
-                    (current - 1 * perPill).clamp(0.0, perPill) / perPill,
+                    (currentLiters - 1 * perPill).clamp(0.0, perPill) / perPill,
               ),
               const SizedBox(width: 6),
               _HydrationPill(
                 fillAmount:
-                    (current - 2 * perPill).clamp(0.0, perPill) / perPill,
+                    (currentLiters - 2 * perPill).clamp(0.0, perPill) / perPill,
               ),
             ],
           ),
         ],
       ),
     );
+  }
+
+  String _formatLiters(double value) {
+    if (value == value.roundToDouble()) {
+      return value.toStringAsFixed(0);
+    }
+    return value.toStringAsFixed(1);
   }
 }
 

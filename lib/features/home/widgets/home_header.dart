@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:nutrilens/data/mock_home_data.dart';
+import 'package:nutrilens/models/user_profile.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
 class HomeHeader extends StatelessWidget {
-  const HomeHeader({super.key});
+  const HomeHeader({super.key, required this.profile});
+
+  final UserProfile profile;
 
   @override
   Widget build(BuildContext context) {
+    final name = _displayName(profile);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -15,12 +18,12 @@ class HomeHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                MockHomeData.greeting,
+                _greetingFor(DateTime.now()),
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 4),
               Text(
-                '${MockHomeData.userName} 👋',
+                '$name 👋',
                 style: Theme.of(context).textTheme.headlineLarge,
               ),
             ],
@@ -34,13 +37,49 @@ class HomeHeader extends StatelessWidget {
             border: Border.all(color: AppColors.lime, width: 2),
             color: AppColors.cardDark,
           ),
-          child: const Icon(
-            Icons.person_rounded,
-            color: AppColors.textMuted,
-            size: 28,
-          ),
+          clipBehavior: Clip.antiAlias,
+          child: profile.avatarUrl == null || profile.avatarUrl!.isEmpty
+              ? const Icon(
+                  Icons.person_rounded,
+                  color: AppColors.textMuted,
+                  size: 28,
+                )
+              : Image.network(
+                  profile.avatarUrl!,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => const Icon(
+                    Icons.person_rounded,
+                    color: AppColors.textMuted,
+                    size: 28,
+                  ),
+                ),
         ),
       ],
     );
+  }
+
+  String _displayName(UserProfile profile) {
+    final firstName = profile.firstName?.trim();
+    if (firstName != null && firstName.isNotEmpty) {
+      return firstName;
+    }
+
+    final displayName = profile.displayName.trim();
+    if (displayName.isNotEmpty) {
+      return displayName.split(RegExp(r'\s+')).first;
+    }
+
+    return 'Athlete';
+  }
+
+  String _greetingFor(DateTime now) {
+    final hour = now.hour;
+    if (hour < 12) {
+      return 'Good Morning';
+    }
+    if (hour < 17) {
+      return 'Good Afternoon';
+    }
+    return 'Good Evening';
   }
 }
