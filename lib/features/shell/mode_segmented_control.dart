@@ -9,13 +9,11 @@ class ModeSegmentedControl extends StatelessWidget {
     required this.mode,
     required this.style,
     required this.onModeChanged,
-    required this.onProfilePressed,
   });
 
   final AppMode mode;
   final SegmentControlStyle style;
   final ValueChanged<AppMode> onModeChanged;
-  final VoidCallback onProfilePressed;
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +21,6 @@ class ModeSegmentedControl extends StatelessWidget {
       SegmentControlStyle.minimalTabs => _MinimalTabsModeControl(
         mode: mode,
         onModeChanged: onModeChanged,
-        onProfilePressed: onProfilePressed,
       ),
       SegmentControlStyle.classicPill => _ClassicPillModeControl(
         mode: mode,
@@ -37,77 +34,66 @@ class _MinimalTabsModeControl extends StatelessWidget {
   const _MinimalTabsModeControl({
     required this.mode,
     required this.onModeChanged,
-    required this.onProfilePressed,
   });
 
   final AppMode mode;
   final ValueChanged<AppMode> onModeChanged;
-  final VoidCallback onProfilePressed;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(28, 10, 28, 14),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
         children: [
-          Expanded(
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: _ModeTab(
-                        label: 'Meal Tracking',
-                        selected: mode == AppMode.mealTracking,
-                        selectedColor: AppColors.lime,
-                        onTap: () => onModeChanged(AppMode.mealTracking),
-                      ),
-                    ),
-                    Expanded(
-                      child: _ModeTab(
-                        label: 'Sleep',
-                        selected: mode == AppMode.sleep,
-                        selectedColor: AppColors.sleepAccent,
-                        onTap: () => onModeChanged(AppMode.sleep),
-                      ),
-                    ),
-                  ],
+          Row(
+            children: [
+              Expanded(
+                child: _ModeTab(
+                  label: 'Meal Tracking',
+                  selected: mode == AppMode.mealTracking,
+                  selectedColor: AppColors.lime,
+                  onTap: () => onModeChanged(AppMode.mealTracking),
                 ),
-                const SizedBox(height: 9),
-                Stack(
-                  children: [
-                    Container(height: 1, color: AppColors.cardDark),
-                    AnimatedAlign(
-                      duration: const Duration(milliseconds: 220),
-                      curve: Curves.easeOutCubic,
-                      alignment: mode == AppMode.mealTracking
-                          ? Alignment.centerLeft
-                          : Alignment.centerRight,
-                      child: FractionallySizedBox(
-                        widthFactor: 0.5,
-                        child: Align(
-                          alignment: Alignment.center,
-                          child: Container(
-                            width: 156,
-                            height: 3,
-                            decoration: BoxDecoration(
-                              color: mode == AppMode.mealTracking
-                                  ? AppColors.lime
-                                  : AppColors.sleepAccent,
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+              ),
+              Expanded(
+                child: _ModeTab(
+                  label: 'Sleep',
+                  selected: mode == AppMode.sleep,
+                  selectedColor: AppColors.sleepAccent,
+                  onTap: () => onModeChanged(AppMode.sleep),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          const SizedBox(width: 18),
-          _ProfileShortcut(onTap: onProfilePressed),
+          const SizedBox(height: 9),
+          Stack(
+            children: [
+              Container(height: 1, color: AppColors.cardDark),
+              AnimatedAlign(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                alignment: mode == AppMode.mealTracking
+                    ? Alignment.centerLeft
+                    : Alignment.centerRight,
+                child: FractionallySizedBox(
+                  widthFactor: 0.5,
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: Container(
+                      width: 156,
+                      height: 3,
+                      decoration: BoxDecoration(
+                        color: mode == AppMode.mealTracking
+                            ? AppColors.lime
+                            : AppColors.sleepAccent,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -204,34 +190,6 @@ class _ModeTab extends StatelessWidget {
               Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ProfileShortcut extends StatelessWidget {
-  const _ProfileShortcut({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      customBorder: const CircleBorder(),
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: AppColors.lime, width: 2),
-          color: AppColors.cardDarker,
-        ),
-        child: const Icon(
-          Icons.person_rounded,
-          color: AppColors.textMuted,
-          size: 25,
         ),
       ),
     );

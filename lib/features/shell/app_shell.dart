@@ -32,13 +32,6 @@ class _AppShellState extends State<AppShell> {
               mode: _appMode,
               style: settings.segmentControlStyle,
               onModeChanged: (mode) => setState(() => _appMode = mode),
-              onProfilePressed: () => setState(() {
-                if (_appMode == AppMode.mealTracking) {
-                  _mealTabIndex = 4;
-                } else {
-                  _sleepTabIndex = 2;
-                }
-              }),
             ),
             Expanded(
               child: _appMode == AppMode.mealTracking
