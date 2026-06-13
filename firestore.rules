@@ -31,5 +31,15 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow write: if false;
     }
+
+    // Logged meals — owner read/write only.
+    match /meals/{userId}/entries/{mealId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Daily nutrition/hydration/sleep summaries — owner read/write only.
+    match /dailySummaries/{userId}/days/{dateKey} {
+      allow read, write: if isOwner(userId);
+    }
   }
 }
