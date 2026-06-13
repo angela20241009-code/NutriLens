@@ -16,28 +16,25 @@ class MealTrackingShell extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onIndexChanged;
 
-  static const _screens = [
-    HomeDashboardScreen(),
-    MealsScreen(),
-    ScanScreen(),
-    ScheduleScreen(),
-    ProfileScreen(),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final screens = [
+      HomeDashboardScreen(
+        onMealsTap: () => onIndexChanged(1),
+        onProfileTap: () => onIndexChanged(4),
+      ),
+      const MealsScreen(),
+      const ScanScreen(),
+      const ScheduleScreen(),
+      const ProfileScreen(),
+    ];
+
     return Column(
       children: [
         Expanded(
-          child: IndexedStack(
-            index: selectedIndex,
-            children: _screens,
-          ),
+          child: IndexedStack(index: selectedIndex, children: screens),
         ),
-        CustomBottomNav(
-          selectedIndex: selectedIndex,
-          onTap: onIndexChanged,
-        ),
+        CustomBottomNav(selectedIndex: selectedIndex, onTap: onIndexChanged),
       ],
     );
   }

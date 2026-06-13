@@ -17,10 +17,16 @@ import 'package:nutrilens/services/meal_plan_client.dart';
 import 'package:nutrilens/services/user_repository.dart';
 
 class HomeDashboardScreen extends StatefulWidget {
-  const HomeDashboardScreen({super.key, DateTime Function()? now})
-    : _nowProvider = now;
+  const HomeDashboardScreen({
+    super.key,
+    DateTime Function()? now,
+    required this.onProfileTap,
+    required this.onMealsTap,
+  }) : _nowProvider = now;
 
   final DateTime Function()? _nowProvider;
+  final VoidCallback onProfileTap;
+  final VoidCallback onMealsTap;
 
   @override
   State<HomeDashboardScreen> createState() => _HomeDashboardScreenState();
@@ -185,7 +191,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                HomeHeader(profile: profile),
+                HomeHeader(profile: profile, onProfileTap: widget.onProfileTap),
                 const SizedBox(height: 16),
                 ProgramBanner(profile: profile),
                 const SizedBox(height: 20),
@@ -199,6 +205,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                   sport: profile.primarySportName,
                   totals: data.summary.totals,
                   targets: profile.dailyTargets,
+                  onViewDetailsTap: widget.onMealsTap,
                 ),
                 const SizedBox(height: 16),
                 const NextSessionCard(),

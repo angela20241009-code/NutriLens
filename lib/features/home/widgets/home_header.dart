@@ -3,9 +3,14 @@ import 'package:nutrilens/models/user_profile.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
 class HomeHeader extends StatelessWidget {
-  const HomeHeader({super.key, required this.profile});
+  const HomeHeader({
+    super.key,
+    required this.profile,
+    required this.onProfileTap,
+  });
 
   final UserProfile profile;
+  final VoidCallback onProfileTap;
 
   @override
   Widget build(BuildContext context) {
@@ -29,30 +34,34 @@ class HomeHeader extends StatelessWidget {
             ],
           ),
         ),
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: AppColors.lime, width: 2),
-            color: AppColors.cardDark,
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: profile.avatarUrl == null || profile.avatarUrl!.isEmpty
-              ? const Icon(
-                  Icons.person_rounded,
-                  color: AppColors.textMuted,
-                  size: 28,
-                )
-              : Image.network(
-                  profile.avatarUrl!,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => const Icon(
+        InkWell(
+          onTap: onProfileTap,
+          customBorder: const CircleBorder(),
+          child: Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.lime, width: 2),
+              color: AppColors.cardDark,
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: profile.avatarUrl == null || profile.avatarUrl!.isEmpty
+                ? const Icon(
                     Icons.person_rounded,
                     color: AppColors.textMuted,
                     size: 28,
+                  )
+                : Image.network(
+                    profile.avatarUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.person_rounded,
+                      color: AppColors.textMuted,
+                      size: 28,
+                    ),
                   ),
-                ),
+          ),
         ),
       ],
     );
