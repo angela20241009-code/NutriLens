@@ -4,6 +4,7 @@ import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/features/home/home_dashboard_data.dart';
 import 'package:nutrilens/features/home/widgets/home_header.dart';
 import 'package:nutrilens/features/home/widgets/hydration_card.dart';
+import 'package:nutrilens/features/home/widgets/meal_capture_card.dart';
 import 'package:nutrilens/features/home/widgets/meal_plan_section.dart';
 import 'package:nutrilens/features/home/widgets/next_session_card.dart';
 import 'package:nutrilens/features/home/widgets/program_banner.dart';
@@ -14,7 +15,6 @@ import 'package:nutrilens/services/date_key.dart';
 import 'package:nutrilens/services/edamam_meal_plan_client.dart';
 import 'package:nutrilens/services/meal_plan_client.dart';
 import 'package:nutrilens/services/user_repository.dart';
-import 'package:nutrilens/theme/app_colors.dart';
 
 class HomeDashboardScreen extends StatefulWidget {
   const HomeDashboardScreen({super.key, DateTime Function()? now})
@@ -147,6 +147,12 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     }
   }
 
+  void _showComingSoon(String feature) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('$feature coming soon')));
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<HomeDashboardData>(
@@ -183,15 +189,10 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                 const SizedBox(height: 16),
                 ProgramBanner(profile: profile),
                 const SizedBox(height: 20),
-                FilledButton.icon(
-                  onPressed: _openLogMealSheet,
-                  icon: const Icon(Icons.add),
-                  label: const Text('Log meal'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.lime,
-                    foregroundColor: AppColors.onLime,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
+                MealCaptureCard(
+                  onManualTap: _openLogMealSheet,
+                  onScanTap: () => _showComingSoon('Scan'),
+                  onFavoritesTap: () => _showComingSoon('Favorites'),
                 ),
                 const SizedBox(height: 16),
                 TodaysFuelCard(
