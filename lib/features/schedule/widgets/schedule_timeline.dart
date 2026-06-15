@@ -4,22 +4,16 @@ import 'package:nutrilens/models/schedule_event.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
 class ScheduleTimeline extends StatelessWidget {
-  const ScheduleTimeline({
-    super.key,
-    required this.events,
-  });
+  const ScheduleTimeline({super.key, required this.events});
 
-  final List<ScheduleEvent> events;
+  final List<UserScheduleEvent> events;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Timeline',
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
+        Text('Timeline', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 16),
         if (events.isEmpty)
           Container(
@@ -37,10 +31,7 @@ class ScheduleTimeline extends StatelessWidget {
           )
         else
           for (var i = 0; i < events.length; i++)
-            TimelineEventTile(
-              event: events[i],
-              isLast: i == events.length - 1,
-            ),
+            TimelineEventTile(event: events[i], isLast: i == events.length - 1),
       ],
     );
   }

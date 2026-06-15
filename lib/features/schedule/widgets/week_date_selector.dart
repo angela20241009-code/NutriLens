@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:nutrilens/data/mock_schedule_data.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
 class WeekDateSelector extends StatelessWidget {
@@ -7,11 +6,13 @@ class WeekDateSelector extends StatelessWidget {
     super.key,
     required this.dates,
     required this.selectedDate,
+    required this.hasEventsOn,
     required this.onDateSelected,
   });
 
   final List<DateTime> dates;
   final DateTime selectedDate;
+  final bool Function(DateTime date) hasEventsOn;
   final ValueChanged<DateTime> onDateSelected;
 
   bool _isSameDay(DateTime a, DateTime b) {
@@ -29,7 +30,7 @@ class WeekDateSelector extends StatelessWidget {
         itemBuilder: (context, index) {
           final date = dates[index];
           final selected = _isSameDay(date, selectedDate);
-          final hasEvents = MockScheduleData.hasEventsOn(date);
+          final hasEvents = hasEventsOn(date);
 
           return GestureDetector(
             onTap: () => onDateSelected(date),
@@ -45,7 +46,7 @@ class WeekDateSelector extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    MockScheduleData.formatDayLabel(date),
+                    _formatDayLabel(date),
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
@@ -59,7 +60,9 @@ class WeekDateSelector extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: selected ? AppColors.onLime : AppColors.textPrimary,
+                      color: selected
+                          ? AppColors.onLime
+                          : AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -70,8 +73,8 @@ class WeekDateSelector extends StatelessWidget {
                       color: selected
                           ? AppColors.onLime
                           : hasEvents
-                              ? AppColors.orange
-                              : Colors.transparent,
+                          ? AppColors.orange
+                          : Colors.transparent,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -82,5 +85,10 @@ class WeekDateSelector extends StatelessWidget {
         },
       ),
     );
+  }
+
+  String _formatDayLabel(DateTime date) {
+    const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+    return days[date.weekday - 1];
   }
 }

@@ -9,6 +9,7 @@ import 'package:nutrilens/features/home/widgets/meal_plan_section.dart';
 import 'package:nutrilens/features/home/widgets/next_session_card.dart';
 import 'package:nutrilens/features/home/widgets/program_banner.dart';
 import 'package:nutrilens/features/home/widgets/todays_fuel_card.dart';
+import 'package:nutrilens/features/meals/favorite_meal_sheet.dart';
 import 'package:nutrilens/features/meals/log_meal_sheet.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/services/date_key.dart';
@@ -153,6 +154,19 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     }
   }
 
+  Future<void> _openFavoriteMealSheet() async {
+    final result = await FavoriteMealSheet.show(context);
+    if (!mounted) {
+      return;
+    }
+
+    if (result == FavoriteMealSheetResult.logged) {
+      await _refresh();
+    } else if (result == FavoriteMealSheetResult.edit) {
+      await _openLogMealSheet();
+    }
+  }
+
   void _showComingSoon(String feature) {
     ScaffoldMessenger.of(
       context,
@@ -198,7 +212,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                 MealCaptureCard(
                   onManualTap: _openLogMealSheet,
                   onScanTap: () => _showComingSoon('Scan'),
-                  onFavoritesTap: () => _showComingSoon('Favorites'),
+                  onFavoritesTap: _openFavoriteMealSheet,
                 ),
                 const SizedBox(height: 16),
                 TodaysFuelCard(

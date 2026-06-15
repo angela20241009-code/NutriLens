@@ -95,6 +95,34 @@ Use canonical snake_case keys in storage; map to display labels in the app.
 }
 ```
 
+## Schedule events
+
+Stored directly on the profile document as `scheduleEvents`. New profiles should
+write an empty array until real events are attached.
+
+```json
+{
+  "scheduleEvents": [
+    {
+      "eventId": "event_001",
+      "type": "match",
+      "startAt": "2026-06-20T16:00:00.000Z",
+      "title": "Home athlete vs Rivera",
+      "subtitle": "~2h",
+      "location": "Lincoln Courts",
+      "badge": "CONFERENCE FINALS",
+      "fuelingHints": [
+        { "timing": "3H BEFORE", "label": "Big Carbs" },
+        { "timing": "1H BEFORE", "label": "Light Snack" },
+        { "timing": "POST", "label": "Protein+" }
+      ]
+    }
+  ]
+}
+```
+
+`type`: `meal` | `training` | `match`
+
 ## Health sync
 
 ```json
@@ -136,7 +164,6 @@ See seed in [`firebase/seed/README.md`](../../firebase/seed/README.md) and `User
 |------|------------|
 | Daily calorie progress | Derived from `meals` |
 | Meal plan items | `meals` |
-| Schedule / next session | `scheduleEvents` |
 | Weekly fuel trends | `insights` |
 | Goal version history | `nutritionGoals` |
 

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:nutrilens/data/mock_schedule_data.dart';
 import 'package:nutrilens/models/schedule_event.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
@@ -10,7 +9,7 @@ class TimelineEventTile extends StatelessWidget {
     required this.isLast,
   });
 
-  final ScheduleEvent event;
+  final UserScheduleEvent event;
   final bool isLast;
 
   Color get _accentColor {
@@ -23,11 +22,23 @@ class TimelineEventTile extends StatelessWidget {
     }
   }
 
+  IconData get _icon {
+    switch (event.type) {
+      case ScheduleEventType.meal:
+        return Icons.restaurant_rounded;
+      case ScheduleEventType.training:
+        return Icons.fitness_center_rounded;
+      case ScheduleEventType.match:
+        return Icons.sports_tennis_rounded;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final accent = _accentColor;
-    final iconTextColor =
-        event.type == ScheduleEventType.meal ? Colors.white : AppColors.onLime;
+    final iconTextColor = event.type == ScheduleEventType.meal
+        ? Colors.white
+        : AppColors.onLime;
 
     return IntrinsicHeight(
       child: Row(
@@ -38,7 +49,7 @@ class TimelineEventTile extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.only(top: 18),
               child: Text(
-                MockScheduleData.formatTime(event.start),
+                _formatTime(event.startAt),
                 style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
@@ -68,10 +79,7 @@ class TimelineEventTile extends StatelessWidget {
                 ),
                 if (!isLast)
                   Expanded(
-                    child: Container(
-                      width: 2,
-                      color: AppColors.cardDarker,
-                    ),
+                    child: Container(width: 2, color: AppColors.cardDarker),
                   ),
               ],
             ),
@@ -94,11 +102,7 @@ class TimelineEventTile extends StatelessWidget {
                         color: accent,
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      child: Icon(
-                        event.icon,
-                        color: iconTextColor,
-                        size: 24,
-                      ),
+                      child: Icon(_icon, color: iconTextColor, size: 24),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
@@ -111,10 +115,10 @@ class TimelineEventTile extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            event.subtitle,
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  fontSize: 12,
-                                ),
+                            event.subtitle ?? '',
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodyMedium?.copyWith(fontSize: 12),
                           ),
                         ],
                       ),
@@ -127,5 +131,14 @@ class TimelineEventTile extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _formatTime(DateTime time) {
+    final local = time.toLocal();
+    final hour = local.hour;
+    final minute = local.minute;
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+    return '$displayHour:${minute.toString().padLeft(2, '0')} $period';
   }
 }

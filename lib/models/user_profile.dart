@@ -2,7 +2,9 @@ import 'package:nutrilens/models/daily_targets.dart';
 import 'package:nutrilens/models/dietary_profile.dart';
 import 'package:nutrilens/models/firestore_map.dart';
 import 'package:nutrilens/models/health_sync.dart';
+import 'package:nutrilens/models/nutrition_entry.dart';
 import 'package:nutrilens/models/nutrition_settings.dart';
+import 'package:nutrilens/models/schedule_event.dart';
 import 'package:nutrilens/models/segment_control_style.dart';
 import 'package:nutrilens/models/stats_cache.dart';
 
@@ -19,6 +21,36 @@ enum UserRole {
       orElse: () => UserRole.athlete,
     );
   }
+}
+
+class FavoriteMealProfileItem {
+  const FavoriteMealProfileItem({
+    required this.name,
+    required this.nutrition,
+    this.imagePath,
+  });
+
+  final String name;
+  final NutritionEntry nutrition;
+  final String? imagePath;
+
+  factory FavoriteMealProfileItem.fromMap(Map<String, dynamic> map) {
+    return FavoriteMealProfileItem(
+      name: map['name'] as String? ?? '',
+      nutrition: NutritionEntry.fromMap(
+        map['nutrition'] != null
+            ? Map<String, dynamic>.from(map['nutrition'] as Map)
+            : null,
+      ),
+      imagePath: map['imagePath'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+    'name': name,
+    'nutrition': nutrition.toMap(),
+    'imagePath': imagePath,
+  };
 }
 
 class UserProfile {
@@ -51,8 +83,10 @@ class UserProfile {
     this.activeGoalId,
     this.dietaryProfile = const DietaryProfile(),
     this.nutritionSettings = const NutritionSettings(),
+    this.scheduleEvents = const [],
     this.segmentControlStyle = SegmentControlStyle.minimalTabs,
     this.healthSync = const HealthSync(),
+    this.favoriteMeals = const [],
     this.statsCache,
     this.statsCacheUpdatedAt,
     this.onboardingStep,
@@ -89,8 +123,10 @@ class UserProfile {
   final String? activeGoalId;
   final DietaryProfile dietaryProfile;
   final NutritionSettings nutritionSettings;
+  final List<UserScheduleEvent> scheduleEvents;
   final SegmentControlStyle segmentControlStyle;
   final HealthSync healthSync;
+  final List<FavoriteMealProfileItem> favoriteMeals;
   final StatsCache? statsCache;
   final DateTime? statsCacheUpdatedAt;
   final String? onboardingStep;
@@ -142,6 +178,13 @@ class UserProfile {
             ? Map<String, dynamic>.from(map['nutritionSettings'] as Map)
             : null,
       ),
+      scheduleEvents: (map['scheduleEvents'] as List? ?? const [])
+          .whereType<Map>()
+          .map(
+            (event) =>
+                UserScheduleEvent.fromMap(Map<String, dynamic>.from(event)),
+          )
+          .toList(),
       segmentControlStyle: SegmentControlStyle.fromFirestore(
         map['segmentControlStyle'] as String?,
       ),
@@ -150,6 +193,7 @@ class UserProfile {
             ? Map<String, dynamic>.from(map['healthSync'] as Map)
             : null,
       ),
+      favoriteMeals: _parseFavoriteMeals(map['favoriteMeals']),
       statsCache: statsRaw != null
           ? StatsCache.fromMap(Map<String, dynamic>.from(statsRaw as Map))
           : null,
@@ -190,8 +234,10 @@ class UserProfile {
     'activeGoalId': activeGoalId,
     'dietaryProfile': dietaryProfile.toMap(),
     'nutritionSettings': nutritionSettings.toMap(),
+    'scheduleEvents': scheduleEvents.map((event) => event.toMap()).toList(),
     'segmentControlStyle': segmentControlStyle.firestoreValue,
     'healthSync': healthSync.toMap(),
+    'favoriteMeals': favoriteMeals.map((meal) => meal.toMap()).toList(),
     'statsCache': statsCache?.toMap(),
     'statsCacheUpdatedAt': iso8601OrNull(statsCacheUpdatedAt),
     'onboardingStep': onboardingStep,
@@ -287,6 +333,7 @@ class UserProfile {
     String? activeGoalId,
     DietaryProfile? dietaryProfile,
     NutritionSettings? nutritionSettings,
+    List<UserScheduleEvent>? scheduleEvents,
     SegmentControlStyle? segmentControlStyle,
     HealthSync? healthSync,
     StatsCache? statsCache,
@@ -294,6 +341,7 @@ class UserProfile {
     String? onboardingStep,
     DateTime? onboardingCompletedAt,
     DateTime? updatedAt,
+    List<FavoriteMealProfileItem>? favoriteMeals,
   }) {
     return UserProfile(
       userId: userId,
@@ -324,8 +372,10 @@ class UserProfile {
       activeGoalId: activeGoalId ?? this.activeGoalId,
       dietaryProfile: dietaryProfile ?? this.dietaryProfile,
       nutritionSettings: nutritionSettings ?? this.nutritionSettings,
+      scheduleEvents: scheduleEvents ?? this.scheduleEvents,
       segmentControlStyle: segmentControlStyle ?? this.segmentControlStyle,
       healthSync: healthSync ?? this.healthSync,
+      favoriteMeals: favoriteMeals ?? this.favoriteMeals,
       statsCache: statsCache ?? this.statsCache,
       statsCacheUpdatedAt: statsCacheUpdatedAt ?? this.statsCacheUpdatedAt,
       onboardingStep: onboardingStep ?? this.onboardingStep,
@@ -335,4 +385,19 @@ class UserProfile {
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
+}
+
+List<FavoriteMealProfileItem> _parseFavoriteMeals(dynamic value) {
+  if (value is! List) {
+    return const [];
+  }
+
+  return value
+      .whereType<Map>()
+      .map(
+        (item) =>
+            FavoriteMealProfileItem.fromMap(Map<String, dynamic>.from(item)),
+      )
+      .where((meal) => meal.name.trim().isNotEmpty)
+      .toList(growable: false);
 }

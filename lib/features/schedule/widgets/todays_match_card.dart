@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:nutrilens/data/mock_schedule_data.dart';
 import 'package:nutrilens/models/schedule_event.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 import 'package:nutrilens/widgets/pill_badge.dart';
 
 class TodaysMatchCard extends StatelessWidget {
-  const TodaysMatchCard({
-    super.key,
-    required this.match,
-  });
+  const TodaysMatchCard({super.key, required this.match});
 
-  final MatchDayInfo match;
+  final UserScheduleEvent match;
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +21,7 @@ class TodaysMatchCard extends StatelessWidget {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             Text(
-              MockScheduleData.formatShortDate(match.date),
+              _formatShortDate(match.startAt),
               style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
@@ -44,10 +40,7 @@ class TodaysMatchCard extends StatelessWidget {
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Color(0xFFFF8C42),
-                Color(0xFFB85A1A),
-              ],
+              colors: [Color(0xFFFF8C42), Color(0xFFB85A1A)],
             ),
           ),
           child: Stack(
@@ -73,7 +66,7 @@ class TodaysMatchCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        match.badge,
+                        match.badge ?? 'MATCH',
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
@@ -85,7 +78,7 @@ class TodaysMatchCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    match.matchup,
+                    match.title,
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w800,
@@ -103,7 +96,7 @@ class TodaysMatchCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '${match.location} · ${MockScheduleData.formatTimeOfDay(match.time)}',
+                        _formatLocationAndTime(match),
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
@@ -132,5 +125,42 @@ class TodaysMatchCard extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  String _formatShortDate(DateTime date) {
+    final local = date.toLocal();
+    const months = [
+      'JAN',
+      'FEB',
+      'MAR',
+      'APR',
+      'MAY',
+      'JUN',
+      'JUL',
+      'AUG',
+      'SEP',
+      'OCT',
+      'NOV',
+      'DEC',
+    ];
+    return '${months[local.month - 1]} ${local.day}, ${local.year}';
+  }
+
+  String _formatLocationAndTime(UserScheduleEvent match) {
+    final parts = [
+      if (match.location != null && match.location!.trim().isNotEmpty)
+        match.location!.trim(),
+      _formatTime(match.startAt),
+    ];
+    return parts.join(' · ');
+  }
+
+  String _formatTime(DateTime time) {
+    final local = time.toLocal();
+    final hour = local.hour;
+    final minute = local.minute;
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+    return '$displayHour:${minute.toString().padLeft(2, '0')} $period';
   }
 }

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:nutrilens/data/mock_schedule_data.dart';
+import 'package:nutrilens/app/user_scope.dart';
+import 'package:nutrilens/features/schedule/create_schedule_event_sheet.dart';
 import 'package:nutrilens/features/schedule/widgets/schedule_header.dart';
 import 'package:nutrilens/features/schedule/widgets/schedule_timeline.dart';
 import 'package:nutrilens/features/schedule/widgets/todays_match_card.dart';
 import 'package:nutrilens/features/schedule/widgets/week_date_selector.dart';
+import 'package:nutrilens/models/models.dart';
 
 class ScheduleScreen extends StatefulWidget {
   const ScheduleScreen({super.key});
@@ -14,47 +16,112 @@ class ScheduleScreen extends StatefulWidget {
 
 class _ScheduleScreenState extends State<ScheduleScreen> {
   late DateTime _selectedDate;
+  Future<UserProfile?>? _profileFuture;
+  String? _loadedUid;
 
   @override
   void initState() {
     super.initState();
-    _selectedDate = MockScheduleData.defaultSelectedDate;
+    _selectedDate = _dayKey(DateTime.now());
   }
 
-  void _onAddTap() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Event creation coming soon'),
-        behavior: SnackBarBehavior.floating,
-      ),
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final scope = UserScope.of(context);
+    if (_loadedUid != scope.uid) {
+      _loadedUid = scope.uid;
+      _profileFuture = scope.repository.getProfile(scope.uid);
+    }
+  }
+
+  Future<void> _onAddTap() async {
+    final created = await CreateScheduleEventSheet.show(
+      context,
+      initialDate: _selectedDate,
     );
+    if (created == null || !mounted) {
+      return;
+    }
+
+    final scope = UserScope.of(context);
+    setState(() {
+      _selectedDate = _dayKey(created.startAt.toLocal());
+      _profileFuture = scope.repository.getProfile(scope.uid);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final match = MockScheduleData.matchFor(_selectedDate);
-    final events = MockScheduleData.eventsFor(_selectedDate);
+    return FutureBuilder<UserProfile?>(
+      future: _profileFuture,
+      builder: (context, snapshot) {
+        final scheduleEvents = snapshot.data?.scheduleEvents ?? const [];
+        final weekDates = _weekDatesAround(_selectedDate);
+        final events = _eventsFor(scheduleEvents, _selectedDate);
+        final matches = events.where(
+          (event) => event.type == ScheduleEventType.match,
+        );
+        final match = matches.isEmpty ? null : matches.first;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ScheduleHeader(onAddTap: _onAddTap),
-          const SizedBox(height: 20),
-          WeekDateSelector(
-            dates: MockScheduleData.weekDates,
-            selectedDate: _selectedDate,
-            onDateSelected: (date) => setState(() => _selectedDate = date),
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ScheduleHeader(onAddTap: _onAddTap),
+              const SizedBox(height: 20),
+              WeekDateSelector(
+                dates: weekDates,
+                selectedDate: _selectedDate,
+                hasEventsOn: (date) =>
+                    _eventsFor(scheduleEvents, date).isNotEmpty,
+                onDateSelected: (date) =>
+                    setState(() => _selectedDate = _dayKey(date)),
+              ),
+              if (snapshot.connectionState != ConnectionState.done) ...[
+                const SizedBox(height: 24),
+                const Center(child: CircularProgressIndicator()),
+              ] else if (snapshot.hasError) ...[
+                const SizedBox(height: 24),
+                Text(
+                  'Failed to load schedule.',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ] else ...[
+                if (match != null) ...[
+                  const SizedBox(height: 24),
+                  TodaysMatchCard(match: match),
+                ],
+                const SizedBox(height: 24),
+                ScheduleTimeline(events: events),
+              ],
+            ],
           ),
-          if (match != null) ...[
-            const SizedBox(height: 24),
-            TodaysMatchCard(match: match),
-          ],
-          const SizedBox(height: 24),
-          ScheduleTimeline(events: events),
-        ],
-      ),
+        );
+      },
     );
+  }
+
+  DateTime _dayKey(DateTime date) => DateTime(date.year, date.month, date.day);
+
+  List<DateTime> _weekDatesAround(DateTime selectedDate) {
+    final start = _dayKey(selectedDate).subtract(const Duration(days: 1));
+    return List.generate(6, (index) => start.add(Duration(days: index)));
+  }
+
+  List<UserScheduleEvent> _eventsFor(
+    List<UserScheduleEvent> events,
+    DateTime date,
+  ) {
+    final target = _dayKey(date);
+    final filtered = events.where((event) {
+      final eventDay = _dayKey(event.startAt.toLocal());
+      return eventDay.year == target.year &&
+          eventDay.month == target.month &&
+          eventDay.day == target.day;
+    }).toList();
+    filtered.sort((a, b) => a.startAt.compareTo(b.startAt));
+    return filtered;
   }
 }

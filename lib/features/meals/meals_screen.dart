@@ -3,7 +3,9 @@ import 'package:nutrilens/app/meal_plan_scope.dart';
 import 'package:nutrilens/data/mock_schedule_data.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/models/models.dart';
+import 'package:nutrilens/services/date_key.dart';
 import 'package:nutrilens/services/edamam_meal_plan_client.dart';
+import 'package:nutrilens/services/user_repository.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -20,6 +22,9 @@ class _MealsScreenState extends State<MealsScreen> {
   bool _loading = true;
   bool _refreshing = false;
   String? _error;
+  bool _foodDashboardLoading = true;
+  DailySummary? _dailySummary;
+  List<Meal> _loggedMeals = const [];
   UserProfile? _profile;
   MealPlanWeek? _plan;
   final Set<String> _refreshingMealKeys = {};
@@ -64,6 +69,12 @@ class _MealsScreenState extends State<MealsScreen> {
       if (profile == null) {
         throw StateError('User profile is unavailable.');
       }
+      final foodDashboard = await _loadFoodDashboardData(
+        repository: repository,
+        uid: uid,
+        profile: profile,
+        date: _selectedDate,
+      );
 
       final plan = await client.fetchWeeklyPlan(
         profile: profile,
@@ -77,6 +88,8 @@ class _MealsScreenState extends State<MealsScreen> {
       final previousSelectedDate = _selectedDate;
       setState(() {
         _profile = profile;
+        _dailySummary = foodDashboard.summary;
+        _loggedMeals = foodDashboard.loggedMeals;
         _plan = plan;
         _selectedDate =
             plan.days.any((day) => _isSameDay(day.date, previousSelectedDate))
@@ -84,8 +97,10 @@ class _MealsScreenState extends State<MealsScreen> {
             : plan.days.firstOrNull?.date ?? previousSelectedDate;
         _loading = false;
         _refreshing = false;
+        _foodDashboardLoading = false;
       });
     } catch (error) {
+      debugPrint('Meals data unavailable: $error');
       if (!mounted) {
         return;
       }
@@ -93,9 +108,35 @@ class _MealsScreenState extends State<MealsScreen> {
       setState(() {
         _loading = false;
         _refreshing = false;
+        _foodDashboardLoading = false;
         _error = '$error';
       });
     }
+  }
+
+  Future<_FoodDashboardData> _loadFoodDashboardData({
+    required UserRepository repository,
+    required String uid,
+    required UserProfile profile,
+    required DateTime date,
+  }) async {
+    final summaryKey = dateKeyFor(date, profile.timezone);
+    final summary = await repository.getDailySummary(uid, summaryKey);
+    final loggedMeals = await repository.getMealsForDay(
+      uid,
+      date,
+      profile.timezone,
+    );
+    return _FoodDashboardData(
+      summary:
+          summary ??
+          DailySummary(
+            uid: uid,
+            dateKey: summaryKey,
+            updatedAt: DateTime.now().toUtc(),
+          ),
+      loggedMeals: loggedMeals.reversed.toList(growable: false),
+    );
   }
 
   Future<void> _regenerate() async {
@@ -151,10 +192,37 @@ class _MealsScreenState extends State<MealsScreen> {
     }
   }
 
-  void _selectDate(DateTime date) {
+  Future<void> _selectDate(DateTime date) async {
     setState(() {
       _selectedDate = date;
+      _foodDashboardLoading = true;
     });
+    final profile = _profile;
+    if (profile == null) {
+      return;
+    }
+    try {
+      final scope = UserScope.of(context);
+      final foodDashboard = await _loadFoodDashboardData(
+        repository: scope.repository,
+        uid: scope.uid,
+        profile: profile,
+        date: date,
+      );
+      if (!mounted) return;
+      setState(() {
+        _dailySummary = foodDashboard.summary;
+        _loggedMeals = foodDashboard.loggedMeals;
+        _foodDashboardLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _dailySummary = null;
+        _loggedMeals = const [];
+        _foodDashboardLoading = false;
+      });
+    }
   }
 
   MealPlanWeek _replaceMealInPlan({
@@ -279,6 +347,7 @@ class _MealsScreenState extends State<MealsScreen> {
   Widget build(BuildContext context) {
     final plan = _plan;
     final selectedDay = _selectedDay;
+    debugPrint('Meals dashboard count: ${_loggedMeals.length}');
 
     return ColoredBox(
       color: const Color(0xFFF5F4EE),
@@ -287,6 +356,7 @@ class _MealsScreenState extends State<MealsScreen> {
         child: _loading && plan == null
             ? const Center(child: CircularProgressIndicator())
             : ListView(
+                cacheExtent: 10000,
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                 children: [
                   Row(
@@ -361,6 +431,14 @@ class _MealsScreenState extends State<MealsScreen> {
                   ],
                   if (selectedDay != null) ...[
                     const SizedBox(height: 18),
+                    _TodaysFoodDashboard(
+                      selectedDate: _selectedDate,
+                      targets: _profile?.dailyTargets,
+                      summary: _dailySummary,
+                      loggedMeals: _loggedMeals,
+                      loading: _foodDashboardLoading,
+                    ),
+                    const SizedBox(height: 18),
                     _HeroCard(
                       title: _heroLabel,
                       headline: _heroHeadline,
@@ -394,6 +472,424 @@ class _MealsScreenState extends State<MealsScreen> {
               ),
       ),
     );
+  }
+}
+
+class _FoodDashboardData {
+  const _FoodDashboardData({
+    required this.summary,
+    required this.loggedMeals,
+  });
+
+  final DailySummary summary;
+  final List<Meal> loggedMeals;
+}
+
+class _TodaysFoodDashboard extends StatelessWidget {
+  const _TodaysFoodDashboard({
+    required this.selectedDate,
+    required this.targets,
+    required this.summary,
+    required this.loggedMeals,
+    required this.loading,
+  });
+
+  final DateTime selectedDate;
+  final DailyTargets? targets;
+  final DailySummary? summary;
+  final List<Meal> loggedMeals;
+  final bool loading;
+
+  bool get _isToday => DateUtils.isSameDay(selectedDate, DateTime.now());
+
+  @override
+  Widget build(BuildContext context) {
+    final totals = summary?.totals ?? const NutritionEntry();
+    final dailyTargets = targets;
+    final targetCalories = dailyTargets?.caloriesKcal ?? 0;
+    final remainingCalories = targetCalories > 0
+        ? (targetCalories - totals.caloriesKcal).clamp(0, targetCalories)
+        : 0;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: const Color(0xFFE4E0D8)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: loading
+          ? const SizedBox(
+              height: 180,
+              child: Center(child: CircularProgressIndicator()),
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: AppColors.lime,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Icon(
+                        Icons.restaurant_menu_rounded,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _isToday ? "Today's Food" : 'Food Dashboard',
+                            style: const TextStyle(
+                              fontSize: 23,
+                              height: 1,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.black,
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            '${loggedMeals.length} recently eaten meal${loggedMeals.length == 1 ? '' : 's'}',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF7F7F7F),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    _RemainingCaloriesBadge(value: remainingCalories),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                _CalorieProgress(
+                  eaten: totals.caloriesKcal,
+                  target: targetCalories,
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _MacroProgressTile(
+                        label: 'Protein',
+                        value: totals.proteinG,
+                        target: dailyTargets?.proteinG ?? 0,
+                        unit: 'g',
+                        color: AppColors.electricBlue,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _MacroProgressTile(
+                        label: 'Carbs',
+                        value: totals.carbsG,
+                        target: dailyTargets?.carbsG ?? 0,
+                        unit: 'g',
+                        color: AppColors.lime,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _MacroProgressTile(
+                        label: 'Fats',
+                        value: totals.fatsG,
+                        target: dailyTargets?.fatsG ?? 0,
+                        unit: 'g',
+                        color: AppColors.orange,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                const Text(
+                  'Recently eaten',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                if (loggedMeals.isEmpty)
+                  const _EmptyRecentMeals()
+                else
+                  for (final meal in loggedMeals.take(3))
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: _RecentMealTile(meal: meal),
+                    ),
+              ],
+            ),
+    );
+  }
+}
+
+class _RemainingCaloriesBadge extends StatelessWidget {
+  const _RemainingCaloriesBadge({required this.value});
+
+  final int value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Text(
+            '$value',
+            style: const TextStyle(
+              color: AppColors.lime,
+              fontSize: 18,
+              height: 1,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 3),
+          const Text(
+            'left',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CalorieProgress extends StatelessWidget {
+  const _CalorieProgress({required this.eaten, required this.target});
+
+  final int eaten;
+  final int target;
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = target <= 0 ? 0.0 : (eaten / target).clamp(0.0, 1.0);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              '$eaten',
+              style: const TextStyle(
+                color: Colors.black,
+                fontSize: 34,
+                height: 1,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              target > 0 ? 'of $target kcal' : 'kcal eaten',
+              style: const TextStyle(
+                color: Color(0xFF777777),
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(999),
+          child: LinearProgressIndicator(
+            value: progress,
+            minHeight: 10,
+            backgroundColor: const Color(0xFFEDEAE2),
+            valueColor: const AlwaysStoppedAnimation<Color>(Colors.black),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MacroProgressTile extends StatelessWidget {
+  const _MacroProgressTile({
+    required this.label,
+    required this.value,
+    required this.target,
+    required this.unit,
+    required this.color,
+  });
+
+  final String label;
+  final int value;
+  final int target;
+  final String unit;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = target <= 0 ? 0.0 : (value / target).clamp(0.0, 1.0);
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF6F4EE),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: Color(0xFF777777),
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 7),
+          Text(
+            '$value$unit',
+            style: const TextStyle(
+              color: Colors.black,
+              fontSize: 19,
+              height: 1,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 9),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 6,
+              backgroundColor: Colors.white,
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyRecentMeals extends StatelessWidget {
+  const _EmptyRecentMeals();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF6F4EE),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: const Text(
+        'No meals logged yet. Your recent meals will appear here.',
+        style: TextStyle(
+          color: Color(0xFF777777),
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+class _RecentMealTile extends StatelessWidget {
+  const _RecentMealTile({required this.meal});
+
+  final Meal meal;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF6F4EE),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: Colors.black,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(
+              Icons.restaurant_rounded,
+              color: AppColors.lime,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  meal.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${_formatTime(meal.loggedAt)} · ${meal.nutrition.proteinG}g protein',
+                  style: const TextStyle(
+                    color: Color(0xFF777777),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            '${meal.nutrition.caloriesKcal}',
+            style: const TextStyle(
+              color: Colors.black,
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatTime(DateTime time) {
+    final local = time.toLocal();
+    final hour = local.hour;
+    final minute = local.minute;
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+    return '$displayHour:${minute.toString().padLeft(2, '0')} $period';
   }
 }
 

@@ -44,6 +44,46 @@ void main() {
     expect(restored.segmentControlStyle, SegmentControlStyle.minimalTabs);
   });
 
+  test('UserProfile defaults missing schedule events to empty', () {
+    final map = UserProfile.demoAngela(userId: 'abc123', now: now).toMap()
+      ..remove('scheduleEvents');
+
+    final restored = UserProfile.fromMap(map, userId: 'abc123');
+
+    expect(restored.scheduleEvents, isEmpty);
+  });
+
+  test('UserProfile round-trips schedule events', () {
+    final event = UserScheduleEvent(
+      eventId: 'event_001',
+      type: ScheduleEventType.match,
+      startAt: DateTime.utc(2026, 6, 20, 23),
+      title: 'Home athlete vs Rivera',
+      subtitle: '~2h',
+      location: 'Lincoln Courts',
+      badge: 'CONFERENCE FINALS',
+      fuelingHints: const [
+        FuelingHint(timing: '3H BEFORE', label: 'Big Carbs'),
+        FuelingHint(timing: '1H BEFORE', label: 'Light Snack'),
+      ],
+    );
+    final profile = UserProfile.demoAngela(
+      userId: 'abc123',
+      now: now,
+    ).copyWith(scheduleEvents: [event]);
+
+    final map = profile.toMap();
+    final restored = UserProfile.fromMap(map, userId: 'abc123');
+
+    expect(map['scheduleEvents'], isA<List<dynamic>>());
+    expect(restored.scheduleEvents, hasLength(1));
+    expect(restored.scheduleEvents.single.eventId, 'event_001');
+    expect(restored.scheduleEvents.single.type, ScheduleEventType.match);
+    expect(restored.scheduleEvents.single.title, 'Home athlete vs Rivera');
+    expect(restored.scheduleEvents.single.location, 'Lincoln Courts');
+    expect(restored.scheduleEvents.single.fuelingHints, hasLength(2));
+  });
+
   test('catalog seed sport and team program parse', () {
     final sport = CatalogSeedData.tennisSport(effectiveFrom: now);
     final team = CatalogSeedData.lincolnHighTennis();
