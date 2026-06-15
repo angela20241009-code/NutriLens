@@ -1,18 +1,23 @@
 import 'package:flutter/material.dart';
 
 abstract final class AppColors {
-  static const background = Color(0xFF000000);
-  static const lime = Color(0xFFB8FF3C);
-  static const limeDark = Color(0xFF5A7A1E);
-  static const electricBlue = Color(0xFF4DA3FF);
-  static const programBannerBg = Color(0xFF0D1F33);
-  static const orange = Color(0xFFFF8C42);
-  static const cardDark = Color(0xFF1A1A1A);
-  static const cardDarker = Color(0xFF121212);
-  static const textPrimary = Color(0xFFFFFFFF);
-  static const textMuted = Color(0xFF8A8A8A);
-  static const navInactive = Color(0xFF6B6B6B);
-  static const sleepAccent = Color(0xFF9B7EDE);
-  static const sleepAccentMuted = Color(0xFF3D2E5C);
-  static const onLime = Color(0xFF000000);
+  static const fitnessBlack = Color(0xFF000000);
+  static const fitnessWhite = Color(0xFFFFFFFF);
+  static const fitnessGreen = Color(0xFFB8FF3C);
+  static const fitnessPurple = Color(0xFFBF5AF2);
+
+  static const background = fitnessBlack;
+  static const lime = fitnessGreen;
+  static const limeDark = fitnessGreen;
+  static const electricBlue = fitnessPurple;
+  static const programBannerBg = fitnessBlack;
+  static const orange = fitnessPurple;
+  static const cardDark = fitnessBlack;
+  static const cardDarker = fitnessBlack;
+  static const textPrimary = fitnessWhite;
+  static const textMuted = fitnessWhite;
+  static const navInactive = fitnessWhite;
+  static const sleepAccent = fitnessPurple;
+  static const sleepAccentMuted = fitnessPurple;
+  static const onLime = fitnessBlack;
 }

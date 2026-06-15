@@ -103,10 +103,10 @@ class _PlaceholderGradient extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: isBreakfast
-              ? [const Color(0xFF8B6914), const Color(0xFF4A3810)]
+              ? [AppColors.fitnessGreen, AppColors.fitnessBlack]
               : isDinner
-              ? [const Color(0xFF5A3E85), const Color(0xFF2B2240)]
-              : [const Color(0xFF2D6A4F), const Color(0xFF1B4332)],
+              ? [AppColors.fitnessPurple, AppColors.fitnessBlack]
+              : [AppColors.fitnessWhite, AppColors.fitnessBlack],
         ),
       ),
       child: Center(
