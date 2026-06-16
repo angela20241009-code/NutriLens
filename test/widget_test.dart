@@ -193,7 +193,7 @@ void main() {
     expect(find.text('Sleep'), findsOneWidget);
   });
 
-  testWidgets('Settings hides mode switcher when Sleep Mode is off', (
+  testWidgets('Settings shows Sleep Mode toggle off and enables it', (
     WidgetTester tester,
   ) async {
     final repository = InMemoryUserRepository();
@@ -210,12 +210,22 @@ void main() {
 
     await _pumpAccountSettings(tester, repository, account.uid);
 
+    expect(find.text('Sleep Mode'), findsOneWidget);
+    expect(tester.widget<Switch>(find.byType(Switch)).value, false);
     expect(find.text('Mode switcher'), findsNothing);
     expect(find.text('Notifications'), findsOneWidget);
     expect(find.text('Units'), findsOneWidget);
+
+    await tester.tap(find.byType(Switch));
+    await tester.pumpAndSettle();
+
+    final profile = await repository.getProfile(account.uid);
+    expect(profile?.sleepModeEnabled, true);
+    expect(tester.widget<Switch>(find.byType(Switch)).value, true);
+    expect(find.text('Mode switcher'), findsOneWidget);
   });
 
-  testWidgets('Settings shows mode switcher when Sleep Mode is on', (
+  testWidgets('Settings shows Sleep Mode toggle on and disables it', (
     WidgetTester tester,
   ) async {
     final repository = InMemoryUserRepository();
@@ -232,8 +242,18 @@ void main() {
 
     await _pumpAccountSettings(tester, repository, account.uid);
 
+    expect(find.text('Sleep Mode'), findsOneWidget);
+    expect(tester.widget<Switch>(find.byType(Switch)).value, true);
     expect(find.text('Mode switcher'), findsOneWidget);
     expect(find.text('Minimal tabs'), findsOneWidget);
+
+    await tester.tap(find.byType(Switch));
+    await tester.pumpAndSettle();
+
+    final profile = await repository.getProfile(account.uid);
+    expect(profile?.sleepModeEnabled, false);
+    expect(tester.widget<Switch>(find.byType(Switch)).value, false);
+    expect(find.text('Mode switcher'), findsNothing);
   });
 
   testWidgets('Guest profile create account unlocks profile editing', (

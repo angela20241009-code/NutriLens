@@ -78,6 +78,36 @@ class AppSettingsController extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<void> updateSleepModeEnabled(bool enabled) async {
+    if (enabled == _sleepModeEnabled || _saving) {
+      return;
+    }
+
+    final previousEnabled = _sleepModeEnabled;
+    final previousProfile = _profile;
+    _sleepModeEnabled = enabled;
+    _saving = true;
+    notifyListeners();
+
+    try {
+      final profile = _profile ?? await _repository.getProfile(_uid);
+      if (profile == null) {
+        throw StateError('User profile is unavailable.');
+      }
+
+      final updated = profile.copyWith(sleepModeEnabled: enabled);
+      await _repository.saveProfile(updated);
+      _profile = updated;
+    } catch (_) {
+      _profile = previousProfile;
+      _sleepModeEnabled = previousEnabled;
+      rethrow;
+    } finally {
+      _saving = false;
+      notifyListeners();
+    }
+  }
 }
 
 class AppSettingsScope extends StatefulWidget {

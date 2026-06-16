@@ -65,23 +65,28 @@ class SettingsRow extends StatelessWidget {
             child: Text(
               label,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: labelColor ?? AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
-                  ),
+                color: labelColor ?? AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
           if (value != null) ...[
-            Flexible(
-              child: Text(
-                value!,
-                textAlign: TextAlign.right,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textMuted,
-                    ),
+            const SizedBox(width: 16),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 190),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  value!,
+                  textAlign: TextAlign.right,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
+                ),
               ),
             ),
-            if (showChevron) const SizedBox(width: 4),
+            if (showChevron) const SizedBox(width: 6),
           ],
           ?trailing,
           if (showChevron && onTap != null)
@@ -96,13 +101,7 @@ class SettingsRow extends StatelessWidget {
 
     return Column(
       children: [
-        if (onTap != null)
-          InkWell(
-            onTap: onTap,
-            child: content,
-          )
-        else
-          content,
+        if (onTap != null) InkWell(onTap: onTap, child: content) else content,
         if (showDivider)
           const Divider(
             height: 1,

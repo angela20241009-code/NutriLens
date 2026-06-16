@@ -214,6 +214,20 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     }
   }
 
+  Future<void> _toggleSleepMode(bool enabled) async {
+    final settings = AppSettingsScope.of(context);
+    try {
+      await settings.updateSleepModeEnabled(enabled);
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Unable to update Sleep Mode: $error')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final appSettings = AppSettingsScope.of(context);
@@ -260,6 +274,22 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     SettingsSection(
                       title: 'App',
                       children: [
+                        SettingsRow(
+                          label: 'Sleep Mode',
+                          trailing: Switch(
+                            value: appSettings.sleepModeEnabled,
+                            activeThumbColor: AppColors.sleepAccent,
+                            onChanged: _busy || appSettings.saving
+                                ? null
+                                : _toggleSleepMode,
+                          ),
+                          showChevron: false,
+                          onTap: _busy || appSettings.saving
+                              ? null
+                              : () => _toggleSleepMode(
+                                  !appSettings.sleepModeEnabled,
+                                ),
+                        ),
                         if (appSettings.sleepModeEnabled)
                           SettingsRow(
                             label: 'Mode switcher',
