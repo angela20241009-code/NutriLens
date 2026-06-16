@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nutrilens/app/app_settings_scope.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/features/profile/widgets/profile_text_field.dart';
 import 'package:nutrilens/features/shell/app_shell.dart';
@@ -84,7 +85,7 @@ class OnboardingFlow extends StatefulWidget {
 }
 
 class _OnboardingFlowState extends State<OnboardingFlow> {
-  static const _totalSteps = 5;
+  static const _totalSteps = 6;
 
   final _pageController = PageController();
   final _nameFormKey = GlobalKey<FormState>();
@@ -102,6 +103,10 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   String? _selectedSportId;
   String? _selectedSportName;
   String? _lastDerivedSportId;
+  String? _wakeTiredAnswer;
+  String? _bedtimeConsistencyAnswer;
+  String? _sleepReminderAnswer;
+  bool _sleepModeEnabled = false;
   String _timezone = 'America/Los_Angeles';
   bool _saving = false;
   int _currentPage = 0;
@@ -154,7 +159,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     if (!mounted) return;
     setState(() => _currentPage = page);
 
-    if (page == 4 &&
+    if (page == 5 &&
         _selectedSportId != null &&
         _selectedSportId != _lastDerivedSportId) {
       _applySportDefaults(_selectedSportId!);
@@ -176,40 +181,47 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     final now = DateTime.now().toUtc();
     final sportId = _selectedSportId!;
     final targets = _sportTargets[sportId] ?? _sportTargets['other']!;
+    final sleepRecommendation = _sleepRecommendation;
 
     final graduationText = _graduationController.text.trim();
     final graduationYear = graduationText.isEmpty
         ? null
         : int.parse(graduationText);
 
-    final profile = UserProfile.emptyShell(
-      userId: uid,
-      now: now,
-      timezone: _timezone,
-    ).copyWith(
-      displayName: _nameController.text.trim(),
-      schoolName: _schoolController.text.trim().isEmpty
-          ? null
-          : _schoolController.text.trim(),
-      graduationYear: graduationYear,
-      primarySportId: sportId,
-      primarySportName: _selectedSportName!,
-      dailyTargets: DailyTargets(
-        caloriesKcal: int.parse(_caloriesController.text.trim()),
-        proteinG: int.parse(_proteinController.text.trim()),
-        carbsG: int.parse(_carbsController.text.trim()),
-        fatsG: int.parse(_fatsController.text.trim()),
-        hydrationLiters: targets.hydrationLiters,
-        sleepHours: 8,
-        source: DailyTargetsSource.onboarding,
-        effectiveFrom: now,
-      ),
-    );
+    final profile =
+        UserProfile.emptyShell(
+          userId: uid,
+          now: now,
+          timezone: _timezone,
+        ).copyWith(
+          displayName: _nameController.text.trim(),
+          schoolName: _schoolController.text.trim().isEmpty
+              ? null
+              : _schoolController.text.trim(),
+          graduationYear: graduationYear,
+          primarySportId: sportId,
+          primarySportName: _selectedSportName!,
+          dailyTargets: DailyTargets(
+            caloriesKcal: int.parse(_caloriesController.text.trim()),
+            proteinG: int.parse(_proteinController.text.trim()),
+            carbsG: int.parse(_carbsController.text.trim()),
+            fatsG: int.parse(_fatsController.text.trim()),
+            hydrationLiters: targets.hydrationLiters,
+            sleepHours: 8,
+            source: DailyTargetsSource.onboarding,
+            effectiveFrom: now,
+          ),
+          sleepModeEnabled: _sleepModeEnabled,
+          sleepModeRecommended: sleepRecommendation.recommended,
+          sleepModeRecommendationReasons: sleepRecommendation.reasons,
+        );
 
     setState(() => _saving = true);
 
     try {
+      final settings = AppSettingsScope.maybeOf(context);
       await scope.repository.completeOnboarding(uid: uid, profile: profile);
+      await settings?.reload(repository: scope.repository, uid: uid);
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const AppShell()),
@@ -218,9 +230,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     } catch (error) {
       if (!mounted) return;
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$error')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('$error')));
     }
   }
 
@@ -228,6 +240,49 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     backgroundColor: AppColors.lime,
     foregroundColor: AppColors.onLime,
   );
+
+  _SleepRecommendation get _sleepRecommendation {
+    final reasons = <String>[];
+    var moderateSignals = 0;
+
+    if (_wakeTiredAnswer == 'Most days') {
+      reasons.add('You often wake up tired.');
+    } else if (_wakeTiredAnswer == 'Sometimes') {
+      moderateSignals++;
+    }
+
+    if (_bedtimeConsistencyAnswer == 'Often') {
+      reasons.add('Your bedtime is often inconsistent.');
+    } else if (_bedtimeConsistencyAnswer == 'Sometimes') {
+      moderateSignals++;
+    }
+
+    if (_sleepReminderAnswer == 'Yes') {
+      reasons.add('Sleep reminders could support recovery.');
+    } else if (_sleepReminderAnswer == 'Maybe') {
+      moderateSignals++;
+    }
+
+    final recommended = reasons.isNotEmpty || moderateSignals >= 2;
+    if (recommended && reasons.isEmpty) {
+      reasons.add('A few small sleep habits could improve recovery.');
+    }
+
+    return _SleepRecommendation(recommended: recommended, reasons: reasons);
+  }
+
+  bool get _sleepQuestionsComplete =>
+      _wakeTiredAnswer != null &&
+      _bedtimeConsistencyAnswer != null &&
+      _sleepReminderAnswer != null;
+
+  void _continueFromSleepStep({required bool enableSleepMode}) {
+    if (!_sleepQuestionsComplete) {
+      return;
+    }
+    setState(() => _sleepModeEnabled = enableSleepMode);
+    _goToPage(5);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -303,6 +358,34 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
             ),
             _OnboardingStepShell(
               currentStep: 5,
+              totalSteps: _totalSteps,
+              showProgress: true,
+              showBack: true,
+              onBack: _goBack,
+              child: _SleepModeStep(
+                wakeTiredAnswer: _wakeTiredAnswer,
+                bedtimeConsistencyAnswer: _bedtimeConsistencyAnswer,
+                sleepReminderAnswer: _sleepReminderAnswer,
+                recommendation: _sleepRecommendation,
+                questionsComplete: _sleepQuestionsComplete,
+                onWakeTiredChanged: (value) {
+                  setState(() => _wakeTiredAnswer = value);
+                },
+                onBedtimeConsistencyChanged: (value) {
+                  setState(() => _bedtimeConsistencyAnswer = value);
+                },
+                onSleepReminderChanged: (value) {
+                  setState(() => _sleepReminderAnswer = value);
+                },
+                onUseSleepMode: () =>
+                    _continueFromSleepStep(enableSleepMode: true),
+                onSkipSleepMode: () =>
+                    _continueFromSleepStep(enableSleepMode: false),
+                primaryButtonStyle: _primaryButtonStyle,
+              ),
+            ),
+            _OnboardingStepShell(
+              currentStep: 6,
               totalSteps: _totalSteps,
               showProgress: true,
               showBack: true,
@@ -441,10 +524,7 @@ class _NameStep extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Your name',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
+          Text('Your name', style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 24),
           ProfileTextField(
             label: 'FULL NAME',
@@ -532,10 +612,7 @@ class _SportStep extends StatelessWidget {
                           ),
                         ),
                         if (isSelected)
-                          const Icon(
-                            Icons.check_circle,
-                            color: AppColors.lime,
-                          ),
+                          const Icon(Icons.check_circle, color: AppColors.lime),
                       ],
                     ),
                   ),
@@ -614,6 +691,242 @@ class _SchoolStep extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+}
+
+class _SleepRecommendation {
+  const _SleepRecommendation({
+    required this.recommended,
+    required this.reasons,
+  });
+
+  final bool recommended;
+  final List<String> reasons;
+}
+
+class _SleepModeStep extends StatelessWidget {
+  const _SleepModeStep({
+    required this.wakeTiredAnswer,
+    required this.bedtimeConsistencyAnswer,
+    required this.sleepReminderAnswer,
+    required this.recommendation,
+    required this.questionsComplete,
+    required this.onWakeTiredChanged,
+    required this.onBedtimeConsistencyChanged,
+    required this.onSleepReminderChanged,
+    required this.onUseSleepMode,
+    required this.onSkipSleepMode,
+    required this.primaryButtonStyle,
+  });
+
+  final String? wakeTiredAnswer;
+  final String? bedtimeConsistencyAnswer;
+  final String? sleepReminderAnswer;
+  final _SleepRecommendation recommendation;
+  final bool questionsComplete;
+  final ValueChanged<String> onWakeTiredChanged;
+  final ValueChanged<String> onBedtimeConsistencyChanged;
+  final ValueChanged<String> onSleepReminderChanged;
+  final VoidCallback onUseSleepMode;
+  final VoidCallback onSkipSleepMode;
+  final ButtonStyle primaryButtonStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final recommended = recommendation.recommended;
+
+    final useSleepButton = SizedBox(
+      height: 52,
+      child: FilledButton(
+        onPressed: questionsComplete ? onUseSleepMode : null,
+        style: primaryButtonStyle,
+        child: const Text('Use Sleep Mode'),
+      ),
+    );
+    final skipButton = SizedBox(
+      height: 52,
+      child: OutlinedButton(
+        onPressed: questionsComplete ? onSkipSleepMode : null,
+        child: const Text('Skip for now'),
+      ),
+    );
+
+    return ListView(
+      children: [
+        Text('Sleep recovery', style: textTheme.headlineMedium),
+        const SizedBox(height: 8),
+        Text(
+          'Answer a few quick questions so we can decide if Sleep Mode belongs in your daily setup.',
+          style: textTheme.bodyMedium,
+        ),
+        const SizedBox(height: 24),
+        _SleepQuestionCard(
+          question: 'How often do you wake up tired?',
+          options: const ['Rarely', 'Sometimes', 'Most days'],
+          selected: wakeTiredAnswer,
+          onSelected: onWakeTiredChanged,
+        ),
+        const SizedBox(height: 16),
+        _SleepQuestionCard(
+          question: 'Do late practices or homework make bedtime inconsistent?',
+          options: const ['Rarely', 'Sometimes', 'Often'],
+          selected: bedtimeConsistencyAnswer,
+          onSelected: onBedtimeConsistencyChanged,
+        ),
+        const SizedBox(height: 16),
+        _SleepQuestionCard(
+          question: 'Would sleep reminders help you recover better?',
+          options: const ['Yes', 'Maybe', 'No'],
+          selected: sleepReminderAnswer,
+          onSelected: onSleepReminderChanged,
+        ),
+        const SizedBox(height: 20),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 180),
+          child: questionsComplete
+              ? _SleepRecommendationCard(recommendation: recommendation)
+              : const SizedBox.shrink(),
+        ),
+        const SizedBox(height: 20),
+        if (recommended) ...[
+          useSleepButton,
+          const SizedBox(height: 12),
+          skipButton,
+        ] else ...[
+          SizedBox(
+            height: 52,
+            child: FilledButton(
+              onPressed: questionsComplete ? onSkipSleepMode : null,
+              style: primaryButtonStyle,
+              child: const Text('Skip for now'),
+            ),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton(
+            onPressed: questionsComplete ? onUseSleepMode : null,
+            child: const Text('Use Sleep Mode'),
+          ),
+        ],
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+}
+
+class _SleepQuestionCard extends StatelessWidget {
+  const _SleepQuestionCard({
+    required this.question,
+    required this.options,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final String question;
+  final List<String> options;
+  final String? selected;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.cardDark,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.cardDarker),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(question, style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final option in options)
+                ChoiceChip(
+                  label: Text(option),
+                  selected: selected == option,
+                  selectedColor: AppColors.lime,
+                  labelStyle: TextStyle(
+                    color: selected == option
+                        ? AppColors.onLime
+                        : AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  backgroundColor: AppColors.fitnessBlack,
+                  side: BorderSide(
+                    color: selected == option
+                        ? AppColors.lime
+                        : AppColors.textMuted.withValues(alpha: 0.24),
+                  ),
+                  onSelected: (_) => onSelected(option),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SleepRecommendationCard extends StatelessWidget {
+  const _SleepRecommendationCard({required this.recommendation});
+
+  final _SleepRecommendation recommendation;
+
+  @override
+  Widget build(BuildContext context) {
+    final recommended = recommendation.recommended;
+    final title = recommended
+        ? 'Sleep Mode recommended'
+        : 'Sleep Mode is optional';
+    final message = recommended
+        ? recommendation.reasons.join(' ')
+        : 'Your answers look steady, so you can add Sleep Mode later if your schedule changes.';
+
+    return Container(
+      key: ValueKey(recommended),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: recommended
+            ? AppColors.sleepAccent.withValues(alpha: 0.18)
+            : AppColors.cardDark,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: recommended
+              ? AppColors.sleepAccent
+              : AppColors.textMuted.withValues(alpha: 0.24),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            recommended ? Icons.nightlight_round : Icons.check_circle_outline,
+            color: recommended ? AppColors.sleepAccent : AppColors.lime,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 6),
+                Text(
+                  message,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(height: 1.35),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

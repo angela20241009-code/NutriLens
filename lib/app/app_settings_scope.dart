@@ -13,10 +13,12 @@ class AppSettingsController extends ChangeNotifier {
   String _uid;
   UserProfile? _profile;
   SegmentControlStyle _segmentControlStyle = SegmentControlStyle.minimalTabs;
+  bool _sleepModeEnabled = false;
   bool _loading = true;
   bool _saving = false;
 
   SegmentControlStyle get segmentControlStyle => _segmentControlStyle;
+  bool get sleepModeEnabled => _sleepModeEnabled;
   bool get loading => _loading;
   bool get saving => _saving;
 
@@ -28,6 +30,7 @@ class AppSettingsController extends ChangeNotifier {
     _uid = uid;
     _profile = null;
     _segmentControlStyle = SegmentControlStyle.minimalTabs;
+    _sleepModeEnabled = false;
     _loading = true;
     notifyListeners();
     await load();
@@ -39,6 +42,7 @@ class AppSettingsController extends ChangeNotifier {
       _profile = profile;
       _segmentControlStyle =
           profile?.segmentControlStyle ?? SegmentControlStyle.minimalTabs;
+      _sleepModeEnabled = profile?.sleepModeEnabled ?? false;
     } finally {
       _loading = false;
       notifyListeners();
@@ -97,6 +101,12 @@ class AppSettingsScope extends StatefulWidget {
       );
     }
     return scope.notifier!;
+  }
+
+  static AppSettingsController? maybeOf(BuildContext context) {
+    return context
+        .dependOnInheritedWidgetOfExactType<_AppSettingsInherited>()
+        ?.notifier;
   }
 
   @override

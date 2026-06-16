@@ -44,6 +44,39 @@ void main() {
     expect(restored.segmentControlStyle, SegmentControlStyle.minimalTabs);
   });
 
+  test('UserProfile round-trips sleep mode onboarding preference', () {
+    final profile = UserProfile.demoAngela(userId: 'abc123', now: now).copyWith(
+      sleepModeEnabled: true,
+      sleepModeRecommended: true,
+      sleepModeRecommendationReasons: [
+        'You often wake up tired.',
+        'Sleep reminders could support recovery.',
+      ],
+    );
+
+    final restored = UserProfile.fromMap(profile.toMap(), userId: 'abc123');
+
+    expect(restored.sleepModeEnabled, true);
+    expect(restored.sleepModeRecommended, true);
+    expect(
+      restored.sleepModeRecommendationReasons,
+      contains('You often wake up tired.'),
+    );
+  });
+
+  test('UserProfile defaults missing sleep mode fields to disabled', () {
+    final map = UserProfile.demoAngela(userId: 'abc123', now: now).toMap()
+      ..remove('sleepModeEnabled')
+      ..remove('sleepModeRecommended')
+      ..remove('sleepModeRecommendationReasons');
+
+    final restored = UserProfile.fromMap(map, userId: 'abc123');
+
+    expect(restored.sleepModeEnabled, false);
+    expect(restored.sleepModeRecommended, false);
+    expect(restored.sleepModeRecommendationReasons, isEmpty);
+  });
+
   test('UserProfile defaults missing schedule events to empty', () {
     final map = UserProfile.demoAngela(userId: 'abc123', now: now).toMap()
       ..remove('scheduleEvents');

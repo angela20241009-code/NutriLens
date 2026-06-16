@@ -84,6 +84,9 @@ class UserProfile {
     this.dietaryProfile = const DietaryProfile(),
     this.nutritionSettings = const NutritionSettings(),
     this.scheduleEvents = const [],
+    this.sleepModeEnabled = false,
+    this.sleepModeRecommended = false,
+    this.sleepModeRecommendationReasons = const [],
     this.segmentControlStyle = SegmentControlStyle.minimalTabs,
     this.healthSync = const HealthSync(),
     this.favoriteMeals = const [],
@@ -124,6 +127,9 @@ class UserProfile {
   final DietaryProfile dietaryProfile;
   final NutritionSettings nutritionSettings;
   final List<UserScheduleEvent> scheduleEvents;
+  final bool sleepModeEnabled;
+  final bool sleepModeRecommended;
+  final List<String> sleepModeRecommendationReasons;
   final SegmentControlStyle segmentControlStyle;
   final HealthSync healthSync;
   final List<FavoriteMealProfileItem> favoriteMeals;
@@ -185,6 +191,11 @@ class UserProfile {
                 UserScheduleEvent.fromMap(Map<String, dynamic>.from(event)),
           )
           .toList(),
+      sleepModeEnabled: parseBool(map['sleepModeEnabled']),
+      sleepModeRecommended: parseBool(map['sleepModeRecommended']),
+      sleepModeRecommendationReasons: parseStringList(
+        map['sleepModeRecommendationReasons'],
+      ),
       segmentControlStyle: SegmentControlStyle.fromFirestore(
         map['segmentControlStyle'] as String?,
       ),
@@ -235,6 +246,9 @@ class UserProfile {
     'dietaryProfile': dietaryProfile.toMap(),
     'nutritionSettings': nutritionSettings.toMap(),
     'scheduleEvents': scheduleEvents.map((event) => event.toMap()).toList(),
+    'sleepModeEnabled': sleepModeEnabled,
+    'sleepModeRecommended': sleepModeRecommended,
+    'sleepModeRecommendationReasons': sleepModeRecommendationReasons,
     'segmentControlStyle': segmentControlStyle.firestoreValue,
     'healthSync': healthSync.toMap(),
     'favoriteMeals': favoriteMeals.map((meal) => meal.toMap()).toList(),
@@ -334,6 +348,9 @@ class UserProfile {
     DietaryProfile? dietaryProfile,
     NutritionSettings? nutritionSettings,
     List<UserScheduleEvent>? scheduleEvents,
+    bool? sleepModeEnabled,
+    bool? sleepModeRecommended,
+    List<String>? sleepModeRecommendationReasons,
     SegmentControlStyle? segmentControlStyle,
     HealthSync? healthSync,
     StatsCache? statsCache,
@@ -373,6 +390,10 @@ class UserProfile {
       dietaryProfile: dietaryProfile ?? this.dietaryProfile,
       nutritionSettings: nutritionSettings ?? this.nutritionSettings,
       scheduleEvents: scheduleEvents ?? this.scheduleEvents,
+      sleepModeEnabled: sleepModeEnabled ?? this.sleepModeEnabled,
+      sleepModeRecommended: sleepModeRecommended ?? this.sleepModeRecommended,
+      sleepModeRecommendationReasons:
+          sleepModeRecommendationReasons ?? this.sleepModeRecommendationReasons,
       segmentControlStyle: segmentControlStyle ?? this.segmentControlStyle,
       healthSync: healthSync ?? this.healthSync,
       favoriteMeals: favoriteMeals ?? this.favoriteMeals,

@@ -3,12 +3,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nutrilens/app.dart';
 import 'package:nutrilens/app/app_settings_scope.dart';
 import 'package:nutrilens/app/meal_plan_scope.dart';
+import 'package:nutrilens/app/session_scope.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/data/catalog_seed_data.dart';
 import 'package:nutrilens/features/auth/auth_screen.dart';
 import 'package:nutrilens/features/meals/meals_screen.dart';
+import 'package:nutrilens/features/onboarding/onboarding_flow.dart';
+import 'package:nutrilens/features/profile/account_settings_screen.dart';
 import 'package:nutrilens/features/profile/profile_screen.dart';
 import 'package:nutrilens/features/schedule/schedule_screen.dart';
+import 'package:nutrilens/features/shell/app_shell.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/services/meal_plan_client.dart';
 import 'package:nutrilens/services/in_memory_user_repository.dart';
@@ -49,6 +53,187 @@ void main() {
 
     expect(createCalled, true);
     expect(signInCalled, false);
+  });
+
+  testWidgets('Onboarding recommends and saves Sleep Mode opt-in', (
+    WidgetTester tester,
+  ) async {
+    final repository = InMemoryUserRepository();
+    final account = await repository.signInAnonymously(
+      timezone: 'America/Los_Angeles',
+    );
+
+    await _pumpOnboarding(tester, repository, account.uid);
+
+    await tester.tap(find.text('Get started'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField).first, 'Angela');
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Tennis'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Sleep recovery'), findsOneWidget);
+    expect(find.text('Daily nutrition targets'), findsNothing);
+
+    await tester.tap(find.text('Most days'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Often'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Yes'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Yes'));
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Sleep Mode recommended'));
+    await tester.pumpAndSettle();
+    expect(find.text('Sleep Mode recommended'), findsOneWidget);
+
+    await tester.ensureVisible(find.text('Use Sleep Mode'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Use Sleep Mode'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Daily nutrition targets'), findsOneWidget);
+
+    await tester.tap(find.text('Finish setup'));
+    await tester.pumpAndSettle();
+
+    final profile = await repository.getProfile(account.uid);
+    expect(profile?.sleepModeEnabled, true);
+    expect(profile?.sleepModeRecommended, true);
+    expect(profile?.sleepModeRecommendationReasons, isNotEmpty);
+  });
+
+  testWidgets('Onboarding can skip Sleep Mode after low-need answers', (
+    WidgetTester tester,
+  ) async {
+    final repository = InMemoryUserRepository();
+    final account = await repository.signInAnonymously(
+      timezone: 'America/Los_Angeles',
+    );
+
+    await _pumpOnboarding(tester, repository, account.uid);
+
+    await tester.tap(find.text('Get started'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField).first, 'Angela');
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Tennis'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Rarely').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Rarely').last);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('No'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('No'));
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Sleep Mode is optional'));
+    await tester.pumpAndSettle();
+    expect(find.text('Sleep Mode is optional'), findsOneWidget);
+
+    await tester.ensureVisible(find.text('Skip for now'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Skip for now'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Finish setup'));
+    await tester.pumpAndSettle();
+
+    final profile = await repository.getProfile(account.uid);
+    expect(profile?.sleepModeEnabled, false);
+    expect(profile?.sleepModeRecommended, false);
+    expect(profile?.sleepModeRecommendationReasons, isEmpty);
+  });
+
+  testWidgets('App shell gates Sleep mode by profile preference', (
+    WidgetTester tester,
+  ) async {
+    final disabledRepository = InMemoryUserRepository();
+    final disabledAccount = await disabledRepository.signInAnonymously(
+      timezone: 'America/Los_Angeles',
+    );
+    await disabledRepository.completeOnboarding(
+      uid: disabledAccount.uid,
+      profile: UserProfile.demoAngela(
+        userId: disabledAccount.uid,
+        now: DateTime.now().toUtc(),
+      ),
+    );
+
+    await _pumpAppShell(tester, disabledRepository, disabledAccount.uid);
+    expect(find.text('Meal Tracking'), findsNothing);
+    expect(find.text('Sleep'), findsNothing);
+
+    final enabledRepository = InMemoryUserRepository();
+    final enabledAccount = await enabledRepository.signInAnonymously(
+      timezone: 'America/Los_Angeles',
+    );
+    await enabledRepository.completeOnboarding(
+      uid: enabledAccount.uid,
+      profile: UserProfile.demoAngela(
+        userId: enabledAccount.uid,
+        now: DateTime.now().toUtc(),
+      ).copyWith(sleepModeEnabled: true),
+    );
+
+    await _pumpAppShell(tester, enabledRepository, enabledAccount.uid);
+    expect(find.text('Meal Tracking'), findsOneWidget);
+    expect(find.text('Sleep'), findsOneWidget);
+  });
+
+  testWidgets('Settings hides mode switcher when Sleep Mode is off', (
+    WidgetTester tester,
+  ) async {
+    final repository = InMemoryUserRepository();
+    final account = await repository.signInAnonymously(
+      timezone: 'America/Los_Angeles',
+    );
+    await repository.completeOnboarding(
+      uid: account.uid,
+      profile: UserProfile.demoAngela(
+        userId: account.uid,
+        now: DateTime.now().toUtc(),
+      ),
+    );
+
+    await _pumpAccountSettings(tester, repository, account.uid);
+
+    expect(find.text('Mode switcher'), findsNothing);
+    expect(find.text('Notifications'), findsOneWidget);
+    expect(find.text('Units'), findsOneWidget);
+  });
+
+  testWidgets('Settings shows mode switcher when Sleep Mode is on', (
+    WidgetTester tester,
+  ) async {
+    final repository = InMemoryUserRepository();
+    final account = await repository.signInAnonymously(
+      timezone: 'America/Los_Angeles',
+    );
+    await repository.completeOnboarding(
+      uid: account.uid,
+      profile: UserProfile.demoAngela(
+        userId: account.uid,
+        now: DateTime.now().toUtc(),
+      ).copyWith(sleepModeEnabled: true),
+    );
+
+    await _pumpAccountSettings(tester, repository, account.uid);
+
+    expect(find.text('Mode switcher'), findsOneWidget);
+    expect(find.text('Minimal tabs'), findsOneWidget);
   });
 
   testWidgets('Guest profile create account unlocks profile editing', (
@@ -823,6 +1008,78 @@ class _FakeMealPlanClient implements MealPlanClient {
 
 Finder _mealsScrollable() {
   return find.byType(Scrollable).first;
+}
+
+Future<void> _pumpOnboarding(
+  WidgetTester tester,
+  InMemoryUserRepository repository,
+  String uid,
+) async {
+  await tester.pumpWidget(
+    MealPlanScope(
+      client: _FakeMealPlanClient(),
+      child: UserScope(
+        repository: repository,
+        uid: uid,
+        child: AppSettingsScope(
+          repository: repository,
+          uid: uid,
+          child: MaterialApp(
+            theme: AppTheme.dark,
+            home: const OnboardingFlow(),
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
+Future<void> _pumpAppShell(
+  WidgetTester tester,
+  InMemoryUserRepository repository,
+  String uid,
+) async {
+  await tester.pumpWidget(
+    MealPlanScope(
+      client: _FakeMealPlanClient(),
+      child: UserScope(
+        repository: repository,
+        uid: uid,
+        child: AppSettingsScope(
+          repository: repository,
+          uid: uid,
+          child: MaterialApp(theme: AppTheme.dark, home: const AppShell()),
+        ),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
+Future<void> _pumpAccountSettings(
+  WidgetTester tester,
+  InMemoryUserRepository repository,
+  String uid,
+) async {
+  await tester.pumpWidget(
+    UserScope(
+      repository: repository,
+      uid: uid,
+      child: AppSettingsScope(
+        repository: repository,
+        uid: uid,
+        child: SessionScope(
+          signOut: () async {},
+          child: MaterialApp(
+            theme: AppTheme.dark,
+            home: const AccountSettingsScreen(),
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
 }
 
 class _FailingMealPlanClient implements MealPlanClient {

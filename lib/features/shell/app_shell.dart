@@ -21,6 +21,8 @@ class _AppShellState extends State<AppShell> {
   @override
   Widget build(BuildContext context) {
     final settings = AppSettingsScope.of(context);
+    final sleepModeEnabled = settings.sleepModeEnabled;
+    final appMode = sleepModeEnabled ? _appMode : AppMode.mealTracking;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -28,13 +30,14 @@ class _AppShellState extends State<AppShell> {
         bottom: false,
         child: Column(
           children: [
-            ModeSegmentedControl(
-              mode: _appMode,
-              style: settings.segmentControlStyle,
-              onModeChanged: (mode) => setState(() => _appMode = mode),
-            ),
+            if (sleepModeEnabled)
+              ModeSegmentedControl(
+                mode: appMode,
+                style: settings.segmentControlStyle,
+                onModeChanged: (mode) => setState(() => _appMode = mode),
+              ),
             Expanded(
-              child: _appMode == AppMode.mealTracking
+              child: appMode == AppMode.mealTracking
                   ? MealTrackingShell(
                       selectedIndex: _mealTabIndex,
                       onIndexChanged: (i) => setState(() => _mealTabIndex = i),

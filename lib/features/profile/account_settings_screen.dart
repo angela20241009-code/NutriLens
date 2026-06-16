@@ -260,15 +260,16 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     SettingsSection(
                       title: 'App',
                       children: [
-                        SettingsRow(
-                          label: 'Mode switcher',
-                          value: _modeSwitcherLabel(
-                            appSettings.segmentControlStyle,
+                        if (appSettings.sleepModeEnabled)
+                          SettingsRow(
+                            label: 'Mode switcher',
+                            value: _modeSwitcherLabel(
+                              appSettings.segmentControlStyle,
+                            ),
+                            onTap: _busy || appSettings.saving
+                                ? null
+                                : _showModeSwitcherPicker,
                           ),
-                          onTap: _busy || appSettings.saving
-                              ? null
-                              : _showModeSwitcherPicker,
-                        ),
                         SettingsRow(
                           label: 'Notifications',
                           onTap: _busy
