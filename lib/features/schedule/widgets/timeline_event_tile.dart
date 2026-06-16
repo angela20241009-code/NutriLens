@@ -7,10 +7,12 @@ class TimelineEventTile extends StatelessWidget {
     super.key,
     required this.event,
     required this.isLast,
+    this.onDelete,
   });
 
   final UserScheduleEvent event;
   final bool isLast;
+  final VoidCallback? onDelete;
 
   Color get _accentColor {
     switch (event.type) {
@@ -40,95 +42,102 @@ class TimelineEventTile extends StatelessWidget {
         ? Colors.white
         : AppColors.onLime;
 
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 52,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 18),
-              child: Text(
-                _formatTime(event.startAt),
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textMuted,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: onDelete,
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 52,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 18),
+                  child: Text(
+                    _formatTime(event.startAt),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          SizedBox(
-            width: 20,
-            child: Column(
-              children: [
-                Container(
-                  width: 10,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    color: accent,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: accent.withValues(alpha: 0.5),
-                        blurRadius: 6,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                  ),
-                ),
-                if (!isLast)
-                  Expanded(
-                    child: Container(width: 2, color: AppColors.cardDarker),
-                  ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(bottom: isLast ? 0 : 12),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.cardDark,
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Row(
+              SizedBox(
+                width: 20,
+                child: Column(
                   children: [
                     Container(
-                      width: 48,
-                      height: 48,
+                      width: 10,
+                      height: 10,
                       decoration: BoxDecoration(
                         color: accent,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Icon(_icon, color: iconTextColor, size: 24),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            event.title,
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            event.subtitle ?? '',
-                            style: Theme.of(
-                              context,
-                            ).textTheme.bodyMedium?.copyWith(fontSize: 12),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: accent.withValues(alpha: 0.5),
+                            blurRadius: 6,
+                            spreadRadius: 1,
                           ),
                         ],
                       ),
                     ),
+                    if (!isLast)
+                      Expanded(
+                        child: Container(width: 2, color: AppColors.cardDarker),
+                      ),
                   ],
                 ),
               ),
-            ),
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: isLast ? 0 : 12),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.cardDark,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: accent,
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Icon(_icon, color: iconTextColor, size: 24),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                event.title,
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                event.subtitle ?? '',
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.bodyMedium?.copyWith(fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

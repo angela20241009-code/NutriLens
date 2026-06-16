@@ -4,9 +4,14 @@ import 'package:nutrilens/models/schedule_event.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
 class ScheduleTimeline extends StatelessWidget {
-  const ScheduleTimeline({super.key, required this.events});
+  const ScheduleTimeline({
+    super.key,
+    required this.events,
+    this.onEventTap,
+  });
 
   final List<UserScheduleEvent> events;
+  final ValueChanged<UserScheduleEvent>? onEventTap;
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +36,11 @@ class ScheduleTimeline extends StatelessWidget {
           )
         else
           for (var i = 0; i < events.length; i++)
-            TimelineEventTile(event: events[i], isLast: i == events.length - 1),
+            TimelineEventTile(
+              event: events[i],
+              isLast: i == events.length - 1,
+              onDelete: onEventTap == null ? null : () => onEventTap!(events[i]),
+            ),
       ],
     );
   }

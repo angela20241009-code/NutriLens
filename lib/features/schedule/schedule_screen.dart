@@ -51,6 +51,70 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     });
   }
 
+  Future<bool> _confirmDeleteEvent(UserScheduleEvent event) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Delete event?'),
+          content: Text('Delete "${event.title}" from your schedule?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    return confirmed == true;
+  }
+
+  Future<void> _deleteScheduleEvent(
+    UserScheduleEvent event,
+    UserProfile? profile,
+  ) async {
+    if (profile == null) {
+      return;
+    }
+
+    final confirmed = await _confirmDeleteEvent(event);
+    if (!confirmed || !mounted) {
+      return;
+    }
+
+    final scope = UserScope.of(context);
+    final updatedEvents = profile.scheduleEvents
+        .where((item) => item.eventId != event.eventId)
+        .toList();
+
+    try {
+      await scope.repository.saveProfile(
+        profile.copyWith(scheduleEvents: updatedEvents),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to delete event.')),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _profileFuture = scope.repository.getProfile(scope.uid);
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Event deleted.')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<UserProfile?>(
@@ -94,7 +158,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   TodaysMatchCard(match: match),
                 ],
                 const SizedBox(height: 24),
-                ScheduleTimeline(events: events),
+                ScheduleTimeline(
+                  events: events,
+                  onEventTap: (event) => _deleteScheduleEvent(event, snapshot.data),
+                ),
               ],
             ],
           ),

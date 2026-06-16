@@ -120,11 +120,12 @@ class _MealsScreenState extends State<MealsScreen> {
     required UserProfile profile,
     required DateTime date,
   }) async {
-    final summaryKey = dateKeyFor(date, profile.timezone);
+    final lookupDate = DateUtils.dateOnly(date).add(const Duration(hours: 12));
+    final summaryKey = dateKeyFor(lookupDate, profile.timezone);
     final summary = await repository.getDailySummary(uid, summaryKey);
     final loggedMeals = await repository.getMealsForDay(
       uid,
-      date,
+      lookupDate,
       profile.timezone,
     );
     return _FoodDashboardData(
@@ -347,7 +348,6 @@ class _MealsScreenState extends State<MealsScreen> {
   Widget build(BuildContext context) {
     final plan = _plan;
     final selectedDay = _selectedDay;
-    debugPrint('Meals dashboard count: ${_loggedMeals.length}');
 
     return ColoredBox(
       color: const Color(0xFFF5F4EE),

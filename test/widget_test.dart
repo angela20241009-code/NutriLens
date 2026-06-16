@@ -134,15 +134,20 @@ void main() {
 
     expect(find.text('Meal Plan'), findsOneWidget);
     expect(find.text('Regenerate'), findsOneWidget);
-    expect(find.text('Recovery Oats & Fruit'), findsOneWidget);
-    expect(find.text('Source: Allrecipes'), findsWidgets);
     expect(mealPlanClient.callCount, 2);
 
     await tester.tap(find.text('Regenerate'));
     await tester.pumpAndSettle();
 
     expect(mealPlanClient.callCount, 3);
+    await tester.dragUntilVisible(
+      find.text('Recovery Oats & Fruit'),
+      _mealsScrollable(),
+      const Offset(0, -300),
+      maxIteration: 20,
+    );
     expect(find.text('Recovery Oats & Fruit'), findsOneWidget);
+    expect(find.text('Source: Allrecipes'), findsWidgets);
 
     await tester.tap(find.text('Schedule'));
     await tester.pumpAndSettle();
@@ -578,6 +583,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('2102'), findsOneWidget);
+    await tester.dragUntilVisible(
+      find.text('Power Oats & Berries Bowl'),
+      _mealsScrollable(),
+      const Offset(0, -300),
+      maxIteration: 20,
+    );
     expect(find.text('Power Oats & Berries Bowl'), findsOneWidget);
   });
 
@@ -618,6 +629,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('2090'), findsOneWidget);
+    await tester.dragUntilVisible(
+      find.text('Power Oats & Berries Bowl'),
+      _mealsScrollable(),
+      const Offset(0, -300),
+      maxIteration: 20,
+    );
     expect(find.text('Power Oats & Berries Bowl'), findsOneWidget);
     expect(find.text('Refresh meal'), findsWidgets);
 
@@ -674,6 +691,12 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await tester.dragUntilVisible(
+      find.text('Power Oats & Berries Bowl'),
+      _mealsScrollable(),
+      const Offset(0, -300),
+      maxIteration: 20,
+    );
     final refreshMealAction = find.text('Refresh meal').first;
     await tester.ensureVisible(refreshMealAction);
     await tester.pumpAndSettle();
@@ -796,6 +819,10 @@ class _FakeMealPlanClient implements MealPlanClient {
       ),
     );
   }
+}
+
+Finder _mealsScrollable() {
+  return find.byType(Scrollable).first;
 }
 
 class _FailingMealPlanClient implements MealPlanClient {
