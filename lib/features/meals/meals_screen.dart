@@ -433,6 +433,7 @@ class _MealsScreenState extends State<MealsScreen> {
                     const SizedBox(height: 18),
                     _TodaysFoodDashboard(
                       selectedDate: _selectedDate,
+                      isToday: DateUtils.isSameDay(_selectedDate, _today),
                       targets: _profile?.dailyTargets,
                       summary: _dailySummary,
                       loggedMeals: _loggedMeals,
@@ -476,10 +477,7 @@ class _MealsScreenState extends State<MealsScreen> {
 }
 
 class _FoodDashboardData {
-  const _FoodDashboardData({
-    required this.summary,
-    required this.loggedMeals,
-  });
+  const _FoodDashboardData({required this.summary, required this.loggedMeals});
 
   final DailySummary summary;
   final List<Meal> loggedMeals;
@@ -488,6 +486,7 @@ class _FoodDashboardData {
 class _TodaysFoodDashboard extends StatelessWidget {
   const _TodaysFoodDashboard({
     required this.selectedDate,
+    required this.isToday,
     required this.targets,
     required this.summary,
     required this.loggedMeals,
@@ -495,12 +494,11 @@ class _TodaysFoodDashboard extends StatelessWidget {
   });
 
   final DateTime selectedDate;
+  final bool isToday;
   final DailyTargets? targets;
   final DailySummary? summary;
   final List<Meal> loggedMeals;
   final bool loading;
-
-  bool get _isToday => DateUtils.isSameDay(selectedDate, DateTime.now());
 
   @override
   Widget build(BuildContext context) {
@@ -553,7 +551,7 @@ class _TodaysFoodDashboard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _isToday ? "Today's Food" : 'Food Dashboard',
+                            isToday ? "Today's Food" : 'Food Dashboard',
                             style: const TextStyle(
                               fontSize: 23,
                               height: 1,
