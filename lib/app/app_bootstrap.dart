@@ -1,6 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:nutrilens/firebase_options.dart';
 import 'package:nutrilens/app.dart';
 import 'package:nutrilens/app/app_settings_scope.dart';
 import 'package:nutrilens/app/meal_plan_scope.dart';
@@ -38,9 +37,7 @@ class _AppBootstrapState extends State<AppBootstrap> {
   Future<_BootstrapResult> _initializeApp() async {
     try {
       if (!_firebaseReady) {
-        await Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform,
-        );
+        await Firebase.initializeApp();
         _firebaseReady = true;
       }
       return _restoreFirebaseSession();
