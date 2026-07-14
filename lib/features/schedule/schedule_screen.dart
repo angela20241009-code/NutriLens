@@ -4,7 +4,7 @@ import 'package:nutrilens/features/schedule/create_schedule_event_sheet.dart';
 import 'package:nutrilens/features/schedule/widgets/schedule_header.dart';
 import 'package:nutrilens/features/schedule/widgets/schedule_timeline.dart';
 import 'package:nutrilens/features/schedule/widgets/todays_match_card.dart';
-import 'package:nutrilens/features/schedule/widgets/week_date_selector.dart';
+import 'package:nutrilens/features/schedule/widgets/month_date_selector.dart';
 import 'package:nutrilens/models/models.dart';
 
 class ScheduleScreen extends StatefulWidget {
@@ -121,7 +121,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       future: _profileFuture,
       builder: (context, snapshot) {
         final scheduleEvents = snapshot.data?.scheduleEvents ?? const [];
-        final weekDates = _weekDatesAround(_selectedDate);
         final events = _eventsFor(scheduleEvents, _selectedDate);
         final matches = events.where(
           (event) => event.type == ScheduleEventType.match,
@@ -134,9 +133,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ScheduleHeader(onAddTap: _onAddTap),
-              const SizedBox(height: 20),
-              WeekDateSelector(
-                dates: weekDates,
+              const SizedBox(height: 24),
+              MonthDateSelector(
                 selectedDate: _selectedDate,
                 hasEventsOn: (date) =>
                     _eventsFor(scheduleEvents, date).isNotEmpty,
@@ -171,11 +169,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   }
 
   DateTime _dayKey(DateTime date) => DateTime(date.year, date.month, date.day);
-
-  List<DateTime> _weekDatesAround(DateTime selectedDate) {
-    final start = _dayKey(selectedDate).subtract(const Duration(days: 1));
-    return List.generate(6, (index) => start.add(Duration(days: index)));
-  }
 
   List<UserScheduleEvent> _eventsFor(
     List<UserScheduleEvent> events,

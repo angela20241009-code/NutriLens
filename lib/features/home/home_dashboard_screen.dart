@@ -23,11 +23,13 @@ class HomeDashboardScreen extends StatefulWidget {
     DateTime Function()? now,
     required this.onProfileTap,
     required this.onMealsTap,
+    this.onScanTap,
   }) : _nowProvider = now;
 
   final DateTime Function()? _nowProvider;
   final VoidCallback onProfileTap;
   final VoidCallback onMealsTap;
+  final VoidCallback? onScanTap;
 
   @override
   State<HomeDashboardScreen> createState() => _HomeDashboardScreenState();
@@ -211,7 +213,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                 const SizedBox(height: 20),
                 MealCaptureCard(
                   onManualTap: _openLogMealSheet,
-                  onScanTap: () => _showComingSoon('Scan'),
+                  onScanTap: widget.onScanTap ?? () => _showComingSoon('Scan'),
                   onFavoritesTap: _openFavoriteMealSheet,
                 ),
                 const SizedBox(height: 16),

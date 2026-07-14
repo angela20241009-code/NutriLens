@@ -77,6 +77,76 @@ void main() {
     expect(restored.sleepModeRecommendationReasons, isEmpty);
   });
 
+  test('UserProfile round-trips display preferences', () {
+    final profile = UserProfile.demoAngela(userId: 'abc123', now: now).copyWith(
+      accessibilityModeEnabled: true,
+      textScale: AppTextScale.large,
+      themePalette: AppThemePalette.ocean,
+    );
+
+    final restored = UserProfile.fromMap(profile.toMap(), userId: 'abc123');
+
+    expect(restored.accessibilityModeEnabled, true);
+    expect(restored.textScale, AppTextScale.large);
+    expect(restored.themePalette, AppThemePalette.ocean);
+  });
+
+  test('UserProfile defaults display preferences', () {
+    final map = UserProfile.demoAngela(userId: 'abc123', now: now).toMap()
+      ..remove('accessibilityModeEnabled')
+      ..remove('textScale')
+      ..remove('themePalette');
+
+    final restored = UserProfile.fromMap(map, userId: 'abc123');
+
+    expect(restored.accessibilityModeEnabled, false);
+    expect(restored.textScale, AppTextScale.medium);
+    expect(restored.themePalette, AppThemePalette.classic);
+  });
+
+  test('UserProfile round-trips usual sleep schedule times', () {
+    final profile = UserProfile.demoAngela(
+      userId: 'abc123',
+      now: now,
+    ).copyWith(usualBedtimeMinutes: 22 * 60 + 30, usualWakeTimeMinutes: 390);
+
+    final restored = UserProfile.fromMap(profile.toMap(), userId: 'abc123');
+
+    expect(restored.usualBedtimeMinutes, 1350);
+    expect(restored.usualWakeTimeMinutes, 390);
+  });
+
+  test('UserProfile defaults missing usual sleep schedule times to null', () {
+    final map = UserProfile.demoAngela(userId: 'abc123', now: now).toMap()
+      ..remove('usualBedtimeMinutes')
+      ..remove('usualWakeTimeMinutes');
+
+    final restored = UserProfile.fromMap(map, userId: 'abc123');
+
+    expect(restored.usualBedtimeMinutes, isNull);
+    expect(restored.usualWakeTimeMinutes, isNull);
+  });
+
+  test('UserProfile round-trips custom bedtime preset items', () {
+    final profile = UserProfile.demoAngela(
+      userId: 'abc123',
+      now: now,
+    ).copyWith(customBedtimePresetMinutes: [1260, 1325, 1380]);
+
+    final restored = UserProfile.fromMap(profile.toMap(), userId: 'abc123');
+
+    expect(restored.customBedtimePresetMinutes, [1260, 1325, 1380]);
+  });
+
+  test('UserProfile defaults missing custom bedtime items to empty', () {
+    final map = UserProfile.demoAngela(userId: 'abc123', now: now).toMap()
+      ..remove('customBedtimePresetMinutes');
+
+    final restored = UserProfile.fromMap(map, userId: 'abc123');
+
+    expect(restored.customBedtimePresetMinutes, isEmpty);
+  });
+
   test('UserProfile defaults missing schedule events to empty', () {
     final map = UserProfile.demoAngela(userId: 'abc123', now: now).toMap()
       ..remove('scheduleEvents');

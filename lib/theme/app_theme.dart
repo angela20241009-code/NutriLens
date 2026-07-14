@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:nutrilens/models/app_theme_palette.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
 abstract final class AppTheme {
   static const _radius = 24.0;
 
-  static ThemeData get dark {
+  static ThemeData get dark => build();
+
+  static ThemeData build({AppThemePalette palette = AppThemePalette.classic}) {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
       scaffoldBackgroundColor: AppColors.background,
-      colorScheme: const ColorScheme.dark(
+      colorScheme: ColorScheme.dark(
         surface: AppColors.background,
         onSurface: AppColors.textPrimary,
-        primary: AppColors.lime,
-        onPrimary: AppColors.onLime,
-        secondary: AppColors.electricBlue,
-        tertiary: AppColors.sleepAccent,
+        primary: palette.primary,
+        onPrimary: palette.onPrimary,
+        secondary: palette.secondary,
+        tertiary: palette.sleepAccent,
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.background,

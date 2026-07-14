@@ -1,21 +1,47 @@
 import 'package:flutter/material.dart';
+import 'package:nutrilens/app/app_settings_scope.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/features/onboarding/onboarding_flow.dart';
 import 'package:nutrilens/features/shell/app_shell.dart';
 import 'package:nutrilens/models/user_account.dart';
 import 'package:nutrilens/theme/app_theme.dart';
+import 'package:nutrilens/theme/theme_palette_scope.dart';
 
 class NutriLensApp extends StatelessWidget {
   const NutriLensApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'NutriLens',
-      theme: AppTheme.dark,
-      themeMode: ThemeMode.dark,
-      debugShowCheckedModeBanner: false,
-      home: const _AppEntryGate(),
+    final settings = AppSettingsScope.of(context);
+
+    return ListenableBuilder(
+      listenable: settings,
+      builder: (context, _) {
+        final palette = settings.themePalette;
+        final textScale = settings.textScale.scaleFactor;
+        final accessibility = settings.accessibilityModeEnabled;
+
+        return MaterialApp(
+          title: 'NutriLens',
+          theme: AppTheme.build(palette: palette),
+          themeMode: ThemeMode.dark,
+          debugShowCheckedModeBanner: false,
+          builder: (context, child) {
+            final mediaQuery = MediaQuery.of(context);
+            return ThemePaletteScope(
+              palette: palette,
+              child: MediaQuery(
+                data: mediaQuery.copyWith(
+                  textScaler: TextScaler.linear(textScale),
+                  boldText: accessibility || mediaQuery.boldText,
+                ),
+                child: child ?? const SizedBox.shrink(),
+              ),
+            );
+          },
+          home: const _AppEntryGate(),
+        );
+      },
     );
   }
 }

@@ -13,6 +13,7 @@ import 'package:nutrilens/features/profile/account_settings_screen.dart';
 import 'package:nutrilens/features/profile/profile_screen.dart';
 import 'package:nutrilens/features/schedule/schedule_screen.dart';
 import 'package:nutrilens/features/shell/app_shell.dart';
+import 'package:nutrilens/features/sleep/sleep_dashboard_screen.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/services/meal_plan_client.dart';
 import 'package:nutrilens/services/in_memory_user_repository.dart';
@@ -256,6 +257,62 @@ void main() {
     expect(find.text('Mode switcher'), findsNothing);
   });
 
+  testWidgets(
+    'Sleep dashboard asks for schedule when sleep times are missing',
+    (WidgetTester tester) async {
+      final repository = InMemoryUserRepository();
+      final account = await repository.signInAnonymously(
+        timezone: 'America/Los_Angeles',
+      );
+      await repository.completeOnboarding(
+        uid: account.uid,
+        profile: UserProfile.demoAngela(
+          userId: account.uid,
+          now: DateTime.now().toUtc(),
+        ).copyWith(sleepModeEnabled: true),
+      );
+
+      await _pumpSleepDashboard(tester, repository, account.uid);
+
+      expect(find.text('Set your sleep schedule'), findsOneWidget);
+      expect(find.textContaining('track sleep statistics'), findsOneWidget);
+      expect(find.text('BEDTIME'), findsOneWidget);
+      expect(find.text('WAKE TIME'), findsOneWidget);
+      expect(find.text('Save sleep schedule'), findsOneWidget);
+    },
+  );
+
+  testWidgets('Sleep dashboard shows wake-time planning for saved schedule', (
+    WidgetTester tester,
+  ) async {
+    final repository = InMemoryUserRepository();
+    final account = await repository.signInAnonymously(
+      timezone: 'America/Los_Angeles',
+    );
+    await repository.completeOnboarding(
+      uid: account.uid,
+      profile:
+          UserProfile.demoAngela(
+            userId: account.uid,
+            now: DateTime.now().toUtc(),
+          ).copyWith(
+            sleepModeEnabled: true,
+            usualBedtimeMinutes: 22 * 60 + 30,
+            usualWakeTimeMinutes: 6 * 60 + 30,
+          ),
+    );
+
+    await _pumpSleepDashboard(tester, repository, account.uid);
+
+    expect(find.text('Wake-time planning'), findsOneWidget);
+    expect(find.text('Target sleep'), findsOneWidget);
+    expect(find.text('8h'), findsOneWidget);
+    expect(find.text('Tonight bedtime'), findsOneWidget);
+    expect(find.text('10:30 PM'), findsWidgets);
+    expect(find.text('Wake time'), findsWidgets);
+    expect(find.text('6:30 AM'), findsWidgets);
+  });
+
   testWidgets('Guest profile create account unlocks profile editing', (
     WidgetTester tester,
   ) async {
@@ -338,10 +395,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Meal Plan'), findsOneWidget);
-    expect(find.text('Regenerate'), findsOneWidget);
+    expect(find.text('New Meal Plan'), findsOneWidget);
     expect(mealPlanClient.callCount, 2);
 
-    await tester.tap(find.text('Regenerate'));
+    await tester.tap(find.text('New Meal Plan'));
     await tester.pumpAndSettle();
 
     expect(mealPlanClient.callCount, 3);
@@ -1096,6 +1153,24 @@ Future<void> _pumpAccountSettings(
             home: const AccountSettingsScreen(),
           ),
         ),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
+Future<void> _pumpSleepDashboard(
+  WidgetTester tester,
+  InMemoryUserRepository repository,
+  String uid,
+) async {
+  await tester.pumpWidget(
+    UserScope(
+      repository: repository,
+      uid: uid,
+      child: MaterialApp(
+        theme: AppTheme.dark,
+        home: const SleepDashboardScreen(),
       ),
     ),
   );

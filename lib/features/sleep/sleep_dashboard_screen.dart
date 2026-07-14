@@ -140,10 +140,7 @@ class _SleepDashboardScreenState extends State<SleepDashboardScreen> {
                     onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
-                          builder: (_) => const Scaffold(
-                            backgroundColor: AppColors.background,
-                            body: SafeArea(child: SleepLogScreen()),
-                          ),
+                          builder: (_) => const _SleepSchedulePage(),
                         ),
                       );
                     },
@@ -192,6 +189,36 @@ class _SleepDashboardScreenState extends State<SleepDashboardScreen> {
       return 'Good Afternoon';
     }
     return 'Good Evening';
+  }
+}
+
+class _SleepSchedulePage extends StatelessWidget {
+  const _SleepSchedulePage();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: _SleepScheduleAppBar(),
+      body: SafeArea(top: false, child: SleepLogScreen()),
+    );
+  }
+}
+
+class _SleepScheduleAppBar extends StatelessWidget
+    implements PreferredSizeWidget {
+  const _SleepScheduleAppBar();
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      backgroundColor: AppColors.background,
+      foregroundColor: AppColors.textPrimary,
+      title: const Text('Sleep Schedule'),
+    );
   }
 }
 

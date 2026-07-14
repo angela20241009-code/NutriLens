@@ -1,3 +1,5 @@
+import 'package:nutrilens/models/app_text_scale.dart';
+import 'package:nutrilens/models/app_theme_palette.dart';
 import 'package:nutrilens/models/daily_targets.dart';
 import 'package:nutrilens/models/dietary_profile.dart';
 import 'package:nutrilens/models/firestore_map.dart';
@@ -87,7 +89,13 @@ class UserProfile {
     this.sleepModeEnabled = false,
     this.sleepModeRecommended = false,
     this.sleepModeRecommendationReasons = const [],
+    this.usualBedtimeMinutes,
+    this.usualWakeTimeMinutes,
+    this.customBedtimePresetMinutes = const [],
     this.segmentControlStyle = SegmentControlStyle.minimalTabs,
+    this.accessibilityModeEnabled = false,
+    this.textScale = AppTextScale.medium,
+    this.themePalette = AppThemePalette.classic,
     this.healthSync = const HealthSync(),
     this.favoriteMeals = const [],
     this.statsCache,
@@ -130,7 +138,13 @@ class UserProfile {
   final bool sleepModeEnabled;
   final bool sleepModeRecommended;
   final List<String> sleepModeRecommendationReasons;
+  final int? usualBedtimeMinutes;
+  final int? usualWakeTimeMinutes;
+  final List<int> customBedtimePresetMinutes;
   final SegmentControlStyle segmentControlStyle;
+  final bool accessibilityModeEnabled;
+  final AppTextScale textScale;
+  final AppThemePalette themePalette;
   final HealthSync healthSync;
   final List<FavoriteMealProfileItem> favoriteMeals;
   final StatsCache? statsCache;
@@ -196,8 +210,18 @@ class UserProfile {
       sleepModeRecommendationReasons: parseStringList(
         map['sleepModeRecommendationReasons'],
       ),
+      usualBedtimeMinutes: parseInt(map['usualBedtimeMinutes']),
+      usualWakeTimeMinutes: parseInt(map['usualWakeTimeMinutes']),
+      customBedtimePresetMinutes: _parseIntList(
+        map['customBedtimePresetMinutes'],
+      ),
       segmentControlStyle: SegmentControlStyle.fromFirestore(
         map['segmentControlStyle'] as String?,
+      ),
+      accessibilityModeEnabled: parseBool(map['accessibilityModeEnabled']),
+      textScale: AppTextScale.fromFirestore(map['textScale'] as String?),
+      themePalette: AppThemePalette.fromFirestore(
+        map['themePalette'] as String?,
       ),
       healthSync: HealthSync.fromMap(
         map['healthSync'] != null
@@ -249,7 +273,13 @@ class UserProfile {
     'sleepModeEnabled': sleepModeEnabled,
     'sleepModeRecommended': sleepModeRecommended,
     'sleepModeRecommendationReasons': sleepModeRecommendationReasons,
+    'usualBedtimeMinutes': usualBedtimeMinutes,
+    'usualWakeTimeMinutes': usualWakeTimeMinutes,
+    'customBedtimePresetMinutes': customBedtimePresetMinutes,
     'segmentControlStyle': segmentControlStyle.firestoreValue,
+    'accessibilityModeEnabled': accessibilityModeEnabled,
+    'textScale': textScale.firestoreValue,
+    'themePalette': themePalette.firestoreValue,
     'healthSync': healthSync.toMap(),
     'favoriteMeals': favoriteMeals.map((meal) => meal.toMap()).toList(),
     'statsCache': statsCache?.toMap(),
@@ -351,7 +381,13 @@ class UserProfile {
     bool? sleepModeEnabled,
     bool? sleepModeRecommended,
     List<String>? sleepModeRecommendationReasons,
+    int? usualBedtimeMinutes,
+    int? usualWakeTimeMinutes,
+    List<int>? customBedtimePresetMinutes,
     SegmentControlStyle? segmentControlStyle,
+    bool? accessibilityModeEnabled,
+    AppTextScale? textScale,
+    AppThemePalette? themePalette,
     HealthSync? healthSync,
     StatsCache? statsCache,
     DateTime? statsCacheUpdatedAt,
@@ -394,7 +430,15 @@ class UserProfile {
       sleepModeRecommended: sleepModeRecommended ?? this.sleepModeRecommended,
       sleepModeRecommendationReasons:
           sleepModeRecommendationReasons ?? this.sleepModeRecommendationReasons,
+      usualBedtimeMinutes: usualBedtimeMinutes ?? this.usualBedtimeMinutes,
+      usualWakeTimeMinutes: usualWakeTimeMinutes ?? this.usualWakeTimeMinutes,
+      customBedtimePresetMinutes:
+          customBedtimePresetMinutes ?? this.customBedtimePresetMinutes,
       segmentControlStyle: segmentControlStyle ?? this.segmentControlStyle,
+      accessibilityModeEnabled:
+          accessibilityModeEnabled ?? this.accessibilityModeEnabled,
+      textScale: textScale ?? this.textScale,
+      themePalette: themePalette ?? this.themePalette,
       healthSync: healthSync ?? this.healthSync,
       favoriteMeals: favoriteMeals ?? this.favoriteMeals,
       statsCache: statsCache ?? this.statsCache,
@@ -421,4 +465,12 @@ List<FavoriteMealProfileItem> _parseFavoriteMeals(dynamic value) {
       )
       .where((meal) => meal.name.trim().isNotEmpty)
       .toList(growable: false);
+}
+
+List<int> _parseIntList(dynamic value) {
+  if (value is! List) {
+    return const [];
+  }
+
+  return value.map(parseInt).whereType<int>().toList(growable: false);
 }

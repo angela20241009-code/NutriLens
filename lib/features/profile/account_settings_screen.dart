@@ -214,6 +214,138 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     }
   }
 
+  Future<void> _showTextScalePicker() async {
+    final settings = AppSettingsScope.of(context);
+    final selected = await showModalBottomSheet<AppTextScale>(
+      context: context,
+      backgroundColor: AppColors.cardDark,
+      showDragHandle: true,
+      builder: (context) {
+        final current = settings.textScale;
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Text size',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+              ),
+              for (final scale in AppTextScale.values)
+                _ModeSwitcherOption(
+                  title: scale.label,
+                  subtitle: switch (scale) {
+                    AppTextScale.small => 'Compact labels and body text.',
+                    AppTextScale.medium => 'Default app text size.',
+                    AppTextScale.large => 'Easier to read on most screens.',
+                    AppTextScale.extraLarge => 'Maximum readability.',
+                  },
+                  selected: current == scale,
+                  onTap: () => Navigator.of(context).pop(scale),
+                ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (selected == null || selected == settings.textScale) {
+      return;
+    }
+
+    try {
+      await settings.updateTextScale(selected);
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Unable to update text size: $error')),
+      );
+    }
+  }
+
+  Future<void> _showThemePalettePicker() async {
+    final settings = AppSettingsScope.of(context);
+    final selected = await showModalBottomSheet<AppThemePalette>(
+      context: context,
+      backgroundColor: AppColors.cardDark,
+      showDragHandle: true,
+      builder: (context) {
+        final current = settings.themePalette;
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Theme colors',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+              ),
+              for (final palette in AppThemePalette.values)
+                _ModeSwitcherOption(
+                  title: palette.label,
+                  subtitle: 'Accent and highlight colors across the app.',
+                  selected: current == palette,
+                  leading: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: palette.primary,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white24),
+                    ),
+                  ),
+                  onTap: () => Navigator.of(context).pop(palette),
+                ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (selected == null || selected == settings.themePalette) {
+      return;
+    }
+
+    try {
+      await settings.updateThemePalette(selected);
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Unable to update theme colors: $error')),
+      );
+    }
+  }
+
+  Future<void> _toggleAccessibilityMode(bool enabled) async {
+    final settings = AppSettingsScope.of(context);
+    try {
+      await settings.updateAccessibilityModeEnabled(enabled);
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Unable to update accessibility mode: $error')),
+      );
+    }
+  }
+
   Future<void> _toggleSleepMode(bool enabled) async {
     final settings = AppSettingsScope.of(context);
     try {
@@ -267,6 +399,43 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           labelColor: AppColors.orange,
                           showDivider: false,
                           onTap: _busy ? null : _signOut,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    SettingsSection(
+                      title: 'Display',
+                      children: [
+                        SettingsRow(
+                          label: 'Accessibility mode',
+                          trailing: Switch(
+                            value: appSettings.accessibilityModeEnabled,
+                            activeThumbColor: AppColors.lime,
+                            onChanged: _busy || appSettings.saving
+                                ? null
+                                : _toggleAccessibilityMode,
+                          ),
+                          showChevron: false,
+                          onTap: _busy || appSettings.saving
+                              ? null
+                              : () => _toggleAccessibilityMode(
+                                  !appSettings.accessibilityModeEnabled,
+                                ),
+                        ),
+                        SettingsRow(
+                          label: 'Text size',
+                          value: appSettings.textScale.label,
+                          onTap: _busy || appSettings.saving
+                              ? null
+                              : _showTextScalePicker,
+                        ),
+                        SettingsRow(
+                          label: 'Theme colors',
+                          value: appSettings.themePalette.label,
+                          showDivider: false,
+                          onTap: _busy || appSettings.saving
+                              ? null
+                              : _showThemePalettePicker,
                         ),
                       ],
                     ),
@@ -339,17 +508,20 @@ class _ModeSwitcherOption extends StatelessWidget {
     required this.subtitle,
     required this.selected,
     required this.onTap,
+    this.leading,
   });
 
   final String title;
   final String subtitle;
   final bool selected;
   final VoidCallback onTap;
+  final Widget? leading;
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
       onTap: onTap,
+      leading: leading,
       title: Text(title),
       subtitle: Text(subtitle),
       trailing: selected

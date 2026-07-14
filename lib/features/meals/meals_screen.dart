@@ -400,7 +400,7 @@ class _MealsScreenState extends State<MealsScreen> {
                                 ),
                               )
                             : const Icon(Icons.auto_awesome_rounded),
-                        label: const Text('Regenerate'),
+                        label: const Text('New Meal Plan'),
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.lime,
                           foregroundColor: AppColors.onLime,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:nutrilens/theme/app_colors.dart';
+import 'package:nutrilens/app/app_settings_scope.dart';
+import 'package:nutrilens/theme/theme_palette_scope.dart';
 
 class CustomBottomNav extends StatelessWidget {
   const CustomBottomNav({
@@ -11,12 +12,20 @@ class CustomBottomNav extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onTap;
 
-  static const _navHeight = 72.0;
-  static const _fabSize = 56.0;
+  static const _navHeight = 80.0;
+  static const _fabSize = 60.0;
 
   @override
   Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.paddingOf(context).bottom;
+    final settings = AppSettingsScope.maybeOf(context);
+    final accessibility = settings?.accessibilityModeEnabled ?? false;
+    final iconSize = accessibility ? 32.0 : 28.0;
+    final labelSize = accessibility ? 13.0 : 12.0;
+    final fabIconSize = accessibility ? 32.0 : 30.0;
+    final primary = ThemePaletteScope.primary(context);
+    final onPrimary = ThemePaletteScope.onPrimary(context);
+    final inactive = ThemePaletteScope.navInactive(context);
 
     return SizedBox(
       height: _navHeight + bottomPadding + 12,
@@ -26,10 +35,15 @@ class CustomBottomNav extends StatelessWidget {
         children: [
           Container(
             height: _navHeight + bottomPadding,
-            decoration: const BoxDecoration(
-              color: AppColors.background,
+            decoration: BoxDecoration(
+              color: Theme.of(context).scaffoldBackgroundColor,
               border: Border(
-                top: BorderSide(color: AppColors.cardDark, width: 0.5),
+                top: BorderSide(
+                  color: accessibility
+                      ? Colors.white.withValues(alpha: 0.24)
+                      : Colors.white.withValues(alpha: 0.12),
+                  width: accessibility ? 1.0 : 0.5,
+                ),
               ),
             ),
             child: Padding(
@@ -41,53 +55,76 @@ class CustomBottomNav extends StatelessWidget {
                     label: 'Home',
                     selected: selectedIndex == 0,
                     onTap: () => onTap(0),
+                    iconSize: iconSize,
+                    labelSize: labelSize,
+                    activeColor: primary,
+                    inactiveColor: inactive,
+                    boldLabels: accessibility,
                   ),
                   _NavItem(
                     icon: Icons.restaurant_rounded,
                     label: 'Meals',
                     selected: selectedIndex == 1,
                     onTap: () => onTap(1),
+                    iconSize: iconSize,
+                    labelSize: labelSize,
+                    activeColor: primary,
+                    inactiveColor: inactive,
+                    boldLabels: accessibility,
                   ),
-                  const SizedBox(width: _fabSize + 16),
+                  SizedBox(width: _fabSize + 16),
                   _NavItem(
                     icon: Icons.calendar_today_rounded,
                     label: 'Schedule',
                     selected: selectedIndex == 3,
                     onTap: () => onTap(3),
+                    iconSize: iconSize,
+                    labelSize: labelSize,
+                    activeColor: primary,
+                    inactiveColor: inactive,
+                    boldLabels: accessibility,
                   ),
                   _NavItem(
                     icon: Icons.person_rounded,
                     label: 'Profile',
                     selected: selectedIndex == 4,
                     onTap: () => onTap(4),
+                    iconSize: iconSize,
+                    labelSize: labelSize,
+                    activeColor: primary,
+                    inactiveColor: inactive,
+                    boldLabels: accessibility,
                   ),
                 ],
               ),
             ),
           ),
           Positioned(
-            bottom: bottomPadding + 20,
+            bottom: bottomPadding + 22,
             child: GestureDetector(
               onTap: () => onTap(2),
               child: Container(
                 width: _fabSize,
                 height: _fabSize,
                 decoration: BoxDecoration(
-                  color: AppColors.lime,
-                  borderRadius: BorderRadius.circular(16),
+                  color: primary,
+                  borderRadius: BorderRadius.circular(18),
+                  border: accessibility
+                      ? Border.all(color: Colors.white, width: 2)
+                      : null,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.lime.withValues(alpha: 0.45),
-                      blurRadius: 20,
-                      spreadRadius: 2,
+                      color: primary.withValues(alpha: 0.5),
+                      blurRadius: accessibility ? 24 : 20,
+                      spreadRadius: accessibility ? 3 : 2,
                       offset: const Offset(0, 4),
                     ),
                   ],
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.camera_alt_rounded,
-                  color: AppColors.onLime,
-                  size: 26,
+                  color: onPrimary,
+                  size: fabIconSize,
                 ),
               ),
             ),
@@ -104,16 +141,26 @@ class _NavItem extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    required this.iconSize,
+    required this.labelSize,
+    required this.activeColor,
+    required this.inactiveColor,
+    required this.boldLabels,
   });
 
   final IconData icon;
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final double iconSize;
+  final double labelSize;
+  final Color activeColor;
+  final Color inactiveColor;
+  final bool boldLabels;
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? AppColors.lime : AppColors.navInactive;
+    final color = selected ? activeColor : inactiveColor;
 
     return Expanded(
       child: InkWell(
@@ -121,13 +168,13 @@ class _NavItem extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color, size: 24),
+            Icon(icon, color: color, size: iconSize),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
+                fontSize: labelSize,
+                fontWeight: boldLabels ? FontWeight.w700 : FontWeight.w600,
                 color: color,
               ),
             ),

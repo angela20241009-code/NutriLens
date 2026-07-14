@@ -14,11 +14,17 @@ class AppSettingsController extends ChangeNotifier {
   UserProfile? _profile;
   SegmentControlStyle _segmentControlStyle = SegmentControlStyle.minimalTabs;
   bool _sleepModeEnabled = false;
+  bool _accessibilityModeEnabled = false;
+  AppTextScale _textScale = AppTextScale.medium;
+  AppThemePalette _themePalette = AppThemePalette.classic;
   bool _loading = true;
   bool _saving = false;
 
   SegmentControlStyle get segmentControlStyle => _segmentControlStyle;
   bool get sleepModeEnabled => _sleepModeEnabled;
+  bool get accessibilityModeEnabled => _accessibilityModeEnabled;
+  AppTextScale get textScale => _textScale;
+  AppThemePalette get themePalette => _themePalette;
   bool get loading => _loading;
   bool get saving => _saving;
 
@@ -31,6 +37,9 @@ class AppSettingsController extends ChangeNotifier {
     _profile = null;
     _segmentControlStyle = SegmentControlStyle.minimalTabs;
     _sleepModeEnabled = false;
+    _accessibilityModeEnabled = false;
+    _textScale = AppTextScale.medium;
+    _themePalette = AppThemePalette.classic;
     _loading = true;
     notifyListeners();
     await load();
@@ -43,6 +52,9 @@ class AppSettingsController extends ChangeNotifier {
       _segmentControlStyle =
           profile?.segmentControlStyle ?? SegmentControlStyle.minimalTabs;
       _sleepModeEnabled = profile?.sleepModeEnabled ?? false;
+      _accessibilityModeEnabled = profile?.accessibilityModeEnabled ?? false;
+      _textScale = profile?.textScale ?? AppTextScale.medium;
+      _themePalette = profile?.themePalette ?? AppThemePalette.classic;
     } finally {
       _loading = false;
       notifyListeners();
@@ -102,6 +114,73 @@ class AppSettingsController extends ChangeNotifier {
     } catch (_) {
       _profile = previousProfile;
       _sleepModeEnabled = previousEnabled;
+      rethrow;
+    } finally {
+      _saving = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> updateAccessibilityModeEnabled(bool enabled) async {
+    await _updateProfileField(
+      apply: () => _accessibilityModeEnabled = enabled,
+      rollback: (previous) => _accessibilityModeEnabled = previous,
+      read: () => _accessibilityModeEnabled,
+      write: (profile, value) =>
+          profile.copyWith(accessibilityModeEnabled: value),
+      value: enabled,
+    );
+  }
+
+  Future<void> updateTextScale(AppTextScale scale) async {
+    await _updateProfileField(
+      apply: () => _textScale = scale,
+      rollback: (previous) => _textScale = previous,
+      read: () => _textScale,
+      write: (profile, value) => profile.copyWith(textScale: value),
+      value: scale,
+    );
+  }
+
+  Future<void> updateThemePalette(AppThemePalette palette) async {
+    await _updateProfileField(
+      apply: () => _themePalette = palette,
+      rollback: (previous) => _themePalette = previous,
+      read: () => _themePalette,
+      write: (profile, value) => profile.copyWith(themePalette: value),
+      value: palette,
+    );
+  }
+
+  Future<void> _updateProfileField<T>({
+    required VoidCallback apply,
+    required void Function(T previous) rollback,
+    required T Function() read,
+    required UserProfile Function(UserProfile profile, T value) write,
+    required T value,
+  }) async {
+    if (value == read() || _saving) {
+      return;
+    }
+
+    final previous = read();
+    final previousProfile = _profile;
+    apply();
+    _saving = true;
+    notifyListeners();
+
+    try {
+      final profile = _profile ?? await _repository.getProfile(_uid);
+      if (profile == null) {
+        throw StateError('User profile is unavailable.');
+      }
+
+      final updated = write(profile, value);
+      await _repository.saveProfile(updated);
+      _profile = updated;
+    } catch (_) {
+      _profile = previousProfile;
+      rollback(previous);
       rethrow;
     } finally {
       _saving = false;
