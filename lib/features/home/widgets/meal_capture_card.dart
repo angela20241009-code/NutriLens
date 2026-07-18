@@ -97,31 +97,36 @@ class MealCaptureCard extends StatelessWidget {
                     ),
                     SizedBox(height: isCompact ? 18 : 22),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _CaptureAction(
-                          label: 'Manual',
-                          icon: Icons.add,
-                          color: AppColors.lime,
-                          foregroundColor: AppColors.onLime,
-                          size: actionSize,
-                          onTap: onManualTap,
+                        Expanded(
+                          child: _CaptureAction(
+                            label: 'Manual',
+                            icon: Icons.add,
+                            color: AppColors.lime,
+                            foregroundColor: AppColors.onLime,
+                            size: actionSize,
+                            onTap: onManualTap,
+                          ),
                         ),
-                        _CaptureAction(
-                          label: 'Scan',
-                          icon: Icons.photo_camera_outlined,
-                          color: Colors.white.withValues(alpha: 0.08),
-                          foregroundColor: AppColors.textMuted,
-                          size: actionSize,
-                          onTap: onScanTap,
+                        Expanded(
+                          child: _CaptureAction(
+                            label: 'Scan',
+                            icon: Icons.photo_camera_outlined,
+                            color: Colors.white.withValues(alpha: 0.08),
+                            foregroundColor: AppColors.textMuted,
+                            size: actionSize,
+                            onTap: onScanTap,
+                          ),
                         ),
-                        _CaptureAction(
-                          label: 'Favorites',
-                          icon: Icons.favorite_border_rounded,
-                          color: Colors.white.withValues(alpha: 0.08),
-                          foregroundColor: AppColors.orange,
-                          size: actionSize,
-                          onTap: onFavoritesTap,
+                        Expanded(
+                          child: _CaptureAction(
+                            label: 'Favorites',
+                            icon: Icons.favorite_border_rounded,
+                            color: Colors.white.withValues(alpha: 0.08),
+                            foregroundColor: AppColors.orange,
+                            size: actionSize,
+                            onTap: onFavoritesTap,
+                          ),
                         ),
                       ],
                     ),
@@ -214,29 +219,28 @@ class _CaptureAction extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(40),
-      child: SizedBox(
-        width: size + 8,
-        child: Column(
-          children: [
-            Container(
-              width: size,
-              height: size,
-              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-              child: Icon(icon, size: size * 0.53, color: foregroundColor),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            child: Icon(icon, size: size * 0.53, color: foregroundColor),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: foregroundColor,
+              fontSize: size < 60 ? 12 : 14,
+              fontWeight: FontWeight.w700,
             ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: foregroundColor,
-                fontSize: size < 60 ? 12 : 14,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

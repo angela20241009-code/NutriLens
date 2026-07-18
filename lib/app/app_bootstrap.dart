@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:nutrilens/app.dart';
 import 'package:nutrilens/app/app_settings_scope.dart';
+import 'package:nutrilens/app/meal_analysis_scope.dart';
 import 'package:nutrilens/app/meal_plan_scope.dart';
 import 'package:nutrilens/app/session_scope.dart';
 import 'package:nutrilens/app/user_scope.dart';
@@ -11,7 +12,9 @@ import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/services/edamam_meal_plan_client.dart';
 import 'package:nutrilens/services/firestore_user_repository.dart';
 import 'package:nutrilens/services/in_memory_user_repository.dart';
+import 'package:nutrilens/services/meal_analysis_client.dart';
 import 'package:nutrilens/services/meal_plan_client.dart';
+import 'package:nutrilens/services/openai_meal_analysis_client.dart';
 import 'package:nutrilens/services/user_repository.dart';
 import 'package:nutrilens/theme/app_theme.dart';
 
@@ -25,12 +28,14 @@ class AppBootstrap extends StatefulWidget {
 class _AppBootstrapState extends State<AppBootstrap> {
   late Future<_BootstrapResult> _bootstrapFuture;
   late final MealPlanClient _mealPlanClient;
+  late final MealAnalysisClient _mealAnalysisClient;
   bool _firebaseReady = false;
 
   @override
   void initState() {
     super.initState();
     _mealPlanClient = EdamamMealPlanClient.fromEnvironment();
+    _mealAnalysisClient = OpenAiMealAnalysisClient.fromEnvironment();
     _bootstrapFuture = _initializeApp();
   }
 
@@ -165,17 +170,20 @@ class _AppBootstrapState extends State<AppBootstrap> {
           );
         }
 
-        return MealPlanScope(
-          client: _mealPlanClient,
-          child: SessionScope(
-            signOut: () => _signOutAndRestart(result.repository),
-            child: UserScope(
-              repository: result.repository,
-              uid: result.uid!,
-              child: AppSettingsScope(
+        return MealAnalysisScope(
+          client: _mealAnalysisClient,
+          child: MealPlanScope(
+            client: _mealPlanClient,
+            child: SessionScope(
+              signOut: () => _signOutAndRestart(result.repository),
+              child: UserScope(
                 repository: result.repository,
                 uid: result.uid!,
-                child: const NutriLensApp(),
+                child: AppSettingsScope(
+                  repository: result.repository,
+                  uid: result.uid!,
+                  child: const NutriLensApp(),
+                ),
               ),
             ),
           ),

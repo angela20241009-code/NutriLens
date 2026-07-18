@@ -2,7 +2,10 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:nutrilens/app/meal_analysis_scope.dart';
 import 'package:nutrilens/features/meals/log_meal_sheet.dart';
+import 'package:nutrilens/features/scan/scan_result_sheet.dart';
+import 'package:nutrilens/services/meal_analysis_client.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 import 'package:nutrilens/theme/theme_palette_scope.dart';
 
@@ -17,9 +20,75 @@ class _ScanScreenState extends State<ScanScreen> {
   final _picker = ImagePicker();
   XFile? _selectedImage;
   bool _picking = false;
+  bool _analyzing = false;
+
+  String _mimeTypeForPath(String path) {
+    final lower = path.toLowerCase();
+    if (lower.endsWith('.png')) {
+      return 'image/png';
+    }
+    if (lower.endsWith('.webp')) {
+      return 'image/webp';
+    }
+    if (lower.endsWith('.heic') || lower.endsWith('.heif')) {
+      return 'image/heic';
+    }
+    return 'image/jpeg';
+  }
+
+  Future<void> _analyzeSelectedImage() async {
+    final image = _selectedImage;
+    if (image == null || _analyzing) {
+      return;
+    }
+
+    setState(() => _analyzing = true);
+
+    try {
+      final bytes = await image.readAsBytes();
+      final analysis = await MealAnalysisScope.of(context).analyzeMealPhoto(
+        imageBytes: bytes,
+        mimeType: _mimeTypeForPath(image.path),
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      final saved = await ScanResultSheet.show(context, analysis: analysis);
+      if (!mounted) {
+        return;
+      }
+
+      if (saved == true) {
+        setState(() => _selectedImage = null);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Meal saved to your log')),
+        );
+      }
+    } on MealAnalysisException catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message)),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Unable to analyze meal photo: $error')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _analyzing = false);
+      }
+    }
+  }
 
   Future<void> _pickImage(ImageSource source) async {
-    if (_picking) {
+    if (_picking || _analyzing) {
       return;
     }
 
@@ -34,9 +103,14 @@ class _ScanScreenState extends State<ScanScreen> {
       if (!mounted) {
         return;
       }
+
       setState(() {
         _selectedImage = picked;
       });
+
+      if (picked != null) {
+        await _analyzeSelectedImage();
+      }
     } catch (error) {
       if (!mounted) {
         return;
@@ -85,6 +159,8 @@ class _ScanScreenState extends State<ScanScreen> {
     }
   }
 
+  bool get _isBusy => _picking || _analyzing;
+
   @override
   Widget build(BuildContext context) {
     final accent = ThemePaletteScope.primary(context);
@@ -99,7 +175,7 @@ class _ScanScreenState extends State<ScanScreen> {
             const SizedBox(height: 20),
             Expanded(
               child: GestureDetector(
-                onTap: _picking ? null : _showSourcePicker,
+                onTap: _isBusy ? null : _showSourcePicker,
                 child: Container(
                   decoration: BoxDecoration(
                     color: AppColors.cardDark,
@@ -107,8 +183,11 @@ class _ScanScreenState extends State<ScanScreen> {
                     border: Border.all(color: AppColors.cardDarker),
                   ),
                   clipBehavior: Clip.antiAlias,
-                  child: _selectedImage == null
-                      ? Column(
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      if (_selectedImage == null)
+                        Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
@@ -138,36 +217,54 @@ class _ScanScreenState extends State<ScanScreen> {
                             ),
                           ],
                         )
-                      : Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            Image.file(
-                              File(_selectedImage!.path),
-                              fit: BoxFit.cover,
-                            ),
-                            Positioned(
-                              right: 12,
-                              top: 12,
-                              child: IconButton.filled(
-                                style: IconButton.styleFrom(
-                                  backgroundColor: Colors.black54,
-                                ),
-                                onPressed: _picking
-                                    ? null
-                                    : () => setState(() {
-                                        _selectedImage = null;
-                                      }),
-                                icon: const Icon(Icons.close_rounded),
-                              ),
-                            ),
-                          ],
+                      else
+                        Image.file(
+                          File(_selectedImage!.path),
+                          fit: BoxFit.cover,
                         ),
+                      if (_selectedImage != null && !_analyzing)
+                        Positioned(
+                          right: 12,
+                          top: 12,
+                          child: IconButton.filled(
+                            style: IconButton.styleFrom(
+                              backgroundColor: Colors.black54,
+                            ),
+                            onPressed: _isBusy
+                                ? null
+                                : () => setState(() {
+                                    _selectedImage = null;
+                                  }),
+                            icon: const Icon(Icons.close_rounded),
+                          ),
+                        ),
+                      if (_analyzing)
+                        Container(
+                          color: Colors.black54,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              CircularProgressIndicator(color: accent),
+                              const SizedBox(height: 16),
+                              const Text(
+                                'Analyzing meal...',
+                                style: TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: 16),
             FilledButton.icon(
-              onPressed: _picking ? null : _showSourcePicker,
+              onPressed: _isBusy ? null : _showSourcePicker,
               icon: _picking
                   ? const SizedBox(
                       width: 18,
@@ -186,7 +283,7 @@ class _ScanScreenState extends State<ScanScreen> {
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
-              onPressed: () => LogMealSheet.show(context),
+              onPressed: _isBusy ? null : () => LogMealSheet.show(context),
               icon: const Icon(Icons.edit_outlined),
               label: const Text('Log manually'),
               style: OutlinedButton.styleFrom(

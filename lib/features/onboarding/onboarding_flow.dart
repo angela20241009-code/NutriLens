@@ -85,16 +85,19 @@ class OnboardingFlow extends StatefulWidget {
 }
 
 class _OnboardingFlowState extends State<OnboardingFlow> {
-  static const _totalSteps = 6;
+  static const _totalSteps = 7;
 
   final _pageController = PageController();
   final _nameFormKey = GlobalKey<FormState>();
   final _schoolFormKey = GlobalKey<FormState>();
+  final _bodyFormKey = GlobalKey<FormState>();
   final _goalsFormKey = GlobalKey<FormState>();
 
   final _nameController = TextEditingController();
   final _schoolController = TextEditingController();
   final _graduationController = TextEditingController();
+  final _heightController = TextEditingController();
+  final _weightController = TextEditingController();
   final _caloriesController = TextEditingController();
   final _proteinController = TextEditingController();
   final _carbsController = TextEditingController();
@@ -103,6 +106,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   String? _selectedSportId;
   String? _selectedSportName;
   String? _lastDerivedSportId;
+  double? _lastDerivedHeightCm;
+  double? _lastDerivedWeightKg;
   String? _wakeTiredAnswer;
   String? _bedtimeConsistencyAnswer;
   String? _sleepReminderAnswer;
@@ -125,6 +130,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     _nameController.dispose();
     _schoolController.dispose();
     _graduationController.dispose();
+    _heightController.dispose();
+    _weightController.dispose();
     _caloriesController.dispose();
     _proteinController.dispose();
     _carbsController.dispose();
@@ -142,12 +149,37 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   void _applySportDefaults(String sportId) {
-    final targets = _sportTargets[sportId] ?? _sportTargets['other']!;
-    _caloriesController.text = targets.caloriesKcal.toString();
-    _proteinController.text = targets.proteinG.toString();
-    _carbsController.text = targets.carbsG.toString();
-    _fatsController.text = targets.fatsG.toString();
+    _applyBodyAdjustedTargets(
+      sportId: sportId,
+      heightCm: double.tryParse(_heightController.text.trim()) ?? 170,
+      weightKg: double.tryParse(_weightController.text.trim()) ?? 70,
+    );
+  }
+
+  void _applyBodyAdjustedTargets({
+    required String sportId,
+    required double heightCm,
+    required double weightKg,
+  }) {
+    final sport = _sportTargets[sportId] ?? _sportTargets['other']!;
+    final weightFactor = (weightKg / 70).clamp(0.85, 1.30);
+
+    final calories = (sport.caloriesKcal * weightFactor).round();
+    final protein = (weightKg * 1.8).round().clamp(80, 250);
+    final fats = (weightKg * 0.9).round().clamp(45, 120);
+    var remainingCalories = calories - (protein * 4) - (fats * 9);
+    if (remainingCalories < 400) {
+      remainingCalories = 400;
+    }
+    final carbs = (remainingCalories / 4).round().clamp(150, 700);
+
+    _caloriesController.text = calories.toString();
+    _proteinController.text = protein.toString();
+    _carbsController.text = carbs.toString();
+    _fatsController.text = fats.toString();
     _lastDerivedSportId = sportId;
+    _lastDerivedHeightCm = heightCm;
+    _lastDerivedWeightKg = weightKg;
   }
 
   Future<void> _goToPage(int page) async {
@@ -159,10 +191,18 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     if (!mounted) return;
     setState(() => _currentPage = page);
 
-    if (page == 5 &&
+    if (page == 6 &&
         _selectedSportId != null &&
-        _selectedSportId != _lastDerivedSportId) {
-      _applySportDefaults(_selectedSportId!);
+        (_selectedSportId != _lastDerivedSportId ||
+            _lastDerivedHeightCm !=
+                double.tryParse(_heightController.text.trim()) ||
+            _lastDerivedWeightKg !=
+                double.tryParse(_weightController.text.trim()))) {
+      _applyBodyAdjustedTargets(
+        sportId: _selectedSportId!,
+        heightCm: double.parse(_heightController.text.trim()),
+        weightKg: double.parse(_weightController.text.trim()),
+      );
     }
   }
 
@@ -187,6 +227,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     final graduationYear = graduationText.isEmpty
         ? null
         : int.parse(graduationText);
+    final heightCm = double.parse(_heightController.text.trim());
+    final weightKg = double.parse(_weightController.text.trim());
 
     final profile =
         UserProfile.emptyShell(
@@ -201,6 +243,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           graduationYear: graduationYear,
           primarySportId: sportId,
           primarySportName: _selectedSportName!,
+          heightCm: heightCm,
+          weightKg: weightKg,
           dailyTargets: DailyTargets(
             caloriesKcal: int.parse(_caloriesController.text.trim()),
             proteinG: int.parse(_proteinController.text.trim()),
@@ -282,6 +326,19 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     }
     setState(() => _sleepModeEnabled = enableSleepMode);
     _goToPage(5);
+  }
+
+  void _continueFromBodyStep() {
+    if (!_bodyFormKey.currentState!.validate() || _selectedSportId == null) {
+      return;
+    }
+
+    _applyBodyAdjustedTargets(
+      sportId: _selectedSportId!,
+      heightCm: double.parse(_heightController.text.trim()),
+      weightKg: double.parse(_weightController.text.trim()),
+    );
+    _goToPage(6);
   }
 
   @override
@@ -386,6 +443,20 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
             ),
             _OnboardingStepShell(
               currentStep: 6,
+              totalSteps: _totalSteps,
+              showProgress: true,
+              showBack: true,
+              onBack: _goBack,
+              child: _BodyMetricsStep(
+                formKey: _bodyFormKey,
+                heightController: _heightController,
+                weightController: _weightController,
+                onContinue: _continueFromBodyStep,
+                primaryButtonStyle: _primaryButtonStyle,
+              ),
+            ),
+            _OnboardingStepShell(
+              currentStep: 7,
               totalSteps: _totalSteps,
               showProgress: true,
               showBack: true,
@@ -933,6 +1004,92 @@ class _SleepRecommendationCard extends StatelessWidget {
   }
 }
 
+class _BodyMetricsStep extends StatelessWidget {
+  const _BodyMetricsStep({
+    required this.formKey,
+    required this.heightController,
+    required this.weightController,
+    required this.onContinue,
+    required this.primaryButtonStyle,
+  });
+
+  final GlobalKey<FormState> formKey;
+  final TextEditingController heightController;
+  final TextEditingController weightController;
+  final VoidCallback onContinue;
+  final ButtonStyle primaryButtonStyle;
+
+  String? _positiveNumberValidator(String? value) {
+    final trimmed = value?.trim() ?? '';
+    if (trimmed.isEmpty) return 'Required';
+    final parsed = double.tryParse(trimmed);
+    if (parsed == null || parsed <= 0) return 'Enter a positive number';
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      key: formKey,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Your body metrics',
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'We use height and weight to estimate your daily nutrition targets.',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 24),
+                    ProfileTextField(
+                      key: const Key('onboarding_height_cm'),
+                      label: 'HEIGHT (CM)',
+                      controller: heightController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      validator: _positiveNumberValidator,
+                    ),
+                    const SizedBox(height: 16),
+                    ProfileTextField(
+                      key: const Key('onboarding_weight_kg'),
+                      label: 'WEIGHT (KG)',
+                      controller: weightController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      validator: _positiveNumberValidator,
+                    ),
+                    const Spacer(),
+                    SizedBox(
+                      height: 52,
+                      child: FilledButton(
+                        onPressed: onContinue,
+                        style: primaryButtonStyle,
+                        child: const Text('Continue'),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
 class _GoalsStep extends StatelessWidget {
   const _GoalsStep({
     required this.formKey,
@@ -966,59 +1123,72 @@ class _GoalsStep extends StatelessWidget {
   Widget build(BuildContext context) {
     return Form(
       key: formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'Daily nutrition targets',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'We pre-filled these from your sport. You can adjust.',
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          const SizedBox(height: 24),
-          ProfileTextField(
-            label: 'CALORIES (KCAL)',
-            controller: caloriesController,
-            keyboardType: TextInputType.number,
-            validator: _positiveIntValidator,
-          ),
-          const SizedBox(height: 16),
-          ProfileTextField(
-            label: 'PROTEIN (G)',
-            controller: proteinController,
-            keyboardType: TextInputType.number,
-            validator: _positiveIntValidator,
-          ),
-          const SizedBox(height: 16),
-          ProfileTextField(
-            label: 'CARBS (G)',
-            controller: carbsController,
-            keyboardType: TextInputType.number,
-            validator: _positiveIntValidator,
-          ),
-          const SizedBox(height: 16),
-          ProfileTextField(
-            label: 'FATS (G)',
-            controller: fatsController,
-            keyboardType: TextInputType.number,
-            validator: _positiveIntValidator,
-          ),
-          const Spacer(),
-          SizedBox(
-            height: 52,
-            child: FilledButton(
-              onPressed: saving ? null : onFinish,
-              style: primaryButtonStyle,
-              child: saving
-                  ? const CircularProgressIndicator(color: AppColors.onLime)
-                  : const Text('Finish setup'),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Daily nutrition targets',
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'We estimated these from your sport, height, and weight. You can adjust.',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 24),
+                    ProfileTextField(
+                      label: 'CALORIES (KCAL)',
+                      controller: caloriesController,
+                      keyboardType: TextInputType.number,
+                      validator: _positiveIntValidator,
+                    ),
+                    const SizedBox(height: 16),
+                    ProfileTextField(
+                      label: 'PROTEIN (G)',
+                      controller: proteinController,
+                      keyboardType: TextInputType.number,
+                      validator: _positiveIntValidator,
+                    ),
+                    const SizedBox(height: 16),
+                    ProfileTextField(
+                      label: 'CARBS (G)',
+                      controller: carbsController,
+                      keyboardType: TextInputType.number,
+                      validator: _positiveIntValidator,
+                    ),
+                    const SizedBox(height: 16),
+                    ProfileTextField(
+                      label: 'FATS (G)',
+                      controller: fatsController,
+                      keyboardType: TextInputType.number,
+                      validator: _positiveIntValidator,
+                    ),
+                    const Spacer(),
+                    SizedBox(
+                      height: 52,
+                      child: FilledButton(
+                        onPressed: saving ? null : onFinish,
+                        style: primaryButtonStyle,
+                        child: saving
+                            ? const CircularProgressIndicator(
+                                color: AppColors.onLime,
+                              )
+                            : const Text('Finish setup'),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
             ),
-          ),
-          const SizedBox(height: 24),
-        ],
+          );
+        },
       ),
     );
   }

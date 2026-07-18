@@ -99,6 +99,8 @@ void main() {
     await tester.tap(find.text('Use Sleep Mode'));
     await tester.pumpAndSettle();
 
+    await _completeOnboardingBodyStep(tester);
+
     expect(find.text('Daily nutrition targets'), findsOneWidget);
 
     await tester.tap(find.text('Finish setup'));
@@ -108,6 +110,8 @@ void main() {
     expect(profile?.sleepModeEnabled, true);
     expect(profile?.sleepModeRecommended, true);
     expect(profile?.sleepModeRecommendationReasons, isNotEmpty);
+    expect(profile?.heightCm, 175);
+    expect(profile?.weightKg, 70);
   });
 
   testWidgets('Onboarding can skip Sleep Mode after low-need answers', (
@@ -149,6 +153,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Skip for now'));
     await tester.pumpAndSettle();
+    await _completeOnboardingBodyStep(tester);
     await tester.tap(find.text('Finish setup'));
     await tester.pumpAndSettle();
 
@@ -156,6 +161,8 @@ void main() {
     expect(profile?.sleepModeEnabled, false);
     expect(profile?.sleepModeRecommended, false);
     expect(profile?.sleepModeRecommendationReasons, isEmpty);
+    expect(profile?.heightCm, 175);
+    expect(profile?.weightKg, 70);
   });
 
   testWidgets('App shell gates Sleep mode by profile preference', (
@@ -1085,6 +1092,14 @@ class _FakeMealPlanClient implements MealPlanClient {
 
 Finder _mealsScrollable() {
   return find.byType(Scrollable).first;
+}
+
+Future<void> _completeOnboardingBodyStep(WidgetTester tester) async {
+  expect(find.text('Your body metrics'), findsOneWidget);
+  await tester.enterText(find.byKey(const Key('onboarding_height_cm')), '175');
+  await tester.enterText(find.byKey(const Key('onboarding_weight_kg')), '70');
+  await tester.tap(find.text('Continue'));
+  await tester.pumpAndSettle();
 }
 
 Future<void> _pumpOnboarding(

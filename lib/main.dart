@@ -5,7 +5,7 @@ import 'package:timezone/data/latest.dart' as tz;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: '.env');
+  await dotenv.load(fileName: 'assets/.env');
   tz.initializeTimeZones();
   runApp(const AppBootstrap());
 }
