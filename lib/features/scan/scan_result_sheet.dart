@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nutrilens/app/meal_log_refresh_scope.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/features/profile/widgets/profile_text_field.dart';
 import 'package:nutrilens/models/meal_analysis_result.dart';
@@ -109,6 +110,7 @@ class _ScanResultSheetState extends State<ScanResultSheet> {
 
     try {
       await scope.repository.logMeal(scope.uid, meal, profile.timezone);
+      MealLogRefreshScope.maybeOf(context)?.requestRefresh();
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } catch (error) {
@@ -198,6 +200,7 @@ class _ScanResultSheetState extends State<ScanResultSheet> {
                       label: 'Meal name',
                       controller: _nameController,
                       validator: _requiredText,
+                      limeBorder: true,
                     ),
                     const SizedBox(height: 16),
                     ProfileTextField(
@@ -205,6 +208,7 @@ class _ScanResultSheetState extends State<ScanResultSheet> {
                       controller: _caloriesController,
                       keyboardType: TextInputType.number,
                       validator: _requiredNumber,
+                      limeBorder: true,
                     ),
                     const SizedBox(height: 16),
                     Row(
@@ -215,6 +219,7 @@ class _ScanResultSheetState extends State<ScanResultSheet> {
                             controller: _proteinController,
                             keyboardType: TextInputType.number,
                             validator: _requiredNumber,
+                            limeBorder: true,
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -224,6 +229,7 @@ class _ScanResultSheetState extends State<ScanResultSheet> {
                             controller: _carbsController,
                             keyboardType: TextInputType.number,
                             validator: _requiredNumber,
+                            limeBorder: true,
                           ),
                         ),
                       ],
@@ -234,6 +240,7 @@ class _ScanResultSheetState extends State<ScanResultSheet> {
                       controller: _fatsController,
                       keyboardType: TextInputType.number,
                       validator: _requiredNumber,
+                      limeBorder: true,
                     ),
                     if (profileError != null || _error != null) ...[
                       const SizedBox(height: 16),

@@ -64,6 +64,21 @@ abstract class UserRepository {
   /// ordered by [Meal.loggedAt] ascending.
   Future<List<Meal>> getMealsForDay(String uid, DateTime date, String timezone);
 
+  /// Returns up to [limit] most recently logged meals for [uid].
+  Future<List<Meal>> getRecentMeals(
+    String uid, {
+    required int limit,
+    required String timezone,
+  });
+
+  /// Returns date keys (`yyyy-MM-dd`) with at least one logged meal in the
+  /// inclusive [startDateKey, endDateKey] range.
+  Future<Set<String>> getMealDateKeysInRange(
+    String uid, {
+    required String startDateKey,
+    required String endDateKey,
+  });
+
   // ── Daily summaries ───────────────────────────────────────────────────────
 
   /// Returns the [DailySummary] for [uid] on [dateKey] (`yyyy-MM-dd`),

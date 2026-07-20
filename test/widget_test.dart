@@ -11,7 +11,11 @@ import 'package:nutrilens/features/meals/meals_screen.dart';
 import 'package:nutrilens/features/onboarding/onboarding_flow.dart';
 import 'package:nutrilens/features/profile/account_settings_screen.dart';
 import 'package:nutrilens/features/profile/profile_screen.dart';
+import 'package:nutrilens/features/scan/scan_previous_meals_sheet.dart';
 import 'package:nutrilens/features/schedule/schedule_screen.dart';
+import 'package:nutrilens/features/schedule/schedule_view_filter.dart';
+import 'package:nutrilens/features/schedule/widgets/month_date_selector.dart';
+import 'package:nutrilens/features/schedule/widgets/week_date_selector.dart';
 import 'package:nutrilens/features/shell/app_shell.dart';
 import 'package:nutrilens/features/sleep/sleep_dashboard_screen.dart';
 import 'package:nutrilens/models/models.dart';
@@ -30,9 +34,9 @@ void main() {
       MaterialApp(
         theme: AppTheme.dark,
         home: AuthScreen(
-          onCreateAccount: (_, _) async => createCalled = true,
+          onCreateAccount: (_, _, __) async => createCalled = true,
           onSignIn: (_, _) async => signInCalled = true,
-          onContinueAsGuest: () async {},
+          onContinueAsGuest: (_) async {},
         ),
       ),
     );
@@ -49,7 +53,9 @@ void main() {
       find.widgetWithText(TextFormField, 'Password'),
       'secret123',
     );
-    await tester.tap(find.text('Create account'));
+    await tester.ensureVisible(find.widgetWithText(FilledButton, 'Create account'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Create account'));
     await tester.pump();
 
     expect(createCalled, true);
@@ -77,6 +83,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
+
+    await _completeOnboardingMealPrefsStep(tester);
 
     expect(find.text('Sleep recovery'), findsOneWidget);
     expect(find.text('Daily nutrition targets'), findsNothing);
@@ -135,6 +143,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
+
+    await _completeOnboardingMealPrefsStep(tester);
 
     await tester.tap(find.text('Rarely').first);
     await tester.pumpAndSettle();
@@ -422,9 +432,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Schedule'), findsWidgets);
-    expect(find.text('Train · Match · Fuel'), findsOneWidget);
+    expect(find.text('This week'), findsOneWidget);
     expect(find.text('Timeline'), findsOneWidget);
-    expect(find.text('No events scheduled for this day.'), findsOneWidget);
+    expect(find.text('No events or logged meals for this day.'), findsOneWidget);
     expect(find.text("Today's Match"), findsNothing);
     expect(find.text('Conference Finals'), findsNothing);
   });
@@ -535,9 +545,248 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('No events scheduled for this day.'), findsOneWidget);
+    expect(find.text('No events or logged meals for this day.'), findsOneWidget);
     expect(find.text('Home athlete vs Rivera'), findsNothing);
     expect(find.text('Conference Finals'), findsNothing);
+  });
+
+  testWidgets('Schedule tab shows logged meals on the selected day', (
+    WidgetTester tester,
+  ) async {
+    final repository = InMemoryUserRepository();
+    final account = await repository.signInAnonymously(
+      timezone: 'America/Los_Angeles',
+    );
+    await repository.completeOnboarding(
+      uid: account.uid,
+      profile: UserProfile.demoAngela(
+        userId: account.uid,
+        now: DateTime.now().toUtc(),
+      ),
+    );
+
+    final today = DateUtils.dateOnly(DateTime.now());
+    await repository.logMeal(
+      account.uid,
+      Meal(
+        name: 'Post-practice bowl',
+        nutrition: const NutritionEntry(
+          caloriesKcal: 620,
+          proteinG: 42,
+          carbsG: 58,
+          fatsG: 18,
+        ),
+        source: MealSource.manual,
+        loggedAt: today.add(const Duration(hours: 13)).toUtc(),
+      ),
+      'America/Los_Angeles',
+    );
+
+    await tester.pumpWidget(
+      UserScope(
+        repository: repository,
+        uid: account.uid,
+        child: MaterialApp(
+          theme: AppTheme.dark,
+          home: const Scaffold(body: ScheduleScreen()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Post-practice bowl'), findsOneWidget);
+    expect(find.text('620 kcal · 42g protein'), findsOneWidget);
+    expect(find.text('Logged meals'), findsWidgets);
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(SegmentedButton<ScheduleViewFilter>),
+        matching: find.text('Events'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Post-practice bowl'), findsNothing);
+    expect(find.text('No events scheduled for this day.'), findsOneWidget);
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(SegmentedButton<ScheduleViewFilter>),
+        matching: find.text('Logged meals'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Post-practice bowl'), findsOneWidget);
+  });
+
+  testWidgets('Previous meals sheet shows at most ten recent meals', (
+    WidgetTester tester,
+  ) async {
+    final repository = InMemoryUserRepository();
+    final account = await repository.signInAnonymously(
+      timezone: 'America/Los_Angeles',
+    );
+    await repository.completeOnboarding(
+      uid: account.uid,
+      profile: UserProfile.demoAngela(
+        userId: account.uid,
+        now: DateTime.now().toUtc(),
+      ),
+    );
+
+    final now = DateTime.now().toUtc();
+    for (var i = 0; i < 12; i++) {
+      await repository.logMeal(
+        account.uid,
+        Meal(
+          name: 'Meal $i',
+          nutrition: const NutritionEntry(
+            caloriesKcal: 500,
+            proteinG: 30,
+            carbsG: 40,
+            fatsG: 15,
+          ),
+          source: MealSource.manual,
+          loggedAt: now.subtract(Duration(hours: i)),
+        ),
+        'America/Los_Angeles',
+      );
+    }
+
+    final recent = await repository.getRecentMeals(
+      account.uid,
+      limit: 10,
+      timezone: 'America/Los_Angeles',
+    );
+    expect(recent, hasLength(10));
+    expect(recent.first.name, 'Meal 0');
+    expect(recent.last.name, 'Meal 9');
+  });
+
+  testWidgets('Previous meals sheet quick-adds a meal on tap', (
+    WidgetTester tester,
+  ) async {
+    final repository = InMemoryUserRepository();
+    final account = await repository.signInAnonymously(
+      timezone: 'America/Los_Angeles',
+    );
+    await repository.completeOnboarding(
+      uid: account.uid,
+      profile: UserProfile.demoAngela(
+        userId: account.uid,
+        now: DateTime.now().toUtc(),
+      ),
+    );
+
+    await repository.logMeal(
+      account.uid,
+      Meal(
+        name: 'Turkey rice bowl',
+        nutrition: const NutritionEntry(
+          caloriesKcal: 540,
+          proteinG: 36,
+          carbsG: 52,
+          fatsG: 14,
+        ),
+        source: MealSource.manual,
+        loggedAt: DateTime.now().toUtc(),
+      ),
+      'America/Los_Angeles',
+    );
+
+    await tester.pumpWidget(
+      UserScope(
+        repository: repository,
+        uid: account.uid,
+        child: MaterialApp(
+          theme: AppTheme.dark,
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => FilledButton(
+                onPressed: () => ScanPreviousMealsSheet.open(context),
+                child: const Text('Open previous meals'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Open previous meals'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Turkey rice bowl'), findsOneWidget);
+    await tester.tap(find.text('Turkey rice bowl'));
+    await tester.pumpAndSettle();
+
+    final recent = await repository.getRecentMeals(
+      account.uid,
+      limit: 10,
+      timezone: 'America/Los_Angeles',
+    );
+    expect(recent.where((meal) => meal.name == 'Turkey rice bowl'), hasLength(2));
+  });
+
+  testWidgets('Schedule tab toggles between week and month calendar', (
+    WidgetTester tester,
+  ) async {
+    final repository = InMemoryUserRepository();
+    final account = await repository.signInAnonymously(
+      timezone: 'America/Los_Angeles',
+    );
+    await repository.completeOnboarding(
+      uid: account.uid,
+      profile: UserProfile.demoAngela(
+        userId: account.uid,
+        now: DateTime.now().toUtc(),
+      ),
+    );
+
+    await tester.pumpWidget(
+      UserScope(
+        repository: repository,
+        uid: account.uid,
+        child: MaterialApp(
+          theme: AppTheme.dark,
+          home: const Scaffold(body: ScheduleScreen()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final now = DateTime.now();
+    const monthNames = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    final monthLabel = monthNames[now.month - 1];
+
+    expect(find.text('This week'), findsOneWidget);
+    expect(find.byType(WeekDateSelector), findsOneWidget);
+
+    await tester.tap(find.text(monthLabel));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Full month'), findsOneWidget);
+    expect(find.byType(MonthDateSelector), findsOneWidget);
+
+    await tester.tap(find.text('$monthLabel ${now.year}'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('This week'), findsOneWidget);
+    expect(find.byType(WeekDateSelector), findsOneWidget);
   });
 
   testWidgets('Schedule tab renders profile schedule events by selected day', (
@@ -596,7 +845,20 @@ void main() {
     expect(find.text('3H BEFORE Big Carbs'), findsOneWidget);
     expect(find.text('Recovery Stretch'), findsNothing);
 
-    await tester.tap(find.text('${tomorrow.day}').first);
+    await tester.ensureVisible(
+      find.byKey(
+        Key(
+          'calendar_date_${tomorrow.year}_${tomorrow.month}_${tomorrow.day}',
+        ),
+      ),
+    );
+    await tester.tap(
+      find.byKey(
+        Key(
+          'calendar_date_${tomorrow.year}_${tomorrow.month}_${tomorrow.day}',
+        ),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Recovery Stretch'), findsOneWidget);
@@ -692,7 +954,20 @@ void main() {
     final tomorrow = DateUtils.dateOnly(
       DateTime.now(),
     ).add(const Duration(days: 1));
-    await tester.tap(find.text('${tomorrow.day}').first);
+    await tester.ensureVisible(
+      find.byKey(
+        Key(
+          'calendar_date_${tomorrow.year}_${tomorrow.month}_${tomorrow.day}',
+        ),
+      ),
+    );
+    await tester.tap(
+      find.byKey(
+        Key(
+          'calendar_date_${tomorrow.year}_${tomorrow.month}_${tomorrow.day}',
+        ),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Serve practice'), findsNothing);
@@ -1092,6 +1367,16 @@ class _FakeMealPlanClient implements MealPlanClient {
 
 Finder _mealsScrollable() {
   return find.byType(Scrollable).first;
+}
+
+Future<void> _completeOnboardingMealPrefsStep(WidgetTester tester) async {
+  expect(find.text('Meal preferences'), findsOneWidget);
+  await tester.ensureVisible(find.text('Meal preferences'));
+  await tester.pumpAndSettle();
+  final continueButton = find.widgetWithText(FilledButton, 'Continue');
+  await tester.ensureVisible(continueButton.last);
+  await tester.tap(continueButton.last);
+  await tester.pumpAndSettle();
 }
 
 Future<void> _completeOnboardingBodyStep(WidgetTester tester) async {

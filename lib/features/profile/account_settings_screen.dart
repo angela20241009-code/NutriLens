@@ -1,11 +1,13 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:nutrilens/app/app_settings_scope.dart';
+import 'package:nutrilens/app/meal_plan_refresh_scope.dart';
 import 'package:nutrilens/app/session_scope.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/features/auth/auth_screen.dart';
 import 'package:nutrilens/features/profile/link_email_dialog.dart';
 import 'package:nutrilens/features/profile/sign_out_dialog.dart';
+import 'package:nutrilens/features/profile/meal_preferences_form.dart';
 import 'package:nutrilens/features/profile/widgets/profile_text_field.dart';
 import 'package:nutrilens/features/profile/widgets/settings_section.dart';
 import 'package:nutrilens/models/models.dart';
@@ -42,6 +44,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   // Diet controllers
   final _allergensController = TextEditingController();
   final _restrictionsController = TextEditingController();
+  final _otherStyleController = TextEditingController();
+  final _selectedStyles = <String>{};
+  bool _othersSelected = false;
 
   // Dropdown state
   String? _genderValue;
@@ -116,6 +121,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     _sleepHoursController.dispose();
     _allergensController.dispose();
     _restrictionsController.dispose();
+    _otherStyleController.dispose();
     super.dispose();
   }
 
@@ -153,6 +159,12 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
       _allergensController.text = p.dietaryProfile.allergens.join('\n');
       _restrictionsController.text = p.dietaryProfile.restrictions.join('\n');
+      populateMealStyleFormState(
+        preferences: p.dietaryProfile.preferences,
+        selectedStyles: _selectedStyles,
+        otherStyleController: _otherStyleController,
+        setOthersSelected: (selected) => _othersSelected = selected,
+      );
 
       _genderValue = p.sex;
       _activityLevelValue = p.activityLevel;
@@ -174,6 +186,14 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     setState(() => _saving = true);
 
     try {
+      final previousDietary = _profile!.dietaryProfile;
+      final nextDietary = dietaryProfileFromForm(
+        selectedStyles: _selectedStyles,
+        allergensText: _allergensController.text,
+        restrictionsText: _restrictionsController.text,
+        otherStyleText: _otherStyleController.text,
+        othersSelected: _othersSelected,
+      );
       final updated = _profile!.copyWith(
         displayName: _displayNameController.text.trim(),
         phoneNumber: _phoneController.text.trim().isEmpty
@@ -205,13 +225,19 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
               _profile!.dailyTargets.sleepHours,
           source: DailyTargetsSource.manual,
         ),
-        dietaryProfile: _profile!.dietaryProfile.copyWith(
-          allergens: _splitList(_allergensController.text),
-          restrictions: _splitList(_restrictionsController.text),
-        ),
+        dietaryProfile: nextDietary,
       );
 
       await _repository.saveProfile(updated);
+
+      if (mounted &&
+          (previousDietary.allergens.join() != nextDietary.allergens.join() ||
+              previousDietary.restrictions.join() !=
+                  nextDietary.restrictions.join() ||
+              previousDietary.preferences.join() !=
+                  nextDietary.preferences.join())) {
+        MealPlanRefreshScope.maybeOf(context)?.requestRefresh();
+      }
 
       if (mounted) {
         setState(() {
@@ -230,14 +256,6 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         );
       }
     }
-  }
-
-  List<String> _splitList(String input) {
-    return input
-        .split(RegExp(r'[\n,]'))
-        .map((s) => s.trim())
-        .where((s) => s.isNotEmpty)
-        .toList();
   }
 
   Future<void> _linkEmail() async {
@@ -548,6 +566,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                             label: 'Display name',
                             controller: _displayNameController,
                             enabled: !isBusy,
+                            limeBorder: true,
                             validator: (v) {
                               if (v == null || v.trim().isEmpty) {
                                 return 'Name is required';
@@ -596,6 +615,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                             label: 'Gender',
                             value: _genderValue,
                             items: _genderOptions,
+                            hint: 'Select gender',
                             enabled: !isBusy,
                             onChanged: (v) =>
                                 setState(() => _genderValue = v),
@@ -606,6 +626,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                             controller: _phoneController,
                             keyboardType: TextInputType.phone,
                             enabled: !isBusy,
+                            limeBorder: true,
                           ),
                           const SizedBox(height: 16),
                           ProfileTextField(
@@ -613,6 +634,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                             controller: _birthYearController,
                             keyboardType: TextInputType.number,
                             enabled: !isBusy,
+                            limeBorder: true,
                             validator: (v) {
                               if (v != null &&
                                   v.trim().isNotEmpty &&
@@ -632,6 +654,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                   keyboardType: TextInputType.number,
                                   allowDecimal: true,
                                   enabled: !isBusy,
+                                  limeBorder: true,
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -642,6 +665,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                   keyboardType: TextInputType.number,
                                   allowDecimal: true,
                                   enabled: !isBusy,
+                                  limeBorder: true,
                                 ),
                               ),
                             ],
@@ -684,6 +708,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                             label: 'School',
                             controller: _schoolController,
                             enabled: !isBusy,
+                            limeBorder: true,
                           ),
                           const SizedBox(height: 16),
                           ProfileTextField(
@@ -691,6 +716,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                             controller: _graduationYearController,
                             keyboardType: TextInputType.number,
                             enabled: !isBusy,
+                            limeBorder: true,
                             validator: (v) {
                               if (v != null &&
                                   v.trim().isNotEmpty &&
@@ -707,6 +733,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                             items: {
                               for (int i = 0; i <= 7; i++) i: '$i days',
                             },
+                            hint: 'Select training days',
                             enabled: !isBusy,
                             onChanged: (v) =>
                                 setState(() => _trainingDaysValue = v),
@@ -716,6 +743,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                             label: 'Activity level',
                             value: _activityLevelValue,
                             items: _activityOptions,
+                            hint: 'Select activity level',
                             enabled: !isBusy,
                             onChanged: (v) =>
                                 setState(() => _activityLevelValue = v),
@@ -737,6 +765,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                   controller: _caloriesController,
                                   keyboardType: TextInputType.number,
                                   enabled: !isBusy,
+                                  limeBorder: true,
                                   validator: _requirePositiveInt,
                                 ),
                               ),
@@ -747,6 +776,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                   controller: _proteinController,
                                   keyboardType: TextInputType.number,
                                   enabled: !isBusy,
+                                  limeBorder: true,
                                   validator: _requirePositiveInt,
                                 ),
                               ),
@@ -761,6 +791,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                   controller: _carbsController,
                                   keyboardType: TextInputType.number,
                                   enabled: !isBusy,
+                                  limeBorder: true,
                                   validator: _requirePositiveInt,
                                 ),
                               ),
@@ -771,6 +802,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                   controller: _fatsController,
                                   keyboardType: TextInputType.number,
                                   enabled: !isBusy,
+                                  limeBorder: true,
                                   validator: _requirePositiveInt,
                                 ),
                               ),
@@ -786,6 +818,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                   keyboardType: TextInputType.number,
                                   allowDecimal: true,
                                   enabled: !isBusy,
+                                  limeBorder: true,
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -796,6 +829,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                   keyboardType: TextInputType.number,
                                   allowDecimal: true,
                                   enabled: !isBusy,
+                                  limeBorder: true,
                                 ),
                               ),
                             ],
@@ -809,22 +843,26 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       _sectionLabel('Dietary'),
                       _FormCard(
                         children: [
-                          ProfileTextField(
-                            label: 'Allergens',
-                            controller: _allergensController,
-                            maxLines: 3,
+                          MealPreferencesForm(
+                            selectedStyles: _selectedStyles,
+                            onStyleToggled: (style) {
+                              setState(() {
+                                if (_selectedStyles.contains(style)) {
+                                  _selectedStyles.remove(style);
+                                } else {
+                                  _selectedStyles.add(style);
+                                }
+                              });
+                            },
+                            allergensController: _allergensController,
+                            restrictionsController: _restrictionsController,
+                            otherStyleController: _otherStyleController,
+                            othersSelected: _othersSelected,
+                            onOthersSelectedChanged: (selected) {
+                              setState(() => _othersSelected = selected);
+                            },
                             enabled: !isBusy,
-                            helperText:
-                                'Use commas or new lines to separate values.',
-                          ),
-                          const SizedBox(height: 16),
-                          ProfileTextField(
-                            label: 'Dietary restrictions',
-                            controller: _restrictionsController,
-                            maxLines: 3,
-                            enabled: !isBusy,
-                            helperText:
-                                'Use commas or new lines to separate values.',
+                            useLimeBorders: true,
                           ),
                         ],
                       ),
@@ -987,14 +1025,34 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     required Map<T, String> items,
     required bool enabled,
     required ValueChanged<T?> onChanged,
+    String? hint,
   }) {
+    final T? selectedValue =
+        value != null && items.containsKey(value) ? value : null;
+    OutlineInputBorder limeOutline(double width) {
+      return OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: AppColors.lime, width: width),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(label, style: Theme.of(context).textTheme.labelSmall),
         const SizedBox(height: 8),
         DropdownButtonFormField<T>(
-          initialValue: value,
+          key: ValueKey('$label-$selectedValue'),
+          value: selectedValue,
+          hint: Text(
+            hint ?? 'Select',
+            style: TextStyle(
+              color: AppColors.textMuted.withValues(alpha: 0.72),
+            ),
+          ),
+          style: const TextStyle(color: AppColors.textPrimary),
+          dropdownColor: AppColors.cardDarker,
+          iconEnabledColor: AppColors.lime,
           items: items.entries
               .map(
                 (e) => DropdownMenuItem<T>(
@@ -1006,18 +1064,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
           decoration: InputDecoration(
             filled: true,
             fillColor: AppColors.cardDarker,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.cardDark),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.cardDark),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.lime),
-            ),
+            border: limeOutline(1.5),
+            enabledBorder: limeOutline(1.5),
+            focusedBorder: limeOutline(3),
             contentPadding: const EdgeInsets.symmetric(
               vertical: 18,
               horizontal: 16,

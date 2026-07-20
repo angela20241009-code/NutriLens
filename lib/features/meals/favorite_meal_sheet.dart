@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nutrilens/app/meal_log_refresh_scope.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/theme/app_colors.dart';
@@ -116,6 +117,7 @@ class _FavoriteMealSheetState extends State<FavoriteMealSheet> {
 
     try {
       await scope.repository.logMeal(scope.uid, meal, _profile!.timezone);
+      MealLogRefreshScope.maybeOf(context)?.requestRefresh();
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,

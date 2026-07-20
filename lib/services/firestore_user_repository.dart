@@ -322,21 +322,17 @@ class FirestoreUserRepository implements UserRepository {
     DateTime endUtc;
     try {
       final location = tz.getLocation(timezone);
-      final tzDate = tz.TZDateTime.from(date.toUtc(), location);
       final dayStart = tz.TZDateTime(
         location,
-        tzDate.year,
-        tzDate.month,
-        tzDate.day,
+        date.year,
+        date.month,
+        date.day,
       );
-      // Use the TZDateTime constructor to compute "next local midnight" so that
-      // DST transitions (23-hour and 25-hour days) are handled correctly.
-      // Day overflow (e.g. day 32) normalises exactly as DateTime does.
       final dayEnd = tz.TZDateTime(
         location,
-        tzDate.year,
-        tzDate.month,
-        tzDate.day + 1,
+        date.year,
+        date.month,
+        date.day + 1,
       );
       startUtc = dayStart.toUtc();
       endUtc = dayEnd.toUtc();
@@ -360,6 +356,51 @@ class FirestoreUserRepository implements UserRepository {
     return snap.docs.map((doc) {
       return Meal.fromMap(fromFirestoreMap(doc.data()), mealId: doc.id);
     }).toList();
+  }
+
+  @override
+  Future<List<Meal>> getRecentMeals(
+    String uid, {
+    required int limit,
+    required String timezone,
+  }) async {
+    final snap = await _firestore
+        .collection(FirestorePaths.meals(uid))
+        .orderBy('loggedAt', descending: true)
+        .limit(limit)
+        .get();
+
+    return snap.docs
+        .map((doc) => Meal.fromMap(fromFirestoreMap(doc.data()), mealId: doc.id))
+        .toList();
+  }
+
+  @override
+  Future<Set<String>> getMealDateKeysInRange(
+    String uid, {
+    required String startDateKey,
+    required String endDateKey,
+  }) async {
+    final snap = await _firestore
+        .collection(FirestorePaths.dailySummaries(uid))
+        .where('dateKey', isGreaterThanOrEqualTo: startDateKey)
+        .where('dateKey', isLessThanOrEqualTo: endDateKey)
+        .get();
+
+    return snap.docs
+        .where((doc) {
+          final data = doc.data();
+          final mealCount = data['mealCount'];
+          if (mealCount is int) {
+            return mealCount > 0;
+          }
+          if (mealCount is num) {
+            return mealCount > 0;
+          }
+          return false;
+        })
+        .map((doc) => doc.data()['dateKey'] as String? ?? doc.id)
+        .toSet();
   }
 
   // ── Daily summaries ───────────────────────────────────────────────────────

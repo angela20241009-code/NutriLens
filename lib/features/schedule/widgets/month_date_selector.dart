@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nutrilens/features/schedule/schedule_view_filter.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
 class MonthDateSelector extends StatelessWidget {
@@ -6,12 +7,16 @@ class MonthDateSelector extends StatelessWidget {
     super.key,
     required this.selectedDate,
     required this.hasEventsOn,
+    required this.hasLoggedMealsOn,
     required this.onDateSelected,
+    this.showHeader = true,
   });
 
   final DateTime selectedDate;
   final bool Function(DateTime date) hasEventsOn;
+  final bool Function(DateTime date) hasLoggedMealsOn;
   final ValueChanged<DateTime> onDateSelected;
+  final bool showHeader;
 
   bool _isSameDay(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month && a.day == b.day;
@@ -41,37 +46,43 @@ class MonthDateSelector extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              '${_monthName(selectedDate.month)} ${selectedDate.year}',
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
+        if (showHeader) ...[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '${_monthName(selectedDate.month)} ${selectedDate.year}',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
               ),
-            ),
-            Row(
-              children: [
-                _MonthNavButton(
-                  icon: Icons.chevron_left_rounded,
-                  onTap: () {
-                    onDateSelected(DateTime(selectedDate.year, selectedDate.month - 1, 1));
-                  },
-                ),
-                const SizedBox(width: 8),
-                _MonthNavButton(
-                  icon: Icons.chevron_right_rounded,
-                  onTap: () {
-                    onDateSelected(DateTime(selectedDate.year, selectedDate.month + 1, 1));
-                  },
-                ),
-              ],
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
+              Row(
+                children: [
+                  _MonthNavButton(
+                    icon: Icons.chevron_left_rounded,
+                    onTap: () {
+                      onDateSelected(
+                        DateTime(selectedDate.year, selectedDate.month - 1, 1),
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  _MonthNavButton(
+                    icon: Icons.chevron_right_rounded,
+                    onTap: () {
+                      onDateSelected(
+                        DateTime(selectedDate.year, selectedDate.month + 1, 1),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+        ],
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
@@ -106,8 +117,12 @@ class MonthDateSelector extends StatelessWidget {
             final isCurrentMonth = date.month == selectedDate.month;
             final selected = _isSameDay(date, selectedDate);
             final hasEvents = hasEventsOn(date);
+            final hasLoggedMeals = hasLoggedMealsOn(date);
 
             return GestureDetector(
+              key: Key(
+                'calendar_date_${date.year}_${date.month}_${date.day}',
+              ),
               onTap: () => onDateSelected(date),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
@@ -134,18 +149,29 @@ class MonthDateSelector extends StatelessWidget {
                             ? AppColors.onLime
                             : isCurrentMonth
                                 ? AppColors.textPrimary
-                                : AppColors.textMuted.withOpacity(0.5),
+                                : AppColors.textMuted.withValues(alpha: 0.5),
                       ),
                     ),
-                    if (hasEvents) ...[
+                    if (hasEvents || hasLoggedMeals) ...[
                       const SizedBox(height: 2),
-                      Container(
-                        width: 4,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: selected ? AppColors.onLime : AppColors.orange,
-                          shape: BoxShape.circle,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (hasLoggedMeals)
+                            _CalendarDot(
+                              color: selected
+                                  ? AppColors.onLime
+                                  : scheduleLoggedMealColor,
+                            ),
+                          if (hasLoggedMeals && hasEvents)
+                            const SizedBox(width: 3),
+                          if (hasEvents)
+                            _CalendarDot(
+                              color: selected
+                                  ? AppColors.onLime
+                                  : scheduleEventColor,
+                            ),
+                        ],
                       ),
                     ],
                   ],
@@ -155,6 +181,21 @@ class MonthDateSelector extends StatelessWidget {
           },
         ),
       ],
+    );
+  }
+}
+
+class _CalendarDot extends StatelessWidget {
+  const _CalendarDot({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 4,
+      height: 4,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 }

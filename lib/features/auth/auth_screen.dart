@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:nutrilens/features/profile/meal_preferences_form.dart';
+import 'package:nutrilens/models/dietary_profile.dart';
 import 'package:nutrilens/theme/app_colors.dart';
-
-enum AuthMode { createAccount, signIn }
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({
@@ -12,9 +12,14 @@ class AuthScreen extends StatefulWidget {
     required this.onContinueAsGuest,
   });
 
-  final Future<void> Function(String email, String password) onCreateAccount;
+  final Future<void> Function(
+    String email,
+    String password,
+    DietaryProfile dietaryProfile,
+  )
+  onCreateAccount;
   final Future<void> Function(String email, String password) onSignIn;
-  final Future<void> Function() onContinueAsGuest;
+  final Future<void> Function(DietaryProfile dietaryProfile) onContinueAsGuest;
 
   @override
   State<AuthScreen> createState() => _AuthScreenState();
@@ -24,6 +29,12 @@ class _AuthScreenState extends State<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _allergensController = TextEditingController();
+  final _restrictionsController = TextEditingController();
+  final _otherStyleController = TextEditingController();
+  final _selectedStyles = <String>{};
+  bool _othersSelected = false;
+
   AuthMode _mode = AuthMode.createAccount;
   bool _busy = false;
   String? _error;
@@ -32,8 +43,19 @@ class _AuthScreenState extends State<AuthScreen> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _allergensController.dispose();
+    _restrictionsController.dispose();
+    _otherStyleController.dispose();
     super.dispose();
   }
+
+  DietaryProfile get _dietaryProfile => dietaryProfileFromForm(
+    selectedStyles: _selectedStyles,
+    allergensText: _allergensController.text,
+    restrictionsText: _restrictionsController.text,
+    otherStyleText: _otherStyleController.text,
+    othersSelected: _othersSelected,
+  );
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate() || _busy) {
@@ -49,7 +71,7 @@ class _AuthScreenState extends State<AuthScreen> {
       final email = _emailController.text.trim();
       final password = _passwordController.text.trim();
       if (_mode == AuthMode.createAccount) {
-        await widget.onCreateAccount(email, password);
+        await widget.onCreateAccount(email, password, _dietaryProfile);
       } else {
         await widget.onSignIn(email, password);
       }
@@ -71,7 +93,7 @@ class _AuthScreenState extends State<AuthScreen> {
       _error = null;
     });
     try {
-      await widget.onContinueAsGuest();
+      await widget.onContinueAsGuest(_dietaryProfile);
     } catch (error) {
       if (!mounted) return;
       setState(() {
@@ -103,6 +125,7 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     final isCreate = _mode == AuthMode.createAccount;
+    final showPreferences = isCreate;
 
     return Scaffold(
       body: SafeArea(
@@ -152,7 +175,42 @@ class _AuthScreenState extends State<AuthScreen> {
                               });
                             },
                     ),
-                    const SizedBox(height: 20),
+                    if (showPreferences) ...[
+                      const SizedBox(height: 24),
+                      Text(
+                        'Meal preferences',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Tell us what you like and what to avoid before you sign in.',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 16),
+                      MealPreferencesForm(
+                        selectedStyles: _selectedStyles,
+                        onStyleToggled: (style) {
+                          setState(() {
+                            if (_selectedStyles.contains(style)) {
+                              _selectedStyles.remove(style);
+                            } else {
+                              _selectedStyles.add(style);
+                            }
+                          });
+                        },
+                        allergensController: _allergensController,
+                        restrictionsController: _restrictionsController,
+                        otherStyleController: _otherStyleController,
+                        othersSelected: _othersSelected,
+                        onOthersSelectedChanged: (selected) {
+                          setState(() => _othersSelected = selected);
+                        },
+                        enabled: !_busy,
+                        useLimeBorders: true,
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                    const SizedBox(height: 4),
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
@@ -214,6 +272,8 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 }
+
+enum AuthMode { createAccount, signIn }
 
 String friendlyAuthError(Object error) {
   if (error is FirebaseAuthException) {

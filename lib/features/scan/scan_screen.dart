@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nutrilens/app/meal_analysis_scope.dart';
 import 'package:nutrilens/features/meals/log_meal_sheet.dart';
+import 'package:nutrilens/features/scan/scan_previous_meals_sheet.dart';
 import 'package:nutrilens/features/scan/scan_result_sheet.dart';
+import 'package:nutrilens/features/scan/widgets/scan_action_tile.dart';
 import 'package:nutrilens/services/meal_analysis_client.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 import 'package:nutrilens/theme/theme_palette_scope.dart';
@@ -263,34 +265,39 @@ class _ScanScreenState extends State<ScanScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: _isBusy ? null : _showSourcePicker,
-              icon: _picking
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.add_a_photo_outlined),
-              label: Text(
-                _selectedImage == null ? 'Add meal photo' : 'Change photo',
-              ),
-              style: FilledButton.styleFrom(
-                backgroundColor: accent,
-                foregroundColor: ThemePaletteScope.onPrimary(context),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed: _isBusy ? null : () => LogMealSheet.show(context),
-              icon: const Icon(Icons.edit_outlined),
-              label: const Text('Log manually'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: accent,
-                side: BorderSide(color: accent.withValues(alpha: 0.6)),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
+            Row(
+              children: [
+                ScanActionTile(
+                  label: 'Photo',
+                  icon: Icons.add_a_photo_outlined,
+                  iconColor: AppColors.lime,
+                  enabled: !_isBusy,
+                  onTap: _showSourcePicker,
+                ),
+                const SizedBox(width: 10),
+                ScanActionTile(
+                  label: 'Manual',
+                  icon: Icons.edit_outlined,
+                  iconColor: AppColors.orange,
+                  enabled: !_isBusy,
+                  onTap: () => LogMealSheet.show(context),
+                ),
+                const SizedBox(width: 10),
+                ScanActionTile(
+                  label: 'Previous',
+                  icon: Icons.history_rounded,
+                  iconColor: AppColors.textPrimary,
+                  enabled: !_isBusy,
+                  onTap: () async {
+                    final logged = await ScanPreviousMealsSheet.open(context);
+                    if (logged == true && mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Meal added to your log')),
+                      );
+                    }
+                  },
+                ),
+              ],
             ),
           ],
         ),

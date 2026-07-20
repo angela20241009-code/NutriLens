@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:nutrilens/app.dart';
 import 'package:nutrilens/app/app_settings_scope.dart';
 import 'package:nutrilens/app/meal_analysis_scope.dart';
+import 'package:nutrilens/app/meal_log_refresh_scope.dart';
+import 'package:nutrilens/app/meal_plan_refresh_scope.dart';
 import 'package:nutrilens/app/meal_plan_scope.dart';
 import 'package:nutrilens/app/session_scope.dart';
 import 'package:nutrilens/app/user_scope.dart';
@@ -29,6 +31,8 @@ class _AppBootstrapState extends State<AppBootstrap> {
   late Future<_BootstrapResult> _bootstrapFuture;
   late final MealPlanClient _mealPlanClient;
   late final MealAnalysisClient _mealAnalysisClient;
+  late final MealPlanRefreshNotifier _mealPlanRefreshNotifier;
+  late final MealLogRefreshNotifier _mealLogRefreshNotifier;
   bool _firebaseReady = false;
 
   @override
@@ -36,6 +40,8 @@ class _AppBootstrapState extends State<AppBootstrap> {
     super.initState();
     _mealPlanClient = EdamamMealPlanClient.fromEnvironment();
     _mealAnalysisClient = OpenAiMealAnalysisClient.fromEnvironment();
+    _mealPlanRefreshNotifier = MealPlanRefreshNotifier();
+    _mealLogRefreshNotifier = MealLogRefreshNotifier();
     _bootstrapFuture = _initializeApp();
   }
 
@@ -83,15 +89,35 @@ class _AppBootstrapState extends State<AppBootstrap> {
     });
   }
 
+  Future<void> _saveInitialDietaryProfile(
+    UserRepository repository,
+    String uid,
+    DietaryProfile dietaryProfile,
+  ) async {
+    final profile = await repository.getProfile(uid);
+    if (profile == null) {
+      return;
+    }
+    await repository.saveProfile(
+      profile.copyWith(dietaryProfile: dietaryProfile),
+    );
+  }
+
   Future<void> _createAccount(
     UserRepository repository,
     String email,
     String password,
+    DietaryProfile dietaryProfile,
   ) async {
     final account = await repository.createAccountWithEmail(
       email: email,
       password: password,
       timezone: _defaultTimezone,
+    );
+    await _saveInitialDietaryProfile(
+      repository,
+      account.uid,
+      dietaryProfile,
     );
     _activateSession(repository, account);
   }
@@ -109,9 +135,17 @@ class _AppBootstrapState extends State<AppBootstrap> {
     _activateSession(repository, account);
   }
 
-  Future<void> _continueAsGuest(UserRepository repository) async {
+  Future<void> _continueAsGuest(
+    UserRepository repository,
+    DietaryProfile dietaryProfile,
+  ) async {
     final account = await repository.signInAnonymously(
       timezone: _defaultTimezone,
+    );
+    await _saveInitialDietaryProfile(
+      repository,
+      account.uid,
+      dietaryProfile,
     );
     _activateSession(repository, account);
   }
@@ -161,28 +195,42 @@ class _AppBootstrapState extends State<AppBootstrap> {
             themeMode: ThemeMode.dark,
             debugShowCheckedModeBanner: false,
             home: AuthScreen(
-              onCreateAccount: (email, password) =>
-                  _createAccount(result.repository, email, password),
+              onCreateAccount: (email, password, dietaryProfile) =>
+                  _createAccount(
+                    result.repository,
+                    email,
+                    password,
+                    dietaryProfile,
+                  ),
               onSignIn: (email, password) =>
                   _signIn(result.repository, email, password),
-              onContinueAsGuest: () => _continueAsGuest(result.repository),
+              onContinueAsGuest: (dietaryProfile) => _continueAsGuest(
+                result.repository,
+                dietaryProfile,
+              ),
             ),
           );
         }
 
-        return MealAnalysisScope(
-          client: _mealAnalysisClient,
-          child: MealPlanScope(
-            client: _mealPlanClient,
-            child: SessionScope(
-              signOut: () => _signOutAndRestart(result.repository),
-              child: UserScope(
-                repository: result.repository,
-                uid: result.uid!,
-                child: AppSettingsScope(
-                  repository: result.repository,
-                  uid: result.uid!,
-                  child: const NutriLensApp(),
+        return MealLogRefreshScope(
+          notifier: _mealLogRefreshNotifier,
+          child: MealPlanRefreshScope(
+            notifier: _mealPlanRefreshNotifier,
+            child: MealAnalysisScope(
+              client: _mealAnalysisClient,
+              child: MealPlanScope(
+                client: _mealPlanClient,
+                child: SessionScope(
+                  signOut: () => _signOutAndRestart(result.repository),
+                  child: UserScope(
+                    repository: result.repository,
+                    uid: result.uid!,
+                    child: AppSettingsScope(
+                      repository: result.repository,
+                      uid: result.uid!,
+                      child: const NutriLensApp(),
+                    ),
+                  ),
                 ),
               ),
             ),

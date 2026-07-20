@@ -5,12 +5,12 @@ class MealCaptureCard extends StatelessWidget {
   const MealCaptureCard({
     super.key,
     required this.onManualTap,
-    required this.onScanTap,
+    required this.onPreferencesTap,
     required this.onFavoritesTap,
   });
 
   final VoidCallback onManualTap;
-  final VoidCallback onScanTap;
+  final VoidCallback onPreferencesTap;
   final VoidCallback onFavoritesTap;
 
   @override
@@ -86,7 +86,7 @@ class MealCaptureCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Manual, scan, or favorites',
+                      'Manual, preferences, or favorites',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -110,12 +110,12 @@ class MealCaptureCard extends StatelessWidget {
                         ),
                         Expanded(
                           child: _CaptureAction(
-                            label: 'Scan',
-                            icon: Icons.photo_camera_outlined,
+                            label: 'Prefs',
+                            icon: Icons.tune_rounded,
                             color: Colors.white.withValues(alpha: 0.08),
                             foregroundColor: AppColors.textMuted,
                             size: actionSize,
-                            onTap: onScanTap,
+                            onTap: onPreferencesTap,
                           ),
                         ),
                         Expanded(

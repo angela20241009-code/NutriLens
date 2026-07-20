@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nutrilens/app/meal_plan_refresh_scope.dart';
 import 'package:nutrilens/app/meal_plan_scope.dart';
 import 'package:nutrilens/data/mock_schedule_data.dart';
 import 'package:nutrilens/app/user_scope.dart';
@@ -28,6 +29,8 @@ class _MealsScreenState extends State<MealsScreen> {
   UserProfile? _profile;
   MealPlanWeek? _plan;
   final Set<String> _refreshingMealKeys = {};
+  MealPlanRefreshNotifier? _mealPlanRefreshNotifier;
+  int _lastMealPlanRefreshGeneration = 0;
   late DateTime _selectedDate;
 
   DateTime get _today =>
@@ -42,6 +45,34 @@ class _MealsScreenState extends State<MealsScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadPlan();
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final notifier = MealPlanRefreshScope.maybeOf(context);
+    if (notifier != _mealPlanRefreshNotifier) {
+      _mealPlanRefreshNotifier?.removeListener(_handleMealPlanRefreshRequest);
+      _mealPlanRefreshNotifier = notifier;
+      _lastMealPlanRefreshGeneration = notifier?.generation ?? 0;
+      notifier?.addListener(_handleMealPlanRefreshRequest);
+    }
+  }
+
+  void _handleMealPlanRefreshRequest() {
+    final notifier = _mealPlanRefreshNotifier;
+    if (notifier == null ||
+        notifier.generation == _lastMealPlanRefreshGeneration) {
+      return;
+    }
+    _lastMealPlanRefreshGeneration = notifier.generation;
+    _loadPlan(regenerate: true);
+  }
+
+  @override
+  void dispose() {
+    _mealPlanRefreshNotifier?.removeListener(_handleMealPlanRefreshRequest);
+    super.dispose();
   }
 
   Future<void> _loadPlan({bool regenerate = false}) async {

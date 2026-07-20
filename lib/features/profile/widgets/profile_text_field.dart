@@ -16,6 +16,7 @@ class ProfileTextField extends StatelessWidget {
     this.enabled = true,
     this.validator,
     this.suffix,
+    this.limeBorder = false,
   });
 
   final String label;
@@ -28,6 +29,17 @@ class ProfileTextField extends StatelessWidget {
   final bool enabled;
   final String? Function(String?)? validator;
   final Widget? suffix;
+  final bool limeBorder;
+
+  static const _enabledLimeWidth = 1.5;
+  static const _focusedLimeWidth = 3.0;
+
+  OutlineInputBorder _limeOutline(double width) {
+    return OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: BorderSide(color: AppColors.lime, width: width),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,18 +72,24 @@ class ProfileTextField extends StatelessWidget {
               padding: const EdgeInsets.only(right: 8),
               child: suffix,
             ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.cardDark),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.cardDark),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.lime),
-            ),
+            border: limeBorder
+                ? _limeOutline(_enabledLimeWidth)
+                : OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(color: AppColors.cardDark),
+                  ),
+            enabledBorder: limeBorder
+                ? _limeOutline(_enabledLimeWidth)
+                : OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(color: AppColors.cardDark),
+                  ),
+            focusedBorder: limeBorder
+                ? _limeOutline(_focusedLimeWidth)
+                : OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(color: AppColors.lime),
+                  ),
             contentPadding: const EdgeInsets.symmetric(
               vertical: 18,
               horizontal: 16,

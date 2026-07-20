@@ -1,0 +1,1 @@
+enum ScheduleCalendarMode { week, month }

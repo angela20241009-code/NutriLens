@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nutrilens/features/schedule/schedule_view_filter.dart';
 import 'package:nutrilens/models/schedule_event.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
@@ -14,15 +15,7 @@ class TimelineEventTile extends StatelessWidget {
   final bool isLast;
   final VoidCallback? onDelete;
 
-  Color get _accentColor {
-    switch (event.type) {
-      case ScheduleEventType.meal:
-        return AppColors.orange;
-      case ScheduleEventType.training:
-      case ScheduleEventType.match:
-        return AppColors.lime;
-    }
-  }
+  Color get _accentColor => scheduleEventColor;
 
   IconData get _icon {
     switch (event.type) {
@@ -38,9 +31,7 @@ class TimelineEventTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = _accentColor;
-    final iconTextColor = event.type == ScheduleEventType.meal
-        ? Colors.white
-        : AppColors.onLime;
+    const iconTextColor = Colors.white;
 
     return Material(
       color: Colors.transparent,

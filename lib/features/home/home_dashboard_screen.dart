@@ -10,6 +10,7 @@ import 'package:nutrilens/features/home/widgets/next_session_card.dart';
 import 'package:nutrilens/features/home/widgets/program_banner.dart';
 import 'package:nutrilens/features/home/widgets/todays_fuel_card.dart';
 import 'package:nutrilens/features/meals/favorite_meal_sheet.dart';
+import 'package:nutrilens/features/profile/meal_preferences_sheet.dart';
 import 'package:nutrilens/features/meals/log_meal_sheet.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/services/date_key.dart';
@@ -23,13 +24,13 @@ class HomeDashboardScreen extends StatefulWidget {
     DateTime Function()? now,
     required this.onProfileTap,
     required this.onMealsTap,
-    this.onScanTap,
+    this.onPreferencesTap,
   }) : _nowProvider = now;
 
   final DateTime Function()? _nowProvider;
   final VoidCallback onProfileTap;
   final VoidCallback onMealsTap;
-  final VoidCallback? onScanTap;
+  final VoidCallback? onPreferencesTap;
 
   @override
   State<HomeDashboardScreen> createState() => _HomeDashboardScreenState();
@@ -169,11 +170,22 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     }
   }
 
-  void _showComingSoon(String feature) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('$feature coming soon')));
+  Future<void> _openMealPreferencesSheet() async {
+    final saved = await MealPreferencesSheet.show(context);
+    if (!mounted) {
+      return;
+    }
+    if (saved == true) {
+      await _refresh();
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Meal plan refreshed with your preferences')),
+      );
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -213,7 +225,8 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                 const SizedBox(height: 20),
                 MealCaptureCard(
                   onManualTap: _openLogMealSheet,
-                  onScanTap: widget.onScanTap ?? () => _showComingSoon('Scan'),
+                  onPreferencesTap:
+                      widget.onPreferencesTap ?? _openMealPreferencesSheet,
                   onFavoritesTap: _openFavoriteMealSheet,
                 ),
                 const SizedBox(height: 16),

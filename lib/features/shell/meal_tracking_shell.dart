@@ -22,11 +22,10 @@ class MealTrackingShell extends StatelessWidget {
       HomeDashboardScreen(
         onMealsTap: () => onIndexChanged(1),
         onProfileTap: () => onIndexChanged(4),
-        onScanTap: () => onIndexChanged(2),
       ),
       const MealsScreen(),
       const ScanScreen(),
-      const ScheduleScreen(),
+      ScheduleScreen(isActive: selectedIndex == 3),
       const ProfileScreen(),
     ];
 

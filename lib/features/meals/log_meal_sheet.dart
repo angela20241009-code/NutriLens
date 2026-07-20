@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nutrilens/app/meal_log_refresh_scope.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/features/profile/widgets/profile_text_field.dart';
 import 'package:nutrilens/models/models.dart';
@@ -84,6 +85,7 @@ class _LogMealSheetState extends State<LogMealSheet> {
 
     try {
       await scope.repository.logMeal(scope.uid, meal, profile.timezone);
+      MealLogRefreshScope.maybeOf(context)?.requestRefresh();
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
@@ -169,6 +171,7 @@ class _LogMealSheetState extends State<LogMealSheet> {
                       label: 'Meal name',
                       controller: _nameController,
                       validator: _requiredText,
+                      limeBorder: true,
                     ),
                     const SizedBox(height: 16),
                     ProfileTextField(
@@ -176,6 +179,7 @@ class _LogMealSheetState extends State<LogMealSheet> {
                       controller: _caloriesController,
                       keyboardType: TextInputType.number,
                       validator: _requiredNumber,
+                      limeBorder: true,
                     ),
                     const SizedBox(height: 16),
                     Row(
@@ -186,6 +190,7 @@ class _LogMealSheetState extends State<LogMealSheet> {
                             controller: _proteinController,
                             keyboardType: TextInputType.number,
                             validator: _requiredNumber,
+                            limeBorder: true,
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -195,6 +200,7 @@ class _LogMealSheetState extends State<LogMealSheet> {
                             controller: _carbsController,
                             keyboardType: TextInputType.number,
                             validator: _requiredNumber,
+                            limeBorder: true,
                           ),
                         ),
                       ],
@@ -205,6 +211,7 @@ class _LogMealSheetState extends State<LogMealSheet> {
                       controller: _fatsController,
                       keyboardType: TextInputType.number,
                       validator: _requiredNumber,
+                      limeBorder: true,
                     ),
                     if (profileError != null || _error != null) ...[
                       const SizedBox(height: 16),

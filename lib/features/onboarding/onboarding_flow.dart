@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nutrilens/app/app_settings_scope.dart';
 import 'package:nutrilens/app/user_scope.dart';
+import 'package:nutrilens/features/profile/meal_preferences_form.dart';
 import 'package:nutrilens/features/profile/widgets/profile_text_field.dart';
 import 'package:nutrilens/features/shell/app_shell.dart';
 import 'package:nutrilens/models/daily_targets.dart';
@@ -85,17 +86,21 @@ class OnboardingFlow extends StatefulWidget {
 }
 
 class _OnboardingFlowState extends State<OnboardingFlow> {
-  static const _totalSteps = 7;
+  static const _totalSteps = 8;
 
   final _pageController = PageController();
   final _nameFormKey = GlobalKey<FormState>();
   final _schoolFormKey = GlobalKey<FormState>();
+  final _mealPrefsFormKey = GlobalKey<FormState>();
   final _bodyFormKey = GlobalKey<FormState>();
   final _goalsFormKey = GlobalKey<FormState>();
 
   final _nameController = TextEditingController();
   final _schoolController = TextEditingController();
   final _graduationController = TextEditingController();
+  final _allergensController = TextEditingController();
+  final _restrictionsController = TextEditingController();
+  final _otherStyleController = TextEditingController();
   final _heightController = TextEditingController();
   final _weightController = TextEditingController();
   final _caloriesController = TextEditingController();
@@ -108,6 +113,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   String? _lastDerivedSportId;
   double? _lastDerivedHeightCm;
   double? _lastDerivedWeightKg;
+  final _selectedStyles = <String>{};
+  bool _othersSelected = false;
   String? _wakeTiredAnswer;
   String? _bedtimeConsistencyAnswer;
   String? _sleepReminderAnswer;
@@ -130,6 +137,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     _nameController.dispose();
     _schoolController.dispose();
     _graduationController.dispose();
+    _allergensController.dispose();
+    _restrictionsController.dispose();
+    _otherStyleController.dispose();
     _heightController.dispose();
     _weightController.dispose();
     _caloriesController.dispose();
@@ -144,7 +154,19 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     final profile = await scope.repository.getProfile(scope.uid);
     if (!mounted) return;
     if (profile?.timezone != null && profile!.timezone.isNotEmpty) {
-      setState(() => _timezone = profile.timezone);
+      setState(() {
+        _timezone = profile.timezone;
+        _allergensController.text = profile.dietaryProfile.allergens.join(', ');
+        _restrictionsController.text = profile.dietaryProfile.restrictions.join(
+          ', ',
+        );
+        populateMealStyleFormState(
+          preferences: profile.dietaryProfile.preferences,
+          selectedStyles: _selectedStyles,
+          otherStyleController: _otherStyleController,
+          setOthersSelected: (selected) => _othersSelected = selected,
+        );
+      });
     }
   }
 
@@ -191,7 +213,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     if (!mounted) return;
     setState(() => _currentPage = page);
 
-    if (page == 6 &&
+    if (page == 7 &&
         _selectedSportId != null &&
         (_selectedSportId != _lastDerivedSportId ||
             _lastDerivedHeightCm !=
@@ -245,6 +267,13 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           primarySportName: _selectedSportName!,
           heightCm: heightCm,
           weightKg: weightKg,
+          dietaryProfile: dietaryProfileFromForm(
+            selectedStyles: _selectedStyles,
+            allergensText: _allergensController.text,
+            restrictionsText: _restrictionsController.text,
+            otherStyleText: _otherStyleController.text,
+            othersSelected: _othersSelected,
+          ),
           dailyTargets: DailyTargets(
             caloriesKcal: int.parse(_caloriesController.text.trim()),
             proteinG: int.parse(_proteinController.text.trim()),
@@ -325,6 +354,10 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       return;
     }
     setState(() => _sleepModeEnabled = enableSleepMode);
+    _goToPage(6);
+  }
+
+  void _continueFromMealPrefsStep() {
     _goToPage(5);
   }
 
@@ -338,7 +371,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       heightCm: double.parse(_heightController.text.trim()),
       weightKg: double.parse(_weightController.text.trim()),
     );
-    _goToPage(6);
+    _goToPage(7);
   }
 
   @override
@@ -419,6 +452,35 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               showProgress: true,
               showBack: true,
               onBack: _goBack,
+              child: _MealPreferencesStep(
+                formKey: _mealPrefsFormKey,
+                selectedStyles: _selectedStyles,
+                onStyleToggled: (style) {
+                  setState(() {
+                    if (_selectedStyles.contains(style)) {
+                      _selectedStyles.remove(style);
+                    } else {
+                      _selectedStyles.add(style);
+                    }
+                  });
+                },
+                allergensController: _allergensController,
+                restrictionsController: _restrictionsController,
+                otherStyleController: _otherStyleController,
+                othersSelected: _othersSelected,
+                onOthersSelectedChanged: (selected) {
+                  setState(() => _othersSelected = selected);
+                },
+                onContinue: _continueFromMealPrefsStep,
+                primaryButtonStyle: _primaryButtonStyle,
+              ),
+            ),
+            _OnboardingStepShell(
+              currentStep: 6,
+              totalSteps: _totalSteps,
+              showProgress: true,
+              showBack: true,
+              onBack: _goBack,
               child: _SleepModeStep(
                 wakeTiredAnswer: _wakeTiredAnswer,
                 bedtimeConsistencyAnswer: _bedtimeConsistencyAnswer,
@@ -442,7 +504,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               ),
             ),
             _OnboardingStepShell(
-              currentStep: 6,
+              currentStep: 7,
               totalSteps: _totalSteps,
               showProgress: true,
               showBack: true,
@@ -456,7 +518,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               ),
             ),
             _OnboardingStepShell(
-              currentStep: 7,
+              currentStep: 8,
               totalSteps: _totalSteps,
               showProgress: true,
               showBack: true,
@@ -999,6 +1061,85 @@ class _SleepRecommendationCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _MealPreferencesStep extends StatelessWidget {
+  const _MealPreferencesStep({
+    required this.formKey,
+    required this.selectedStyles,
+    required this.onStyleToggled,
+    required this.allergensController,
+    required this.restrictionsController,
+    required this.otherStyleController,
+    required this.othersSelected,
+    required this.onOthersSelectedChanged,
+    required this.onContinue,
+    required this.primaryButtonStyle,
+  });
+
+  final GlobalKey<FormState> formKey;
+  final Set<String> selectedStyles;
+  final ValueChanged<String> onStyleToggled;
+  final TextEditingController allergensController;
+  final TextEditingController restrictionsController;
+  final TextEditingController otherStyleController;
+  final bool othersSelected;
+  final ValueChanged<bool> onOthersSelectedChanged;
+  final VoidCallback onContinue;
+  final ButtonStyle primaryButtonStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      key: formKey,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Meal preferences',
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Pick food styles you like and anything you need to avoid.',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 24),
+                    MealPreferencesForm(
+                      selectedStyles: selectedStyles,
+                      onStyleToggled: onStyleToggled,
+                      allergensController: allergensController,
+                      restrictionsController: restrictionsController,
+                      otherStyleController: otherStyleController,
+                      othersSelected: othersSelected,
+                      onOthersSelectedChanged: onOthersSelectedChanged,
+                      useLimeBorders: true,
+                    ),
+                    const Spacer(),
+                    SizedBox(
+                      height: 52,
+                      child: FilledButton(
+                        onPressed: onContinue,
+                        style: primaryButtonStyle,
+                        child: const Text('Continue'),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

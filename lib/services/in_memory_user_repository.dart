@@ -264,6 +264,35 @@ class InMemoryUserRepository implements UserRepository {
       ..sort((a, b) => a.loggedAt.compareTo(b.loggedAt));
   }
 
+  @override
+  Future<List<Meal>> getRecentMeals(
+    String uid, {
+    required int limit,
+    required String timezone,
+  }) async {
+    final meals = List<Meal>.from(_meals[uid] ?? [])
+      ..sort((a, b) => b.loggedAt.compareTo(a.loggedAt));
+    return meals.take(limit).toList();
+  }
+
+  @override
+  Future<Set<String>> getMealDateKeysInRange(
+    String uid, {
+    required String startDateKey,
+    required String endDateKey,
+  }) async {
+    final summaries = _dailySummaries[uid] ?? {};
+    return summaries.entries
+        .where(
+          (entry) =>
+              entry.key.compareTo(startDateKey) >= 0 &&
+              entry.key.compareTo(endDateKey) <= 0 &&
+              entry.value.mealCount > 0,
+        )
+        .map((entry) => entry.key)
+        .toSet();
+  }
+
   // ── Daily summaries ───────────────────────────────────────────────────────
 
   @override
