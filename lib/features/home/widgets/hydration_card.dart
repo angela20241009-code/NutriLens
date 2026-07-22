@@ -18,7 +18,7 @@ class HydrationCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.electricBlue,
+        color: AppColors.hydrationBlue,
         borderRadius: BorderRadius.circular(24),
       ),
       child: Row(

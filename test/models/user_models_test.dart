@@ -270,4 +270,55 @@ void main() {
       expect(upgraded.isAnonymous, false);
     },
   );
+
+  test('InMemoryUserRepository deleteAccount removes user data', () async {
+    final repo = InMemoryUserRepository();
+    final account = await repo.createAccountWithEmail(
+      email: 'delete@example.com',
+      password: 'secret123',
+      timezone: 'America/Los_Angeles',
+    );
+    await repo.completeOnboarding(
+      uid: account.uid,
+      profile: UserProfile.demoAngela(userId: account.uid, now: now),
+    );
+    await repo.logMeal(
+      account.uid,
+      Meal(
+        name: 'Breakfast',
+        nutrition: const NutritionEntry(
+          caloriesKcal: 400,
+          proteinG: 30,
+          carbsG: 50,
+          fatsG: 10,
+        ),
+        source: MealSource.manual,
+        loggedAt: now,
+      ),
+      'America/Los_Angeles',
+    );
+
+    await repo.deleteAccount(account.uid);
+
+    expect(repo.currentUid, isNull);
+    expect(await repo.getAccount(account.uid), isNull);
+    expect(await repo.getProfile(account.uid), isNull);
+    expect(
+      await repo.getRecentMeals(
+        account.uid,
+        limit: 10,
+        timezone: 'America/Los_Angeles',
+      ),
+      isEmpty,
+    );
+
+    await expectLater(
+      () => repo.signInWithEmail(
+        email: 'delete@example.com',
+        password: 'secret123',
+        timezone: 'America/Los_Angeles',
+      ),
+      throwsA(isA<StateError>()),
+    );
+  });
 }

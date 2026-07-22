@@ -1,5 +1,19 @@
 import 'package:nutrilens/models/models.dart';
 
+class WeeklySleepDay {
+  const WeeklySleepDay({
+    required this.date,
+    required this.dateKey,
+    required this.sleepHours,
+    required this.isToday,
+  });
+
+  final DateTime date;
+  final String dateKey;
+  final double sleepHours;
+  final bool isToday;
+}
+
 class HomeDashboardData {
   const HomeDashboardData({
     required this.profile,
@@ -7,6 +21,7 @@ class HomeDashboardData {
     required this.loggedMeals,
     required this.plannedMeals,
     this.mealPlanError,
+    this.weeklySleepDays = const [],
   });
 
   final UserProfile profile;
@@ -14,6 +29,7 @@ class HomeDashboardData {
   final List<Meal> loggedMeals;
   final List<HomeMealPlanItem> plannedMeals;
   final String? mealPlanError;
+  final List<WeeklySleepDay> weeklySleepDays;
 }
 
 class HomeMealPlanItem {

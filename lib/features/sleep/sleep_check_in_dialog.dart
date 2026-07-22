@@ -1,18 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:nutrilens/features/sleep/sleep_logging.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
-class SleepCheckInResult {
-  const SleepCheckInResult({
-    required this.bedtimeMinutes,
-    required this.wakeTimeMinutes,
-    required this.sleepHours,
-  });
+enum SleepCheckInAction { saved, skipped }
 
-  final int bedtimeMinutes;
-  final int wakeTimeMinutes;
-  final double sleepHours;
+class SleepCheckInResult {
+  const SleepCheckInResult._({required this.action, this.sleepHours});
+
+  const SleepCheckInResult.saved(double sleepHours)
+    : this._(action: SleepCheckInAction.saved, sleepHours: sleepHours);
+
+  const SleepCheckInResult.skipped()
+    : this._(action: SleepCheckInAction.skipped, sleepHours: null);
+
+  final SleepCheckInAction action;
+  final double? sleepHours;
+
+  bool get skipped => action == SleepCheckInAction.skipped;
 }
 
 class SleepCheckInDialog extends StatefulWidget {
@@ -22,12 +28,14 @@ class SleepCheckInDialog extends StatefulWidget {
     required this.title,
     required this.description,
     required this.allowDismiss,
+    this.initialSleepHours,
   });
 
   final UserProfile profile;
   final String title;
   final String description;
   final bool allowDismiss;
+  final double? initialSleepHours;
 
   static Future<SleepCheckInResult?> show({
     required BuildContext context,
@@ -35,6 +43,7 @@ class SleepCheckInDialog extends StatefulWidget {
     required String title,
     required String description,
     bool allowDismiss = true,
+    double? initialSleepHours,
   }) {
     return showDialog<SleepCheckInResult>(
       context: context,
@@ -45,6 +54,7 @@ class SleepCheckInDialog extends StatefulWidget {
           title: title,
           description: description,
           allowDismiss: allowDismiss,
+          initialSleepHours: initialSleepHours,
         );
       },
     );
@@ -55,44 +65,45 @@ class SleepCheckInDialog extends StatefulWidget {
 }
 
 class _SleepCheckInDialogState extends State<SleepCheckInDialog> {
-  late int _bedtimeMinutes;
-  late int _wakeTimeMinutes;
+  late final TextEditingController _hoursController;
+  late final TextEditingController _minutesController;
   String? _error;
 
   @override
   void initState() {
     super.initState();
-    _bedtimeMinutes = widget.profile.usualBedtimeMinutes ?? 22 * 60;
-    _wakeTimeMinutes = widget.profile.usualWakeTimeMinutes ?? 7 * 60;
+    final initialMinutes = ((widget.initialSleepHours ?? 0) * 60).round();
+    final hours = initialMinutes > 0 ? initialMinutes ~/ 60 : 8;
+    final minutes = initialMinutes > 0 ? initialMinutes % 60 : 0;
+    _hoursController = TextEditingController(text: hours.toString());
+    _minutesController = TextEditingController(text: minutes.toString());
   }
 
-  int get _durationMinutes => sleepDurationMinutes(
-    bedtimeMinutes: _bedtimeMinutes,
-    wakeTimeMinutes: _wakeTimeMinutes,
-  );
+  @override
+  void dispose() {
+    _hoursController.dispose();
+    _minutesController.dispose();
+    super.dispose();
+  }
 
-  Future<void> _pickTime({
-    required int currentMinutes,
-    required ValueChanged<int> onPicked,
-  }) async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay(
-        hour: normalizeMinutes(currentMinutes) ~/ 60,
-        minute: normalizeMinutes(currentMinutes) % 60,
-      ),
-    );
-    if (picked == null || !mounted) {
-      return;
+  int? _durationMinutes() {
+    final hours = int.tryParse(_hoursController.text.trim()) ?? 0;
+    final minutes = int.tryParse(_minutesController.text.trim()) ?? 0;
+    if (hours < 0 || minutes < 0 || minutes >= 60) {
+      return null;
     }
-    setState(() {
-      _error = null;
-      onPicked(picked.hour * 60 + picked.minute);
-    });
+    return hours * 60 + minutes;
   }
 
   void _save() {
-    if (_durationMinutes < 120 || _durationMinutes > 960) {
+    final durationMinutes = _durationMinutes();
+    if (durationMinutes == null) {
+      setState(() {
+        _error = 'Enter valid hours and minutes (0–59 for minutes).';
+      });
+      return;
+    }
+    if (durationMinutes < 120 || durationMinutes > 960) {
       setState(() {
         _error = 'Sleep duration should be between 2 and 16 hours.';
       });
@@ -100,17 +111,18 @@ class _SleepCheckInDialogState extends State<SleepCheckInDialog> {
     }
 
     Navigator.of(context).pop(
-      SleepCheckInResult(
-        bedtimeMinutes: _bedtimeMinutes,
-        wakeTimeMinutes: _wakeTimeMinutes,
-        sleepHours: _durationMinutes / 60,
-      ),
+      SleepCheckInResult.saved(durationMinutes / 60),
     );
+  }
+
+  void _skip() {
+    Navigator.of(context).pop(const SleepCheckInResult.skipped());
   }
 
   @override
   Widget build(BuildContext context) {
     final targetHours = widget.profile.dailyTargets.sleepHours;
+    final durationMinutes = _durationMinutes();
 
     return PopScope(
       canPop: widget.allowDismiss,
@@ -123,31 +135,35 @@ class _SleepCheckInDialogState extends State<SleepCheckInDialog> {
           children: [
             Text(widget.description),
             const SizedBox(height: 16),
-            _TimePickerButton(
-              label: 'Bedtime',
-              value: formatMinutesAsClock(_bedtimeMinutes),
-              onTap: () => _pickTime(
-                currentMinutes: _bedtimeMinutes,
-                onPicked: (value) => _bedtimeMinutes = value,
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: _DurationField(
+                    label: 'Hours',
+                    controller: _hoursController,
+                    onChanged: (_) => setState(() => _error = null),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _DurationField(
+                    label: 'Minutes',
+                    controller: _minutesController,
+                    onChanged: (_) => setState(() => _error = null),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 10),
-            _TimePickerButton(
-              label: 'Wake time',
-              value: formatMinutesAsClock(_wakeTimeMinutes),
-              onTap: () => _pickTime(
-                currentMinutes: _wakeTimeMinutes,
-                onPicked: (value) => _wakeTimeMinutes = value,
+            if (durationMinutes != null && durationMinutes > 0) ...[
+              const SizedBox(height: 14),
+              Text(
+                'Total: ${formatDurationMinutes(durationMinutes)}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.sleepAccent,
+                ),
               ),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              'Estimated sleep: ${formatDurationMinutes(_durationMinutes)}',
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                color: AppColors.sleepAccent,
-              ),
-            ),
+            ],
             const SizedBox(height: 6),
             Text(
               'Target: ${targetHours.toStringAsFixed(1)}h',
@@ -162,11 +178,10 @@ class _SleepCheckInDialogState extends State<SleepCheckInDialog> {
           ],
         ),
         actions: [
-          if (widget.allowDismiss)
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
+          TextButton(
+            onPressed: _skip,
+            child: const Text('Skip for now'),
+          ),
           FilledButton(
             onPressed: _save,
             style: FilledButton.styleFrom(
@@ -181,32 +196,41 @@ class _SleepCheckInDialogState extends State<SleepCheckInDialog> {
   }
 }
 
-class _TimePickerButton extends StatelessWidget {
-  const _TimePickerButton({
+class _DurationField extends StatelessWidget {
+  const _DurationField({
     required this.label,
-    required this.value,
-    required this.onTap,
+    required this.controller,
+    required this.onChanged,
   });
 
   final String label;
-  final String value;
-  final VoidCallback onTap;
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton(
-      onPressed: onTap,
-      style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.textPrimary,
-        side: BorderSide(color: AppColors.sleepAccent.withValues(alpha: 0.6)),
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+    return TextField(
+      controller: controller,
+      keyboardType: TextInputType.number,
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: AppColors.textMuted),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: AppColors.sleepAccent.withValues(alpha: 0.5),
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.sleepAccent, width: 2),
+        ),
       ),
-      child: Row(
-        children: [
-          Text(label),
-          const Spacer(),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w700)),
-        ],
+      style: const TextStyle(
+        fontWeight: FontWeight.w700,
+        color: AppColors.textPrimary,
       ),
     );
   }

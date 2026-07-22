@@ -1,6 +1,9 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:nutrilens/app/app_locale_scope.dart';
 import 'package:nutrilens/features/profile/meal_preferences_form.dart';
+import 'package:nutrilens/features/settings/language_picker.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
+import 'package:nutrilens/l10n/l10n_extensions.dart';
 import 'package:nutrilens/models/dietary_profile.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
@@ -77,8 +80,9 @@ class _AuthScreenState extends State<AuthScreen> {
       }
     } catch (error) {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       setState(() {
-        _error = friendlyAuthError(error);
+        _error = friendlyAuthErrorMessage(l10n, error);
         _busy = false;
       });
     }
@@ -96,34 +100,44 @@ class _AuthScreenState extends State<AuthScreen> {
       await widget.onContinueAsGuest(_dietaryProfile);
     } catch (error) {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       setState(() {
-        _error = friendlyAuthError(error);
+        _error = friendlyAuthErrorMessage(l10n, error);
         _busy = false;
       });
     }
   }
 
-  String? _validateEmail(String? value) {
+  String? _validateEmail(String? value, AppLocalizations l10n) {
     final email = value?.trim() ?? '';
     if (email.isEmpty) {
-      return 'Enter an email';
+      return l10n.authValidationEmailRequired;
     }
     if (!email.contains('@')) {
-      return 'Enter a valid email';
+      return l10n.authValidationEmailInvalid;
     }
     return null;
   }
 
-  String? _validatePassword(String? value) {
+  String? _validatePassword(String? value, AppLocalizations l10n) {
     final password = value?.trim() ?? '';
     if (password.length < 6) {
-      return 'Password must be at least 6 characters';
+      return l10n.authValidationPasswordMin;
     }
     return null;
+  }
+
+  Future<void> _pickLanguage() async {
+    if (_busy) {
+      return;
+    }
+    await pickAndApplyLanguage(context: context);
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final localeScope = AppLocaleScope.of(context);
     final isCreate = _mode == AuthMode.createAccount;
     final showPreferences = isCreate;
 
@@ -140,29 +154,37 @@ class _AuthScreenState extends State<AuthScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton.icon(
+                        onPressed: _busy ? null : _pickLanguage,
+                        icon: const Icon(Icons.language),
+                        label: Text(localeScope.language.label(l10n)),
+                      ),
+                    ),
                     Text(
-                      'NutriLens',
+                      l10n.appTitle,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.headlineLarge,
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      isCreate ? 'Create your account' : 'Welcome back',
+                      isCreate ? l10n.authCreateTitle : l10n.authWelcomeBack,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 28),
                     SegmentedButton<AuthMode>(
-                      segments: const [
+                      segments: [
                         ButtonSegment(
                           value: AuthMode.createAccount,
-                          icon: Icon(Icons.person_add_outlined),
-                          label: Text('Create'),
+                          icon: const Icon(Icons.person_add_outlined),
+                          label: Text(l10n.authCreate),
                         ),
                         ButtonSegment(
                           value: AuthMode.signIn,
-                          icon: Icon(Icons.login),
-                          label: Text('Sign in'),
+                          icon: const Icon(Icons.login),
+                          label: Text(l10n.authSignIn),
                         ),
                       ],
                       selected: {_mode},
@@ -178,12 +200,12 @@ class _AuthScreenState extends State<AuthScreen> {
                     if (showPreferences) ...[
                       const SizedBox(height: 24),
                       Text(
-                        'Meal preferences',
+                        l10n.authMealPreferences,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Tell us what you like and what to avoid before you sign in.',
+                        l10n.authMealPreferencesHint,
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       const SizedBox(height: 16),
@@ -215,9 +237,9 @@ class _AuthScreenState extends State<AuthScreen> {
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       autofillHints: const [AutofillHints.email],
-                      decoration: const InputDecoration(labelText: 'Email'),
+                      decoration: InputDecoration(labelText: l10n.authEmail),
                       enabled: !_busy,
-                      validator: _validateEmail,
+                      validator: (value) => _validateEmail(value, l10n),
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
@@ -228,9 +250,9 @@ class _AuthScreenState extends State<AuthScreen> {
                             ? AutofillHints.newPassword
                             : AutofillHints.password,
                       ],
-                      decoration: const InputDecoration(labelText: 'Password'),
+                      decoration: InputDecoration(labelText: l10n.authPassword),
                       enabled: !_busy,
-                      validator: _validatePassword,
+                      validator: (value) => _validatePassword(value, l10n),
                       onFieldSubmitted: (_) => _submit(),
                     ),
                     if (_error != null) ...[
@@ -253,14 +275,18 @@ class _AuthScreenState extends State<AuthScreen> {
                                   color: AppColors.onLime,
                                 ),
                               )
-                            : Text(isCreate ? 'Create account' : 'Sign in'),
+                            : Text(
+                                isCreate
+                                    ? l10n.authCreateAccount
+                                    : l10n.authSignIn,
+                              ),
                       ),
                     ),
                     const SizedBox(height: 12),
                     TextButton.icon(
                       onPressed: _busy ? null : _continueAsGuest,
                       icon: const Icon(Icons.person_outline),
-                      label: const Text('Continue as guest'),
+                      label: Text(l10n.authContinueAsGuest),
                     ),
                   ],
                 ),
@@ -274,26 +300,3 @@ class _AuthScreenState extends State<AuthScreen> {
 }
 
 enum AuthMode { createAccount, signIn }
-
-String friendlyAuthError(Object error) {
-  if (error is FirebaseAuthException) {
-    return switch (error.code) {
-      'weak-password' => 'Use a stronger password.',
-      'email-already-in-use' => 'That email already has an account.',
-      'invalid-email' => 'Enter a valid email address.',
-      'user-not-found' ||
-      'wrong-password' ||
-      'invalid-credential' => 'Email or password is incorrect.',
-      'network-request-failed' => 'Check your connection and try again.',
-      _ => error.message ?? 'Authentication failed. Try again.',
-    };
-  }
-  final message = error.toString();
-  if (message.contains('email-already-in-use')) {
-    return 'That email already has an account.';
-  }
-  if (message.contains('invalid-credential')) {
-    return 'Email or password is incorrect.';
-  }
-  return 'Authentication failed. Try again.';
-}

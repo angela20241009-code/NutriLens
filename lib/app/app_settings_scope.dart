@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:nutrilens/app/app_locale_scope.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/services/user_repository.dart';
 
@@ -25,6 +26,7 @@ class AppSettingsController extends ChangeNotifier {
   bool get accessibilityModeEnabled => _accessibilityModeEnabled;
   AppTextScale get textScale => _textScale;
   AppThemePalette get themePalette => _themePalette;
+  String? get profileLocale => _profile?.locale;
   bool get loading => _loading;
   bool get saving => _saving;
 
@@ -232,7 +234,19 @@ class _AppSettingsScopeState extends State<AppSettingsScope> {
       repository: widget.repository,
       uid: widget.uid,
     );
-    _controller.load();
+    _controller.addListener(_syncLocaleFromProfile);
+    _controller.load().then((_) {
+      if (mounted) {
+        _syncLocaleFromProfile();
+      }
+    });
+  }
+
+  void _syncLocaleFromProfile() {
+    if (_controller.loading) {
+      return;
+    }
+    AppLocaleScope.maybeOf(context)?.applyFromProfile(_controller.profileLocale);
   }
 
   @override
@@ -240,12 +254,17 @@ class _AppSettingsScopeState extends State<AppSettingsScope> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.repository != widget.repository ||
         oldWidget.uid != widget.uid) {
-      _controller.reload(repository: widget.repository, uid: widget.uid);
+      _controller.reload(repository: widget.repository, uid: widget.uid).then((_) {
+        if (mounted) {
+          _syncLocaleFromProfile();
+        }
+      });
     }
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_syncLocaleFromProfile);
     _controller.dispose();
     super.dispose();
   }

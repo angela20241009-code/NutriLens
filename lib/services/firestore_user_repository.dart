@@ -403,6 +403,50 @@ class FirestoreUserRepository implements UserRepository {
         .toSet();
   }
 
+  @override
+  Future<Set<String>> getSleepDateKeysInRange(
+    String uid, {
+    required String startDateKey,
+    required String endDateKey,
+  }) async {
+    final snap = await _firestore
+        .collection(FirestorePaths.dailySummaries(uid))
+        .where('dateKey', isGreaterThanOrEqualTo: startDateKey)
+        .where('dateKey', isLessThanOrEqualTo: endDateKey)
+        .get();
+
+    return snap.docs
+        .where((doc) {
+          final sleepHours = doc.data()['sleepHours'];
+          if (sleepHours is num) {
+            return sleepHours > 0;
+          }
+          return false;
+        })
+        .map((doc) => doc.data()['dateKey'] as String? ?? doc.id)
+        .toSet();
+  }
+
+  @override
+  Future<Map<String, DailySummary>> getDailySummariesInRange(
+    String uid, {
+    required String startDateKey,
+    required String endDateKey,
+  }) async {
+    final snap = await _firestore
+        .collection(FirestorePaths.dailySummaries(uid))
+        .where('dateKey', isGreaterThanOrEqualTo: startDateKey)
+        .where('dateKey', isLessThanOrEqualTo: endDateKey)
+        .get();
+
+    return {
+      for (final doc in snap.docs)
+        doc.data()['dateKey'] as String? ?? doc.id: DailySummary.fromMap(
+          fromFirestoreMap(doc.data()),
+        ),
+    };
+  }
+
   // ── Daily summaries ───────────────────────────────────────────────────────
 
   @override
@@ -443,6 +487,44 @@ class FirestoreUserRepository implements UserRepository {
       if (hydrationLiters != null) updates['hydrationLiters'] = hydrationLiters;
       if (sleepHours != null) updates['sleepHours'] = sleepHours;
       await ref.set(updates, SetOptions(merge: true));
+    }
+  }
+
+  @override
+  Future<void> deleteAccount(String uid) async {
+    final user = _auth.currentUser;
+    if (user == null || user.uid != uid) {
+      throw StateError('No signed-in user matches this account.');
+    }
+
+    await _deleteUserFirestoreData(uid);
+    await user.delete();
+  }
+
+  Future<void> _deleteUserFirestoreData(String uid) async {
+    await _deleteCollection(_firestore.collection(FirestorePaths.meals(uid)));
+    await _deleteCollection(
+      _firestore.collection(FirestorePaths.dailySummaries(uid)),
+    );
+
+    final batch = _firestore.batch()
+      ..delete(_firestore.doc(FirestorePaths.userDoc(uid)))
+      ..delete(_firestore.doc(FirestorePaths.userProfileDoc(uid)));
+    await batch.commit();
+  }
+
+  Future<void> _deleteCollection(CollectionReference<Map<String, dynamic>> collection) async {
+    while (true) {
+      final snap = await collection.limit(200).get();
+      if (snap.docs.isEmpty) {
+        return;
+      }
+
+      final batch = _firestore.batch();
+      for (final doc in snap.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
     }
   }
 

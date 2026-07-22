@@ -7,19 +7,27 @@ class ScheduleFilterBar extends StatelessWidget {
     super.key,
     required this.filter,
     required this.onFilterChanged,
+    this.showSleepFilter = false,
   });
 
   final ScheduleViewFilter filter;
   final ValueChanged<ScheduleViewFilter> onFilterChanged;
+  final bool showSleepFilter;
 
   @override
   Widget build(BuildContext context) {
+    final options = ScheduleViewFilter.values
+        .where(
+          (option) => showSleepFilter || option != ScheduleViewFilter.sleep,
+        )
+        .toList(growable: false);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SegmentedButton<ScheduleViewFilter>(
           segments: [
-            for (final option in ScheduleViewFilter.values)
+            for (final option in options)
               ButtonSegment(
                 value: option,
                 label: Text(option.label),
@@ -32,9 +40,14 @@ class ScheduleFilterBar extends StatelessWidget {
         Wrap(
           spacing: 16,
           runSpacing: 8,
-          children: const [
-            _LegendDot(color: scheduleLoggedMealColor, label: 'Logged meals'),
-            _LegendDot(color: scheduleEventColor, label: 'Events'),
+          children: [
+            const _LegendDot(
+              color: scheduleLoggedMealColor,
+              label: 'Meals',
+            ),
+            const _LegendDot(color: scheduleEventColor, label: 'Events'),
+            if (showSleepFilter)
+              const _LegendDot(color: scheduleSleepColor, label: 'Sleep'),
           ],
         ),
       ],
