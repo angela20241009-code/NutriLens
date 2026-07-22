@@ -1,15 +1,19 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:nutrilens/app/app_locale_scope.dart';
 import 'package:nutrilens/app/app_settings_scope.dart';
 import 'package:nutrilens/app/meal_plan_refresh_scope.dart';
 import 'package:nutrilens/app/session_scope.dart';
 import 'package:nutrilens/app/user_scope.dart';
-import 'package:nutrilens/features/auth/auth_screen.dart';
+import 'package:nutrilens/features/profile/delete_account_dialog.dart';
 import 'package:nutrilens/features/profile/link_email_dialog.dart';
 import 'package:nutrilens/features/profile/sign_out_dialog.dart';
 import 'package:nutrilens/features/profile/meal_preferences_form.dart';
 import 'package:nutrilens/features/profile/widgets/profile_text_field.dart';
 import 'package:nutrilens/features/profile/widgets/settings_section.dart';
+import 'package:nutrilens/features/settings/language_picker.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
+import 'package:nutrilens/l10n/l10n_extensions.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/services/user_repository.dart';
 import 'package:nutrilens/theme/app_colors.dart';
@@ -63,20 +67,6 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   bool _loading = true;
   bool _saving = false;
   bool _busy = false;
-
-  static const _genderOptions = {
-    'female': 'Female',
-    'male': 'Male',
-    'non_binary': 'Non-binary',
-    'prefer_not_to_say': 'Prefer not to say',
-  };
-
-  static const _activityOptions = {
-    'low': 'Low',
-    'moderate': 'Moderate',
-    'high': 'High',
-    'very_high': 'Very high',
-  };
 
   @override
   void initState() {
@@ -174,8 +164,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     } catch (error) {
       if (mounted) {
         setState(() => _loading = false);
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Unable to load settings: $error')),
+          SnackBar(content: Text(l10n.unableToLoadSettings('$error'))),
         );
       }
     }
@@ -245,14 +236,18 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
           _saving = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Changes saved')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.changesSaved)),
         );
       }
     } catch (error) {
       if (mounted) {
         setState(() => _saving = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save: $error')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.failedToSave('$error'),
+            ),
+          ),
         );
       }
     }
@@ -330,7 +325,43 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       if (mounted) {
         setState(() => _busy = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Unable to sign out: $error')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.unableToSignOut('$error'),
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteAccount() async {
+    if (_busy || _account == null) return;
+
+    final confirmed = await showDeleteAccountConfirmationDialog(
+      context: context,
+      isAnonymous: _account!.isAnonymous,
+      email: _account!.email,
+    );
+
+    if (!confirmed || !mounted) return;
+
+    setState(() => _busy = true);
+    try {
+      await _repository.deleteAccount(_uid);
+      if (!mounted) {
+        return;
+      }
+      await _signOutUser();
+    } catch (error) {
+      if (mounted) {
+        setState(() => _busy = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.unableToDeleteAccount('$error'),
+            ),
+          ),
         );
       }
     }
@@ -418,8 +449,30 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     }
   }
 
+  Future<void> _showLanguagePicker() async {
+    if (_busy) {
+      return;
+    }
+
+    try {
+      await pickAndApplyLanguage(
+        context: context,
+        repository: _repository,
+        uid: _uid,
+      );
+    } catch (error) {
+      if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.unableToUpdateLanguage('$error'))),
+        );
+      }
+    }
+  }
+
   Future<void> _showTextScalePicker() async {
     final settings = AppSettingsScope.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final selected = await showModalBottomSheet<AppTextScale>(
       context: context,
       backgroundColor: AppColors.cardDark,
@@ -435,20 +488,15 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'Text size',
+                    l10n.textSize,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),
               ),
               for (final scale in AppTextScale.values)
                 _PickerOption(
-                  title: scale.label,
-                  subtitle: switch (scale) {
-                    AppTextScale.small => 'Compact labels and body text.',
-                    AppTextScale.medium => 'Default app text size.',
-                    AppTextScale.large => 'Easier to read on most screens.',
-                    AppTextScale.extraLarge => 'Maximum readability.',
-                  },
+                  title: localizedTextScaleLabel(l10n, scale),
+                  subtitle: localizedTextScaleDescription(l10n, scale),
                   selected: current == scale,
                   onTap: () => Navigator.of(context).pop(scale),
                 ),
@@ -464,7 +512,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Unable to update text size: $error')),
+          SnackBar(
+            content: Text(l10n.unableToUpdateTextSize('$error')),
+          ),
         );
       }
     }
@@ -472,6 +522,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
   Future<void> _showThemePalettePicker() async {
     final settings = AppSettingsScope.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final selected = await showModalBottomSheet<AppThemePalette>(
       context: context,
       backgroundColor: AppColors.cardDark,
@@ -487,15 +538,15 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'Theme colors',
+                    l10n.themeColors,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),
               ),
               for (final palette in AppThemePalette.values)
                 _PickerOption(
-                  title: palette.label,
-                  subtitle: 'Accent and highlight colors across the app.',
+                  title: localizedThemePaletteLabel(l10n, palette),
+                  subtitle: l10n.themePaletteDesc,
                   selected: current == palette,
                   leading: Container(
                     width: 28,
@@ -520,15 +571,16 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Unable to update theme: $error')),
+          SnackBar(content: Text(l10n.unableToUpdateTheme('$error'))),
         );
       }
     }
   }
 
   void _showComingSoon(String feature) {
+    final l10n = AppLocalizations.of(context)!;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$feature coming soon')),
+      SnackBar(content: Text(l10n.comingSoon(feature))),
     );
   }
 
@@ -536,6 +588,10 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final localeScope = AppLocaleScope.of(context);
+    final genderOptions = localizedGenderOptions(l10n);
+    final activityOptions = localizedActivityOptions(l10n);
     final appSettings = AppSettingsScope.of(context);
     final isAnonymous = _account?.isAnonymous ?? true;
     final isBusy = _saving || _busy;
@@ -543,7 +599,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text('Settings'),
+        title: Text(l10n.settingsTitle),
         leading: BackButton(
           color: AppColors.lime,
           onPressed: isBusy ? null : () => Navigator.of(context).pop(),
@@ -559,17 +615,17 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
                     children: [
                       // ── Account ──────────────────────────────────────────
-                      _sectionLabel('Account'),
+                      _sectionLabel(l10n.sectionAccount),
                       _FormCard(
                         children: [
                           ProfileTextField(
-                            label: 'Display name',
+                            label: l10n.displayName,
                             controller: _displayNameController,
                             enabled: !isBusy,
                             limeBorder: true,
                             validator: (v) {
                               if (v == null || v.trim().isEmpty) {
-                                return 'Name is required';
+                                return l10n.nameRequired;
                               }
                               return null;
                             },
@@ -581,10 +637,10 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                         title: '',
                         children: [
                           SettingsRow(
-                            label: 'Email',
+                            label: l10n.email,
                             value: _account?.email?.isNotEmpty == true
                                 ? _account!.email!
-                                : 'Not linked',
+                                : l10n.notLinked,
                             showChevron: !isAnonymous,
                             onTap: (!isAnonymous && !isBusy)
                                 ? _changeEmail
@@ -592,13 +648,13 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           ),
                           if (isAnonymous)
                             SettingsRow(
-                              label: 'Create account',
+                              label: l10n.createAccount,
                               onTap: isBusy ? null : _linkEmail,
                               showDivider: false,
                             )
                           else
                             SettingsRow(
-                              label: 'Change password',
+                              label: l10n.changePassword,
                               showDivider: false,
                               onTap: isBusy ? null : _changePassword,
                             ),
@@ -607,22 +663,21 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
                       const SizedBox(height: 28),
 
-                      // ── Personal ─────────────────────────────────────────
-                      _sectionLabel('Personal'),
+                      _sectionLabel(l10n.sectionPersonal),
                       _FormCard(
                         children: [
                           _dropdownField<String>(
-                            label: 'Gender',
+                            label: l10n.gender,
                             value: _genderValue,
-                            items: _genderOptions,
-                            hint: 'Select gender',
+                            items: genderOptions,
+                            hint: l10n.selectGender,
                             enabled: !isBusy,
                             onChanged: (v) =>
                                 setState(() => _genderValue = v),
                           ),
                           const SizedBox(height: 16),
                           ProfileTextField(
-                            label: 'Phone number',
+                            label: l10n.phoneNumber,
                             controller: _phoneController,
                             keyboardType: TextInputType.phone,
                             enabled: !isBusy,
@@ -630,7 +685,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           ),
                           const SizedBox(height: 16),
                           ProfileTextField(
-                            label: 'Birth year',
+                            label: l10n.birthYear,
                             controller: _birthYearController,
                             keyboardType: TextInputType.number,
                             enabled: !isBusy,
@@ -639,7 +694,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                               if (v != null &&
                                   v.trim().isNotEmpty &&
                                   int.tryParse(v.trim()) == null) {
-                                return 'Enter a valid year';
+                                return l10n.enterValidYear;
                               }
                               return null;
                             },
@@ -649,7 +704,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                             children: [
                               Expanded(
                                 child: ProfileTextField(
-                                  label: 'Height (cm)',
+                                  label: l10n.heightCm,
                                   controller: _heightController,
                                   keyboardType: TextInputType.number,
                                   allowDecimal: true,
@@ -660,7 +715,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                               const SizedBox(width: 12),
                               Expanded(
                                 child: ProfileTextField(
-                                  label: 'Weight (kg)',
+                                  label: l10n.weightKg,
                                   controller: _weightController,
                                   keyboardType: TextInputType.number,
                                   allowDecimal: true,
@@ -675,12 +730,11 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
                       const SizedBox(height: 28),
 
-                      // ── Athlete ───────────────────────────────────────────
-                      _sectionLabel('Athlete'),
+                      _sectionLabel(l10n.sectionAthlete),
                       _FormCard(
                         children: [
                           Text(
-                            'Primary sport',
+                            l10n.primarySport,
                             style: Theme.of(context).textTheme.labelSmall,
                           ),
                           const SizedBox(height: 8),
@@ -697,7 +751,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                             child: Text(
                               _profile?.primarySportName.isNotEmpty == true
                                   ? _profile!.primarySportName
-                                  : 'No sport selected',
+                                  : l10n.noSportSelected,
                               style: TextStyle(
                                 color: AppColors.textMuted.withValues(alpha: 0.5),
                               ),
@@ -705,14 +759,14 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           ),
                           const SizedBox(height: 16),
                           ProfileTextField(
-                            label: 'School',
+                            label: l10n.school,
                             controller: _schoolController,
                             enabled: !isBusy,
                             limeBorder: true,
                           ),
                           const SizedBox(height: 16),
                           ProfileTextField(
-                            label: 'Graduation year',
+                            label: l10n.graduationYear,
                             controller: _graduationYearController,
                             keyboardType: TextInputType.number,
                             enabled: !isBusy,
@@ -721,29 +775,30 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                               if (v != null &&
                                   v.trim().isNotEmpty &&
                                   int.tryParse(v.trim()) == null) {
-                                return 'Enter a valid year';
+                                return l10n.enterValidYear;
                               }
                               return null;
                             },
                           ),
                           const SizedBox(height: 16),
                           _dropdownField<int>(
-                            label: 'Training days per week',
+                            label: l10n.trainingDaysPerWeek,
                             value: _trainingDaysValue,
                             items: {
-                              for (int i = 0; i <= 7; i++) i: '$i days',
+                              for (int i = 0; i <= 7; i++)
+                                i: l10n.trainingDaysCount(i),
                             },
-                            hint: 'Select training days',
+                            hint: l10n.selectTrainingDays,
                             enabled: !isBusy,
                             onChanged: (v) =>
                                 setState(() => _trainingDaysValue = v),
                           ),
                           const SizedBox(height: 16),
                           _dropdownField<String>(
-                            label: 'Activity level',
+                            label: l10n.activityLevel,
                             value: _activityLevelValue,
-                            items: _activityOptions,
-                            hint: 'Select activity level',
+                            items: activityOptions,
+                            hint: l10n.selectActivityLevel,
                             enabled: !isBusy,
                             onChanged: (v) =>
                                 setState(() => _activityLevelValue = v),
@@ -753,31 +808,30 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
                       const SizedBox(height: 28),
 
-                      // ── Nutrition Goals ───────────────────────────────────
-                      _sectionLabel('Nutrition Goals'),
+                      _sectionLabel(l10n.sectionNutritionGoals),
                       _FormCard(
                         children: [
                           Row(
                             children: [
                               Expanded(
                                 child: ProfileTextField(
-                                  label: 'Calories (kcal)',
+                                  label: l10n.caloriesKcal,
                                   controller: _caloriesController,
                                   keyboardType: TextInputType.number,
                                   enabled: !isBusy,
                                   limeBorder: true,
-                                  validator: _requirePositiveInt,
+                                  validator: (v) => _requirePositiveInt(v, l10n),
                                 ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: ProfileTextField(
-                                  label: 'Protein (g)',
+                                  label: l10n.proteinG,
                                   controller: _proteinController,
                                   keyboardType: TextInputType.number,
                                   enabled: !isBusy,
                                   limeBorder: true,
-                                  validator: _requirePositiveInt,
+                                  validator: (v) => _requirePositiveInt(v, l10n),
                                 ),
                               ),
                             ],
@@ -787,23 +841,23 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                             children: [
                               Expanded(
                                 child: ProfileTextField(
-                                  label: 'Carbs (g)',
+                                  label: l10n.carbsG,
                                   controller: _carbsController,
                                   keyboardType: TextInputType.number,
                                   enabled: !isBusy,
                                   limeBorder: true,
-                                  validator: _requirePositiveInt,
+                                  validator: (v) => _requirePositiveInt(v, l10n),
                                 ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: ProfileTextField(
-                                  label: 'Fats (g)',
+                                  label: l10n.fatsG,
                                   controller: _fatsController,
                                   keyboardType: TextInputType.number,
                                   enabled: !isBusy,
                                   limeBorder: true,
-                                  validator: _requirePositiveInt,
+                                  validator: (v) => _requirePositiveInt(v, l10n),
                                 ),
                               ),
                             ],
@@ -813,7 +867,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                             children: [
                               Expanded(
                                 child: ProfileTextField(
-                                  label: 'Hydration (L)',
+                                  label: l10n.hydrationL,
                                   controller: _hydrationController,
                                   keyboardType: TextInputType.number,
                                   allowDecimal: true,
@@ -824,7 +878,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                               const SizedBox(width: 12),
                               Expanded(
                                 child: ProfileTextField(
-                                  label: 'Sleep (hrs)',
+                                  label: l10n.sleepHrs,
                                   controller: _sleepHoursController,
                                   keyboardType: TextInputType.number,
                                   allowDecimal: true,
@@ -839,8 +893,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
                       const SizedBox(height: 28),
 
-                      // ── Dietary ───────────────────────────────────────────
-                      _sectionLabel('Dietary'),
+                      _sectionLabel(l10n.sectionDietary),
                       _FormCard(
                         children: [
                           MealPreferencesForm(
@@ -871,10 +924,15 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
                       // ── Display ───────────────────────────────────────────
                       SettingsSection(
-                        title: 'Display',
+                        title: l10n.sectionDisplay,
                         children: [
                           SettingsRow(
-                            label: 'Accessibility mode',
+                            label: l10n.languageLabel,
+                            value: localeScope.language.label(l10n),
+                            onTap: isBusy ? null : _showLanguagePicker,
+                          ),
+                          SettingsRow(
+                            label: l10n.accessibilityMode,
                             trailing: Switch(
                               value: appSettings.accessibilityModeEnabled,
                               activeThumbColor: AppColors.lime,
@@ -890,15 +948,21 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                     ),
                           ),
                           SettingsRow(
-                            label: 'Text size',
-                            value: appSettings.textScale.label,
+                            label: l10n.textSize,
+                            value: localizedTextScaleLabel(
+                              l10n,
+                              appSettings.textScale,
+                            ),
                             onTap: isBusy || appSettings.saving
                                 ? null
                                 : _showTextScalePicker,
                           ),
                           SettingsRow(
-                            label: 'Theme colors',
-                            value: appSettings.themePalette.label,
+                            label: l10n.themeColors,
+                            value: localizedThemePaletteLabel(
+                              l10n,
+                              appSettings.themePalette,
+                            ),
                             showDivider: false,
                             onTap: isBusy || appSettings.saving
                                 ? null
@@ -909,12 +973,11 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
                       const SizedBox(height: 24),
 
-                      // ── App ───────────────────────────────────────────────
                       SettingsSection(
-                        title: 'App',
+                        title: l10n.sectionApp,
                         children: [
                           SettingsRow(
-                            label: 'Sleep Mode',
+                            label: l10n.sleepMode,
                             trailing: Switch(
                               value: appSettings.sleepModeEnabled,
                               activeThumbColor: AppColors.sleepAccent,
@@ -929,28 +992,18 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                       !appSettings.sleepModeEnabled,
                                     ),
                           ),
-                          if (appSettings.sleepModeEnabled)
-                            SettingsRow(
-                              label: 'Mode switcher',
-                              value: _modeSwitcherLabel(
-                                appSettings.segmentControlStyle,
-                              ),
-                              onTap: isBusy || appSettings.saving
-                                  ? null
-                                  : _showModeSwitcherPicker,
-                            ),
                           SettingsRow(
-                            label: 'Notifications',
+                            label: l10n.notifications,
                             onTap: isBusy
                                 ? null
-                                : () => _showComingSoon('Notifications'),
+                                : () => _showComingSoon(l10n.notifications),
                           ),
                           SettingsRow(
-                            label: 'Units',
+                            label: l10n.units,
                             showDivider: false,
                             onTap: isBusy
                                 ? null
-                                : () => _showComingSoon('Units'),
+                                : () => _showComingSoon(l10n.units),
                           ),
                         ],
                       ),
@@ -977,22 +1030,30 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                     strokeWidth: 2,
                                   ),
                                 )
-                              : const Text(
-                                  'Save changes',
-                                  style: TextStyle(fontWeight: FontWeight.w700),
+                              : Text(
+                                  l10n.saveChanges,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
                         ),
                       ),
 
                       const SizedBox(height: 12),
 
-                      // ── Sign out ──────────────────────────────────────────
                       TextButton(
                         onPressed: isBusy ? null : _signOut,
                         style: TextButton.styleFrom(
                           foregroundColor: AppColors.orange,
                         ),
-                        child: const Text('Sign out'),
+                        child: Text(l10n.signOut),
+                      ),
+                      TextButton(
+                        onPressed: isBusy ? null : _deleteAccount,
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.orange,
+                        ),
+                        child: Text(l10n.deleteAccount),
                       ),
                     ],
                   ),
@@ -1078,9 +1139,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     );
   }
 
-  String? _requirePositiveInt(String? v) {
-    if (v == null || v.trim().isEmpty) return 'Required';
-    if (int.tryParse(v.trim()) == null) return 'Enter a number';
+  String? _requirePositiveInt(String? v, AppLocalizations l10n) {
+    if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
+    if (int.tryParse(v.trim()) == null) return l10n.enterNumber;
     return null;
   }
 
@@ -1189,7 +1250,7 @@ class _ChangeEmailDialogState extends State<_ChangeEmailDialog> {
       if (mounted) {
         setState(() {
           _loading = false;
-          _error = friendlyAuthError(e);
+          _error = friendlyAuthErrorMessage(AppLocalizations.of(context)!, e);
         });
       }
     } catch (e) {
@@ -1319,7 +1380,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
       if (mounted) {
         setState(() {
           _loading = false;
-          _error = friendlyAuthError(e);
+          _error = friendlyAuthErrorMessage(AppLocalizations.of(context)!, e);
         });
       }
     } catch (e) {

@@ -79,6 +79,21 @@ abstract class UserRepository {
     required String endDateKey,
   });
 
+  /// Returns date keys (`yyyy-MM-dd`) with logged sleep in the
+  /// inclusive [startDateKey, endDateKey] range.
+  Future<Set<String>> getSleepDateKeysInRange(
+    String uid, {
+    required String startDateKey,
+    required String endDateKey,
+  });
+
+  /// Returns daily summaries keyed by dateKey in the inclusive range.
+  Future<Map<String, DailySummary>> getDailySummariesInRange(
+    String uid, {
+    required String startDateKey,
+    required String endDateKey,
+  });
+
   // ── Daily summaries ───────────────────────────────────────────────────────
 
   /// Returns the [DailySummary] for [uid] on [dateKey] (`yyyy-MM-dd`),
@@ -96,6 +111,9 @@ abstract class UserRepository {
     double? hydrationLiters,
     double? sleepHours,
   });
+
+  /// Permanently deletes the user's auth record and stored app data.
+  Future<void> deleteAccount(String uid);
 
   Future<void> signOut();
 }

@@ -1,0 +1,201 @@
+{
+  "@@locale": "en",
+  "appTitle": "NutriLens",
+  "languageLabel": "Language",
+  "languageEnglish": "English",
+  "languageSpanish": "Spanish",
+  "languageChinese": "Chinese",
+  "languagePickerTitle": "Language",
+  "cancel": "Cancel",
+  "saveChanges": "Save changes",
+  "signOut": "Sign out",
+  "deleteAccount": "Delete account",
+  "comingSoon": "{feature} coming soon",
+  "@comingSoon": {
+    "placeholders": {
+      "feature": {
+        "type": "String"
+      }
+    }
+  },
+  "authCreateTitle": "Create your account",
+  "authWelcomeBack": "Welcome back",
+  "authCreate": "Create",
+  "authSignIn": "Sign in",
+  "authMealPreferences": "Meal preferences",
+  "authMealPreferencesHint": "Tell us what you like and what to avoid before you sign in.",
+  "authEmail": "Email",
+  "authPassword": "Password",
+  "authCreateAccount": "Create account",
+  "authContinueAsGuest": "Continue as guest",
+  "authValidationEmailRequired": "Enter an email",
+  "authValidationEmailInvalid": "Enter a valid email",
+  "authValidationPasswordMin": "Password must be at least 6 characters",
+  "authErrorWeakPassword": "Use a stronger password.",
+  "authErrorEmailInUse": "That email already has an account.",
+  "authErrorInvalidEmail": "Enter a valid email address.",
+  "authErrorWrongCredentials": "Email or password is incorrect.",
+  "authErrorNetwork": "Check your connection and try again.",
+  "authErrorGeneric": "Authentication failed. Try again.",
+  "mealStylesTitle": "Food styles you like",
+  "mealStyleHighProtein": "High protein",
+  "mealStyleMediterranean": "Mediterranean",
+  "mealStyleVegetarian": "Vegetarian",
+  "mealStyleVegan": "Vegan",
+  "mealStyleGlutenFree": "Gluten-free",
+  "mealStyleLowCarb": "Low carb",
+  "mealStyleBalanced": "Balanced",
+  "mealStyleAsianInspired": "Asian-inspired",
+  "mealStyleOthers": "Others",
+  "mealStyleOtherLabel": "OTHER FOOD STYLE",
+  "mealStyleOtherHelper": "Describe your preferred food style",
+  "allergensLabel": "ALLERGENS",
+  "allergensHelper": "Use commas or new lines. Example: peanuts, shellfish",
+  "restrictionsLabel": "DIETARY RESTRICTIONS",
+  "restrictionsHelper": "Use commas or new lines. Example: halal, dairy-free",
+  "settingsTitle": "Settings",
+  "sectionAccount": "Account",
+  "sectionPersonal": "Personal",
+  "sectionAthlete": "Athlete",
+  "sectionNutritionGoals": "Nutrition Goals",
+  "sectionDietary": "Dietary",
+  "sectionDisplay": "Display",
+  "sectionApp": "App",
+  "displayName": "Display name",
+  "nameRequired": "Name is required",
+  "email": "Email",
+  "notLinked": "Not linked",
+  "createAccount": "Create account",
+  "changePassword": "Change password",
+  "gender": "Gender",
+  "selectGender": "Select gender",
+  "genderFemale": "Female",
+  "genderMale": "Male",
+  "genderNonBinary": "Non-binary",
+  "genderPreferNotToSay": "Prefer not to say",
+  "phoneNumber": "Phone number",
+  "birthYear": "Birth year",
+  "enterValidYear": "Enter a valid year",
+  "heightCm": "Height (cm)",
+  "weightKg": "Weight (kg)",
+  "primarySport": "Primary sport",
+  "noSportSelected": "No sport selected",
+  "school": "School",
+  "graduationYear": "Graduation year",
+  "trainingDaysPerWeek": "Training days per week",
+  "selectTrainingDays": "Select training days",
+  "trainingDaysCount": "{count} days",
+  "@trainingDaysCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "activityLevel": "Activity level",
+  "selectActivityLevel": "Select activity level",
+  "activityLow": "Low",
+  "activityModerate": "Moderate",
+  "activityHigh": "High",
+  "activityVeryHigh": "Very high",
+  "caloriesKcal": "Calories (kcal)",
+  "proteinG": "Protein (g)",
+  "carbsG": "Carbs (g)",
+  "fatsG": "Fats (g)",
+  "hydrationL": "Hydration (L)",
+  "sleepHrs": "Sleep (hrs)",
+  "fieldRequired": "Required",
+  "enterNumber": "Enter a number",
+  "accessibilityMode": "Accessibility mode",
+  "textSize": "Text size",
+  "themeColors": "Theme colors",
+  "textScaleSmall": "Small",
+  "textScaleMedium": "Medium",
+  "textScaleLarge": "Large",
+  "textScaleExtraLarge": "Extra large",
+  "textScaleSmallDesc": "Compact labels and body text.",
+  "textScaleMediumDesc": "Default app text size.",
+  "textScaleLargeDesc": "Easier to read on most screens.",
+  "textScaleExtraLargeDesc": "Maximum readability.",
+  "themeClassic": "Classic lime",
+  "themeOcean": "Ocean blue",
+  "themeSunset": "Sunset coral",
+  "themeForest": "Forest green",
+  "themePaletteDesc": "Accent and highlight colors across the app.",
+  "sleepMode": "Sleep Mode",
+  "notifications": "Notifications",
+  "units": "Units",
+  "changesSaved": "Changes saved",
+  "failedToSave": "Failed to save: {error}",
+  "@failedToSave": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unableToLoadSettings": "Unable to load settings: {error}",
+  "@unableToLoadSettings": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unableToUpdateTextSize": "Unable to update text size: {error}",
+  "@unableToUpdateTextSize": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unableToUpdateTheme": "Unable to update theme: {error}",
+  "@unableToUpdateTheme": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unableToUpdateLanguage": "Unable to update language: {error}",
+  "@unableToUpdateLanguage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unableToSignOut": "Unable to sign out: {error}",
+  "@unableToSignOut": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unableToDeleteAccount": "Unable to delete account: {error}",
+  "@unableToDeleteAccount": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToInitializeApp": "Failed to initialize the app:\n{error}",
+  "@failedToInitializeApp": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToLoadAccount": "Failed to load account:\n{error}",
+  "@failedToLoadAccount": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
+}

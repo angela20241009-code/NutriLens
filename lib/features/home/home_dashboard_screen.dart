@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:nutrilens/app/meal_plan_scope.dart';
+import 'package:nutrilens/app/sleep_log_refresh_scope.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/features/home/home_dashboard_data.dart';
 import 'package:nutrilens/features/home/widgets/home_header.dart';
 import 'package:nutrilens/features/home/widgets/hydration_card.dart';
 import 'package:nutrilens/features/home/widgets/meal_capture_card.dart';
 import 'package:nutrilens/features/home/widgets/meal_plan_section.dart';
-import 'package:nutrilens/features/home/widgets/next_session_card.dart';
 import 'package:nutrilens/features/home/widgets/program_banner.dart';
 import 'package:nutrilens/features/home/widgets/todays_fuel_card.dart';
+import 'package:nutrilens/features/home/widgets/weekly_sleep_summary_card.dart';
 import 'package:nutrilens/features/meals/favorite_meal_sheet.dart';
 import 'package:nutrilens/features/profile/meal_preferences_sheet.dart';
 import 'package:nutrilens/features/meals/log_meal_sheet.dart';
+import 'package:nutrilens/features/sleep/sleep_log_actions.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/services/date_key.dart';
-import 'package:nutrilens/services/edamam_meal_plan_client.dart';
+import 'package:nutrilens/services/openai_meal_plan_client.dart';
 import 'package:nutrilens/services/meal_plan_client.dart';
 import 'package:nutrilens/services/user_repository.dart';
 
@@ -41,6 +43,8 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   UserRepository? _repository;
   MealPlanClient? _mealPlanClient;
   String? _uid;
+  SleepLogRefreshNotifier? _sleepLogRefreshNotifier;
+  int _lastSleepLogRefreshGeneration = 0;
 
   DateTime get _today =>
       DateUtils.dateOnly(widget._nowProvider?.call() ?? DateTime.now());
@@ -51,7 +55,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     final scope = UserScope.of(context);
     final mealPlanClient =
         MealPlanScope.maybeOf(context)?.client ??
-        EdamamMealPlanClient.fromEnvironment();
+        OpenAiMealPlanClient.fromEnvironment();
 
     if (_dataFuture == null ||
         _repository != scope.repository ||
@@ -66,6 +70,30 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
         mealPlanClient: mealPlanClient,
       );
     }
+
+    final sleepLogRefresh = SleepLogRefreshScope.maybeOf(context);
+    if (_sleepLogRefreshNotifier != sleepLogRefresh) {
+      _sleepLogRefreshNotifier?.removeListener(_handleSleepLogRefreshRequest);
+      _sleepLogRefreshNotifier = sleepLogRefresh;
+      _lastSleepLogRefreshGeneration = sleepLogRefresh?.generation ?? 0;
+      sleepLogRefresh?.addListener(_handleSleepLogRefreshRequest);
+    }
+  }
+
+  @override
+  void dispose() {
+    _sleepLogRefreshNotifier?.removeListener(_handleSleepLogRefreshRequest);
+    super.dispose();
+  }
+
+  void _handleSleepLogRefreshRequest() {
+    final notifier = _sleepLogRefreshNotifier;
+    if (notifier == null ||
+        notifier.generation == _lastSleepLogRefreshGeneration) {
+      return;
+    }
+    _lastSleepLogRefreshGeneration = notifier.generation;
+    _refresh();
   }
 
   Future<HomeDashboardData> _loadData({
@@ -86,6 +114,27 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       today,
       profile.timezone,
     );
+
+    List<WeeklySleepDay> weeklySleepDays = const [];
+    if (profile.sleepModeEnabled) {
+      final weekStart = today.subtract(Duration(days: today.weekday - 1));
+      final weekEnd = weekStart.add(const Duration(days: 6));
+      final summaries = await repository.getDailySummariesInRange(
+        uid,
+        startDateKey: dateKeyFor(weekStart, profile.timezone),
+        endDateKey: dateKeyFor(weekEnd, profile.timezone),
+      );
+      weeklySleepDays = List.generate(7, (index) {
+        final date = weekStart.add(Duration(days: index));
+        final key = dateKeyFor(date, profile.timezone);
+        return WeeklySleepDay(
+          date: date,
+          dateKey: key,
+          sleepHours: summaries[key]?.sleepHours ?? 0,
+          isToday: DateUtils.isSameDay(date, today),
+        );
+      }, growable: false);
+    }
 
     String? mealPlanError;
     var plannedMeals = const <HomeMealPlanItem>[];
@@ -125,6 +174,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       loggedMeals: loggedMeals,
       plannedMeals: plannedMeals,
       mealPlanError: mealPlanError,
+      weeklySleepDays: weeklySleepDays,
     );
   }
 
@@ -187,6 +237,27 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   }
 
 
+  Future<void> _openSleepLogDialog() async {
+    final data = await _dataFuture;
+    if (!mounted || data == null) {
+      return;
+    }
+
+    final todayKey = dateKeyFor(_today, data.profile.timezone);
+    final saved = await showSleepLogDialogAndSave(
+      context: context,
+      profile: data.profile,
+      dateKey: todayKey,
+      title: 'Log sleep',
+      initialSleepHours: data.summary.sleepHours > 0
+          ? data.summary.sleepHours
+          : null,
+    );
+    if (saved && mounted) {
+      await _refresh();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<HomeDashboardData>(
@@ -236,8 +307,14 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                   targets: profile.dailyTargets,
                   onViewDetailsTap: widget.onMealsTap,
                 ),
-                const SizedBox(height: 16),
-                const NextSessionCard(),
+                if (profile.sleepModeEnabled) ...[
+                  const SizedBox(height: 16),
+                  WeeklySleepSummaryCard(
+                    days: data.weeklySleepDays,
+                    targetHours: profile.dailyTargets.sleepHours,
+                    onLogSleepTap: _openSleepLogDialog,
+                  ),
+                ],
                 const SizedBox(height: 24),
                 MealPlanSection(
                   meals: data.plannedMeals,

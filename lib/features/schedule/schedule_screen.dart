@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:nutrilens/app/meal_log_refresh_scope.dart';
+import 'package:nutrilens/app/meal_plan_refresh_scope.dart';
+import 'package:nutrilens/app/meal_plan_scope.dart';
+import 'package:nutrilens/app/sleep_log_refresh_scope.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/features/schedule/create_schedule_event_sheet.dart';
 import 'package:nutrilens/features/schedule/schedule_calendar_mode.dart';
 import 'package:nutrilens/features/schedule/schedule_view_filter.dart';
 import 'package:nutrilens/features/schedule/widgets/schedule_filter_bar.dart';
 import 'package:nutrilens/features/schedule/widgets/schedule_header.dart';
+import 'package:nutrilens/features/schedule/widgets/schedule_meal_plan_section.dart';
 import 'package:nutrilens/features/schedule/widgets/schedule_timeline.dart';
 import 'package:nutrilens/features/schedule/widgets/todays_match_card.dart';
 import 'package:nutrilens/features/schedule/widgets/month_date_selector.dart';
 import 'package:nutrilens/features/schedule/widgets/week_date_selector.dart';
+import 'package:nutrilens/features/sleep/sleep_log_actions.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/services/date_key.dart';
+import 'package:nutrilens/services/openai_meal_plan_client.dart';
 
 class ScheduleScreen extends StatefulWidget {
   const ScheduleScreen({super.key, this.isActive = true});
@@ -30,10 +36,20 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   ScheduleCalendarMode _calendarMode = ScheduleCalendarMode.week;
   List<Meal> _loggedMeals = const [];
   Set<String> _mealDateKeysInRange = const {};
+  Set<String> _sleepDateKeysInRange = const {};
+  double _sleepHours = 0;
+  MealPlanWeek? _mealPlan;
+  String? _mealPlanError;
+  bool _mealPlanLoading = false;
+  bool _mealDataReloadInProgress = false;
   bool _wasActive = false;
   bool _mealsRequested = false;
   MealLogRefreshNotifier? _mealLogRefreshNotifier;
+  SleepLogRefreshNotifier? _sleepLogRefreshNotifier;
+  MealPlanRefreshNotifier? _mealPlanRefreshNotifier;
   int _lastMealLogRefreshGeneration = 0;
+  int _lastSleepLogRefreshGeneration = 0;
+  int _lastMealPlanRefreshGeneration = 0;
 
   @override
   void initState() {
@@ -52,6 +68,20 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       _mealLogRefreshNotifier = mealLogRefresh;
       _lastMealLogRefreshGeneration = mealLogRefresh?.generation ?? 0;
       mealLogRefresh?.addListener(_handleMealLogRefreshRequest);
+    }
+    final sleepLogRefresh = SleepLogRefreshScope.maybeOf(context);
+    if (_sleepLogRefreshNotifier != sleepLogRefresh) {
+      _sleepLogRefreshNotifier?.removeListener(_handleSleepLogRefreshRequest);
+      _sleepLogRefreshNotifier = sleepLogRefresh;
+      _lastSleepLogRefreshGeneration = sleepLogRefresh?.generation ?? 0;
+      sleepLogRefresh?.addListener(_handleSleepLogRefreshRequest);
+    }
+    final mealPlanRefresh = MealPlanRefreshScope.maybeOf(context);
+    if (_mealPlanRefreshNotifier != mealPlanRefresh) {
+      _mealPlanRefreshNotifier?.removeListener(_handleMealPlanRefreshRequest);
+      _mealPlanRefreshNotifier = mealPlanRefresh;
+      _lastMealPlanRefreshGeneration = mealPlanRefresh?.generation ?? 0;
+      mealPlanRefresh?.addListener(_handleMealPlanRefreshRequest);
     }
     if (_loadedUid != scope.uid) {
       _loadedUid = scope.uid;
@@ -77,6 +107,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   @override
   void dispose() {
     _mealLogRefreshNotifier?.removeListener(_handleMealLogRefreshRequest);
+    _sleepLogRefreshNotifier?.removeListener(_handleSleepLogRefreshRequest);
+    _mealPlanRefreshNotifier?.removeListener(_handleMealPlanRefreshRequest);
     super.dispose();
   }
 
@@ -91,14 +123,43 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     _reloadMealData(force: true);
   }
 
+  void _handleSleepLogRefreshRequest() {
+    final notifier = _sleepLogRefreshNotifier;
+    if (notifier == null ||
+        notifier.generation == _lastSleepLogRefreshGeneration) {
+      return;
+    }
+    _lastSleepLogRefreshGeneration = notifier.generation;
+    _mealsRequested = false;
+    _reloadMealData(force: true);
+  }
+
+  void _handleMealPlanRefreshRequest() {
+    final notifier = _mealPlanRefreshNotifier;
+    if (notifier == null ||
+        notifier.generation == _lastMealPlanRefreshGeneration) {
+      return;
+    }
+    _lastMealPlanRefreshGeneration = notifier.generation;
+    _mealsRequested = false;
+    _reloadMealData(force: true);
+  }
+
   Future<void> _reloadMealData({bool force = false}) async {
+    if (_mealDataReloadInProgress) {
+      return;
+    }
+    _mealDataReloadInProgress = true;
+
     if (!mounted) {
+      _mealDataReloadInProgress = false;
       return;
     }
 
     final scope = UserScope.of(context);
     final profile = await scope.repository.getProfile(scope.uid);
     if (!mounted || profile == null) {
+      _mealDataReloadInProgress = false;
       return;
     }
 
@@ -109,6 +170,11 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
     List<Meal> meals = const [];
     Set<String> dateKeys = const {};
+    Set<String> sleepDateKeys = const {};
+    double sleepHours = 0;
+    MealPlanWeek? mealPlan = _mealPlan;
+    String? mealPlanError = _mealPlanError;
+    var mealPlanLoading = _mealPlanLoading;
     try {
       meals = await scope.repository.getMealsForDay(
         scope.uid,
@@ -127,20 +193,68 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     } catch (_) {
       dateKeys = _mealDateKeysInRange;
     }
+    if (profile.sleepModeEnabled) {
+      try {
+        sleepDateKeys = await scope.repository.getSleepDateKeysInRange(
+          scope.uid,
+          startDateKey: range.start,
+          endDateKey: range.end,
+        );
+      } catch (_) {
+        sleepDateKeys = _sleepDateKeysInRange;
+      }
+      try {
+        final selectedKey = dateKeyFor(_selectedDate, profile.timezone);
+        final summary = await scope.repository.getDailySummary(
+          scope.uid,
+          selectedKey,
+        );
+        sleepHours = summary?.sleepHours ?? 0;
+      } catch (_) {
+        sleepHours = _sleepHours;
+      }
+    }
+
+    mealPlanLoading = true;
+    if (mounted) {
+      setState(() => _mealPlanLoading = true);
+    }
+    try {
+      final client =
+          MealPlanScope.maybeOf(context)?.client ??
+          OpenAiMealPlanClient.fromEnvironment();
+      final planStart = DateUtils.dateOnly(DateTime.now());
+      mealPlan = await client.fetchWeeklyPlan(
+        profile: profile,
+        startDate: planStart,
+      );
+      mealPlanError = null;
+    } catch (error) {
+      mealPlanError = '$error';
+    } finally {
+      mealPlanLoading = false;
+    }
 
     if (!mounted) {
+      _mealDataReloadInProgress = false;
       return;
     }
 
     setState(() {
       _loggedMeals = meals;
       _mealDateKeysInRange = dateKeys;
+      _sleepDateKeysInRange = sleepDateKeys;
+      _sleepHours = sleepHours;
+      _mealPlan = mealPlan;
+      _mealPlanError = mealPlanError;
+      _mealPlanLoading = mealPlanLoading;
       _mealsRequested = true;
     });
+    _mealDataReloadInProgress = false;
   }
 
   void _requestMealReload() {
-    if (_mealsRequested) {
+    if (_mealsRequested || !widget.isActive) {
       return;
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -167,6 +281,21 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       _mealsRequested = false;
     });
     await _reloadMealData(force: true);
+  }
+
+  Future<void> _openSleepLogDialog(UserProfile profile) async {
+    final dateKey = dateKeyFor(_selectedDate, profile.timezone);
+    final saved = await showSleepLogDialogAndSave(
+      context: context,
+      profile: profile,
+      dateKey: dateKey,
+      title: 'Log sleep',
+      initialSleepHours: _sleepHours > 0 ? _sleepHours : null,
+    );
+    if (saved && mounted) {
+      _mealsRequested = false;
+      await _reloadMealData(force: true);
+    }
   }
 
   Future<bool> _confirmDeleteEvent(UserScheduleEvent event) async {
@@ -288,6 +417,15 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           _requestMealReload();
         }
 
+        final sleepModeEnabled = profile?.sleepModeEnabled ?? false;
+        if (!sleepModeEnabled && _filter == ScheduleViewFilter.sleep) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() => _filter = ScheduleViewFilter.all);
+            }
+          });
+        }
+
         final scheduleEvents = profile?.scheduleEvents ?? const [];
         final events = _eventsFor(scheduleEvents, _selectedDate);
         final matches = events.where(
@@ -310,6 +448,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               const SizedBox(height: 16),
               ScheduleFilterBar(
                 filter: _filter,
+                showSleepFilter: sleepModeEnabled,
                 onFilterChanged: (filter) => setState(() => _filter = filter),
               ),
               const SizedBox(height: 20),
@@ -321,6 +460,11 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   hasLoggedMealsOn: (date) => _mealDateKeysInRange.contains(
                     dateKeyFor(date, timezone),
                   ),
+                  hasSleepOn: sleepModeEnabled
+                      ? (date) => _sleepDateKeysInRange.contains(
+                          dateKeyFor(date, timezone),
+                        )
+                      : null,
                   onDateSelected: _selectDate,
                   onPreviousWeek: () => _shiftWeek(-1),
                   onNextWeek: () => _shiftWeek(1),
@@ -347,6 +491,11 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   hasLoggedMealsOn: (date) => _mealDateKeysInRange.contains(
                     dateKeyFor(date, timezone),
                   ),
+                  hasSleepOn: sleepModeEnabled
+                      ? (date) => _sleepDateKeysInRange.contains(
+                          dateKeyFor(date, timezone),
+                        )
+                      : null,
                   onDateSelected: _selectDate,
                 ),
               ],
@@ -366,12 +515,36 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   TodaysMatchCard(match: match),
                 ],
                 const SizedBox(height: 24),
+                ScheduleMealPlanSection(
+                  meals: _plannedMealsForSelectedDate,
+                  error: _mealPlanError,
+                  loading: _mealPlanLoading,
+                ),
+                const SizedBox(height: 24),
                 ScheduleTimeline(
                   events: events,
                   loggedMeals: _loggedMeals,
                   filter: _filter,
+                  sleepHours: sleepModeEnabled ? _sleepHours : 0,
                   onEventTap: (event) => _deleteScheduleEvent(event, profile),
+                  onSleepTap: profile == null || !sleepModeEnabled
+                      ? null
+                      : () => _openSleepLogDialog(profile),
                 ),
+                if (sleepModeEnabled &&
+                    profile != null &&
+                    _filter == ScheduleViewFilter.sleep &&
+                    _sleepHours <= 0) ...[
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _openSleepLogDialog(profile),
+                      icon: const Icon(Icons.nightlight_round),
+                      label: const Text('Log sleep for this day'),
+                    ),
+                  ),
+                ],
               ],
             ],
           ),
@@ -433,5 +606,19 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     }).toList();
     filtered.sort((a, b) => a.startAt.compareTo(b.startAt));
     return filtered;
+  }
+
+  List<MealPlanMeal> get _plannedMealsForSelectedDate {
+    final plan = _mealPlan;
+    if (plan == null) {
+      return const [];
+    }
+
+    for (final day in plan.days) {
+      if (_isSameDay(day.date, _selectedDate)) {
+        return day.meals;
+      }
+    }
+    return const [];
   }
 }

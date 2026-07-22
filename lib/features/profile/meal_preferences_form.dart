@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:nutrilens/features/profile/meal_preferences_constants.dart';
 import 'package:nutrilens/features/profile/widgets/profile_text_field.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
+import 'package:nutrilens/l10n/l10n_extensions.dart';
 import 'package:nutrilens/models/dietary_profile.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
@@ -83,11 +85,13 @@ class MealPreferencesForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Food styles you like',
+          l10n.mealStylesTitle,
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 12),
@@ -97,7 +101,7 @@ class MealPreferencesForm extends StatelessWidget {
           children: [
             for (final style in mealStyleOptions)
               FilterChip(
-                label: Text(style),
+                label: Text(localizedMealStyle(l10n, style)),
                 selected: selectedStyles.contains(style),
                 onSelected: enabled ? (_) => onStyleToggled(style) : null,
                 selectedColor: AppColors.lime,
@@ -116,7 +120,7 @@ class MealPreferencesForm extends StatelessWidget {
                 ),
               ),
             FilterChip(
-              label: const Text(othersMealStyleOption),
+              label: Text(l10n.mealStyleOthers),
               selected: othersSelected,
               onSelected: enabled
                   ? (selected) {
@@ -144,30 +148,30 @@ class MealPreferencesForm extends StatelessWidget {
         if (othersSelected) ...[
           const SizedBox(height: 16),
           ProfileTextField(
-            label: 'OTHER FOOD STYLE',
+            label: l10n.mealStyleOtherLabel,
             controller: otherStyleController,
             enabled: enabled,
             limeBorder: useLimeBorders,
-            helperText: 'Describe your preferred food style',
+            helperText: l10n.mealStyleOtherHelper,
           ),
         ],
         const SizedBox(height: 20),
         ProfileTextField(
-          label: 'ALLERGENS',
+          label: l10n.allergensLabel,
           controller: allergensController,
           maxLines: 3,
           enabled: enabled,
           limeBorder: useLimeBorders,
-          helperText: 'Use commas or new lines. Example: peanuts, shellfish',
+          helperText: l10n.allergensHelper,
         ),
         const SizedBox(height: 16),
         ProfileTextField(
-          label: 'DIETARY RESTRICTIONS',
+          label: l10n.restrictionsLabel,
           controller: restrictionsController,
           maxLines: 3,
           enabled: enabled,
           limeBorder: useLimeBorders,
-          helperText: 'Use commas or new lines. Example: halal, dairy-free',
+          helperText: l10n.restrictionsHelper,
         ),
       ],
     );

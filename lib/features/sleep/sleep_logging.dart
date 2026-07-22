@@ -193,3 +193,19 @@ UserScheduleEvent? _nextTrainingOrMatch(
         ..sort((a, b) => a.startAt.compareTo(b.startAt));
   return upcoming.firstOrNull;
 }
+
+/// Returns whether the daily sleep check-in dialog should be shown.
+bool shouldPromptSleepCheckIn({
+  required UserProfile profile,
+  required DailySummary? todaySummary,
+}) {
+  if (!profile.sleepModeEnabled) {
+    return false;
+  }
+
+  if (todaySummary != null && todaySummary.sleepHours > 0) {
+    return false;
+  }
+
+  return true;
+}

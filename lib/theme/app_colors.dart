@@ -5,11 +5,13 @@ abstract final class AppColors {
   static const fitnessWhite = Color(0xFFFFFFFF);
   static const fitnessGreen = Color(0xFFB8FF3C);
   static const fitnessPurple = Color(0xFFBF5AF2);
+  static const fitnessBlue = Color(0xFF2F80ED);
 
   static const background = fitnessBlack;
   static const lime = fitnessGreen;
   static const limeDark = fitnessGreen;
   static const electricBlue = fitnessPurple;
+  static const hydrationBlue = fitnessBlue;
   static const programBannerBg = fitnessBlack;
   static const orange = fitnessPurple;
   static const cardDark = fitnessBlack;

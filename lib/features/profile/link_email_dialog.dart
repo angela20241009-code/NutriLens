@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:nutrilens/features/auth/auth_screen.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
+import 'package:nutrilens/l10n/l10n_extensions.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/services/user_repository.dart';
 import 'package:nutrilens/theme/app_colors.dart';
@@ -26,10 +27,11 @@ Future<UserAccount?> showLinkEmailDialog({
     );
   } catch (error) {
     if (context.mounted) {
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Unable to create account: ${friendlyAuthError(error)}',
+            '${l10n.createAccount}: ${friendlyAuthErrorMessage(l10n, error)}',
           ),
         ),
       );

@@ -11,11 +11,13 @@ class WeekDateSelector extends StatelessWidget {
     required this.onDateSelected,
     required this.onPreviousWeek,
     required this.onNextWeek,
+    this.hasSleepOn,
   });
 
   final DateTime selectedDate;
   final bool Function(DateTime date) hasEventsOn;
   final bool Function(DateTime date) hasLoggedMealsOn;
+  final bool Function(DateTime date)? hasSleepOn;
   final ValueChanged<DateTime> onDateSelected;
   final VoidCallback onPreviousWeek;
   final VoidCallback onNextWeek;
@@ -49,6 +51,7 @@ class WeekDateSelector extends StatelessWidget {
                     selected: _isSameDay(date, selectedDate),
                     hasEvents: hasEventsOn(date),
                     hasLoggedMeals: hasLoggedMealsOn(date),
+                    hasSleep: hasSleepOn?.call(date) ?? false,
                     onTap: () => onDateSelected(date),
                   ),
                 ),
@@ -67,6 +70,7 @@ class _WeekDayCell extends StatelessWidget {
     required this.selected,
     required this.hasEvents,
     required this.hasLoggedMeals,
+    required this.hasSleep,
     required this.onTap,
   });
 
@@ -74,6 +78,7 @@ class _WeekDayCell extends StatelessWidget {
   final bool selected;
   final bool hasEvents;
   final bool hasLoggedMeals;
+  final bool hasSleep;
   final VoidCallback onTap;
 
   static const _weekdayLabels = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
@@ -129,10 +134,16 @@ class _WeekDayCell extends StatelessWidget {
                           ? AppColors.onLime
                           : scheduleLoggedMealColor,
                     ),
-                  if (hasLoggedMeals && hasEvents) const SizedBox(width: 3),
+                  if (hasLoggedMeals && (hasEvents || hasSleep))
+                    const SizedBox(width: 3),
                   if (hasEvents)
                     _CalendarDot(
                       color: selected ? AppColors.onLime : scheduleEventColor,
+                    ),
+                  if (hasEvents && hasSleep) const SizedBox(width: 3),
+                  if (hasSleep)
+                    _CalendarDot(
+                      color: selected ? AppColors.onLime : scheduleSleepColor,
                     ),
                 ],
               ),

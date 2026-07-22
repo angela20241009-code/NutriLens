@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:nutrilens/app/app_settings_scope.dart';
+import 'package:nutrilens/app/app_locale_scope.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/features/onboarding/onboarding_flow.dart';
 import 'package:nutrilens/features/shell/app_shell.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
+import 'package:nutrilens/models/app_language.dart';
 import 'package:nutrilens/models/user_account.dart';
 import 'package:nutrilens/theme/app_theme.dart';
 import 'package:nutrilens/theme/theme_palette_scope.dart';
@@ -13,19 +16,26 @@ class NutriLensApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = AppSettingsScope.of(context);
+    final localeScope = AppLocaleScope.of(context);
 
     return ListenableBuilder(
-      listenable: settings,
+      listenable: Listenable.merge([settings, localeScope]),
       builder: (context, _) {
         final palette = settings.themePalette;
         final textScale = settings.textScale.scaleFactor;
         final accessibility = settings.accessibilityModeEnabled;
+        final locale = localeScope.ready
+            ? localeScope.locale
+            : AppLanguage.english.locale;
 
         return MaterialApp(
           title: 'NutriLens',
           theme: AppTheme.build(palette: palette),
           themeMode: ThemeMode.dark,
           debugShowCheckedModeBanner: false,
+          locale: locale,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           builder: (context, child) {
             final mediaQuery = MediaQuery.of(context);
             return ThemePaletteScope(
@@ -67,6 +77,8 @@ class _AppEntryGateState extends State<_AppEntryGate> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return FutureBuilder<UserAccount?>(
       future: _accountFuture,
       builder: (context, snapshot) {
@@ -82,7 +94,7 @@ class _AppEntryGateState extends State<_AppEntryGate> {
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Text(
-                  'Failed to load account:\n${snapshot.error}',
+                  l10n.failedToLoadAccount('${snapshot.error}'),
                   textAlign: TextAlign.center,
                 ),
               ),

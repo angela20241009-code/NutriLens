@@ -1,22 +1,27 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:nutrilens/app.dart';
+import 'package:nutrilens/app/app_locale_scope.dart';
 import 'package:nutrilens/app/app_settings_scope.dart';
 import 'package:nutrilens/app/meal_analysis_scope.dart';
 import 'package:nutrilens/app/meal_log_refresh_scope.dart';
+import 'package:nutrilens/app/sleep_log_refresh_scope.dart';
 import 'package:nutrilens/app/meal_plan_refresh_scope.dart';
 import 'package:nutrilens/app/meal_plan_scope.dart';
 import 'package:nutrilens/app/session_scope.dart';
+import 'package:nutrilens/app/tasty_recipe_scope.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/data/catalog_seed_data.dart';
 import 'package:nutrilens/features/auth/auth_screen.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
+import 'package:nutrilens/models/app_language.dart';
 import 'package:nutrilens/models/models.dart';
-import 'package:nutrilens/services/edamam_meal_plan_client.dart';
-import 'package:nutrilens/services/firestore_user_repository.dart';
 import 'package:nutrilens/services/in_memory_user_repository.dart';
 import 'package:nutrilens/services/meal_analysis_client.dart';
 import 'package:nutrilens/services/meal_plan_client.dart';
 import 'package:nutrilens/services/openai_meal_analysis_client.dart';
+import 'package:nutrilens/services/openai_meal_plan_client.dart';
+import 'package:nutrilens/services/tasty_recipe_client.dart';
 import 'package:nutrilens/services/user_repository.dart';
 import 'package:nutrilens/theme/app_theme.dart';
 
@@ -31,17 +36,21 @@ class _AppBootstrapState extends State<AppBootstrap> {
   late Future<_BootstrapResult> _bootstrapFuture;
   late final MealPlanClient _mealPlanClient;
   late final MealAnalysisClient _mealAnalysisClient;
+  late final TastyRecipeClient _tastyRecipeClient;
   late final MealPlanRefreshNotifier _mealPlanRefreshNotifier;
   late final MealLogRefreshNotifier _mealLogRefreshNotifier;
+  late final SleepLogRefreshNotifier _sleepLogRefreshNotifier;
   bool _firebaseReady = false;
 
   @override
   void initState() {
     super.initState();
-    _mealPlanClient = EdamamMealPlanClient.fromEnvironment();
+    _mealPlanClient = OpenAiMealPlanClient.fromEnvironment();
     _mealAnalysisClient = OpenAiMealAnalysisClient.fromEnvironment();
+    _tastyRecipeClient = RapidApiTastyRecipeClient.fromEnvironment();
     _mealPlanRefreshNotifier = MealPlanRefreshNotifier();
     _mealLogRefreshNotifier = MealLogRefreshNotifier();
+    _sleepLogRefreshNotifier = SleepLogRefreshNotifier();
     _bootstrapFuture = _initializeApp();
   }
 
@@ -92,15 +101,26 @@ class _AppBootstrapState extends State<AppBootstrap> {
   Future<void> _saveInitialDietaryProfile(
     UserRepository repository,
     String uid,
-    DietaryProfile dietaryProfile,
-  ) async {
+    DietaryProfile dietaryProfile, {
+    String? locale,
+  }) async {
     final profile = await repository.getProfile(uid);
     if (profile == null) {
       return;
     }
     await repository.saveProfile(
-      profile.copyWith(dietaryProfile: dietaryProfile),
+      profile.copyWith(
+        dietaryProfile: dietaryProfile,
+        locale: locale ?? profile.locale,
+      ),
     );
+  }
+
+  String _currentProfileLocale() {
+    if (!mounted) {
+      return AppLanguage.english.profileLocale;
+    }
+    return AppLocaleScope.of(context).language.profileLocale;
   }
 
   Future<void> _createAccount(
@@ -118,6 +138,7 @@ class _AppBootstrapState extends State<AppBootstrap> {
       repository,
       account.uid,
       dietaryProfile,
+      locale: _currentProfileLocale(),
     );
     _activateSession(repository, account);
   }
@@ -146,6 +167,7 @@ class _AppBootstrapState extends State<AppBootstrap> {
       repository,
       account.uid,
       dietaryProfile,
+      locale: _currentProfileLocale(),
     );
     _activateSession(repository, account);
   }
@@ -162,81 +184,118 @@ class _AppBootstrapState extends State<AppBootstrap> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<_BootstrapResult>(
-      future: _bootstrapFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return const MaterialApp(
-            home: Scaffold(body: Center(child: CircularProgressIndicator())),
-          );
-        }
+    return AppLocaleScope(
+      child: Builder(
+        builder: (context) {
+          final localeScope = AppLocaleScope.of(context);
+          return ListenableBuilder(
+            listenable: localeScope,
+            builder: (context, _) {
+              final locale = localeScope.ready
+                  ? localeScope.locale
+                  : AppLanguage.english.locale;
 
-        if (snapshot.hasError) {
-          return MaterialApp(
-            home: Scaffold(
-              body: Center(
-                child: Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Text(
-                    'Failed to initialize the app:\n${snapshot.error}',
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            ),
-          );
-        }
+              return FutureBuilder<_BootstrapResult>(
+                future: _bootstrapFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState != ConnectionState.done) {
+                    return MaterialApp(
+                      locale: locale,
+                      localizationsDelegates:
+                          AppLocalizations.localizationsDelegates,
+                      supportedLocales: AppLocalizations.supportedLocales,
+                      home: const Scaffold(
+                        body: Center(child: CircularProgressIndicator()),
+                      ),
+                    );
+                  }
 
-        final result = snapshot.requireData;
-        if (result.uid == null) {
-          return MaterialApp(
-            title: 'NutriLens',
-            theme: AppTheme.dark,
-            themeMode: ThemeMode.dark,
-            debugShowCheckedModeBanner: false,
-            home: AuthScreen(
-              onCreateAccount: (email, password, dietaryProfile) =>
-                  _createAccount(
-                    result.repository,
-                    email,
-                    password,
-                    dietaryProfile,
-                  ),
-              onSignIn: (email, password) =>
-                  _signIn(result.repository, email, password),
-              onContinueAsGuest: (dietaryProfile) => _continueAsGuest(
-                result.repository,
-                dietaryProfile,
-              ),
-            ),
-          );
-        }
+                  if (snapshot.hasError) {
+                    return MaterialApp(
+                      locale: locale,
+                      localizationsDelegates:
+                          AppLocalizations.localizationsDelegates,
+                      supportedLocales: AppLocalizations.supportedLocales,
+                      home: Scaffold(
+                        body: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Text(
+                              AppLocalizations.of(context)!
+                                  .failedToInitializeApp('${snapshot.error}'),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }
 
-        return MealLogRefreshScope(
-          notifier: _mealLogRefreshNotifier,
-          child: MealPlanRefreshScope(
-            notifier: _mealPlanRefreshNotifier,
-            child: MealAnalysisScope(
-              client: _mealAnalysisClient,
-              child: MealPlanScope(
-                client: _mealPlanClient,
-                child: SessionScope(
-                  signOut: () => _signOutAndRestart(result.repository),
-                  child: UserScope(
-                    repository: result.repository,
-                    uid: result.uid!,
-                    child: AppSettingsScope(
-                      repository: result.repository,
-                      uid: result.uid!,
-                      child: const NutriLensApp(),
+                  final result = snapshot.requireData;
+                  if (result.uid == null) {
+                    return MaterialApp(
+                      title: 'NutriLens',
+                      theme: AppTheme.dark,
+                      themeMode: ThemeMode.dark,
+                      debugShowCheckedModeBanner: false,
+                      locale: locale,
+                      localizationsDelegates:
+                          AppLocalizations.localizationsDelegates,
+                      supportedLocales: AppLocalizations.supportedLocales,
+                      home: AuthScreen(
+                        onCreateAccount: (email, password, dietaryProfile) =>
+                            _createAccount(
+                              result.repository,
+                              email,
+                              password,
+                              dietaryProfile,
+                            ),
+                        onSignIn: (email, password) =>
+                            _signIn(result.repository, email, password),
+                        onContinueAsGuest: (dietaryProfile) => _continueAsGuest(
+                          result.repository,
+                          dietaryProfile,
+                        ),
+                      ),
+                    );
+                  }
+
+                  return TastyRecipeScope(
+                    client: _tastyRecipeClient,
+                    child: SleepLogRefreshScope(
+                      notifier: _sleepLogRefreshNotifier,
+                      child: MealLogRefreshScope(
+                        notifier: _mealLogRefreshNotifier,
+                        child: MealPlanRefreshScope(
+                          notifier: _mealPlanRefreshNotifier,
+                          child: MealAnalysisScope(
+                            client: _mealAnalysisClient,
+                            child: MealPlanScope(
+                              client: _mealPlanClient,
+                              child: SessionScope(
+                                signOut: () => _signOutAndRestart(result.repository),
+                                child: UserScope(
+                                  repository: result.repository,
+                                  uid: result.uid!,
+                                  child: AppSettingsScope(
+                                    repository: result.repository,
+                                    uid: result.uid!,
+                                    child: const NutriLensApp(),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
+                  );
+                },
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }

@@ -293,6 +293,40 @@ class InMemoryUserRepository implements UserRepository {
         .toSet();
   }
 
+  @override
+  Future<Set<String>> getSleepDateKeysInRange(
+    String uid, {
+    required String startDateKey,
+    required String endDateKey,
+  }) async {
+    final summaries = _dailySummaries[uid] ?? {};
+    return summaries.entries
+        .where(
+          (entry) =>
+              entry.key.compareTo(startDateKey) >= 0 &&
+              entry.key.compareTo(endDateKey) <= 0 &&
+              entry.value.sleepHours > 0,
+        )
+        .map((entry) => entry.key)
+        .toSet();
+  }
+
+  @override
+  Future<Map<String, DailySummary>> getDailySummariesInRange(
+    String uid, {
+    required String startDateKey,
+    required String endDateKey,
+  }) async {
+    final summaries = _dailySummaries[uid] ?? {};
+    return Map.fromEntries(
+      summaries.entries.where(
+        (entry) =>
+            entry.key.compareTo(startDateKey) >= 0 &&
+            entry.key.compareTo(endDateKey) <= 0,
+      ),
+    );
+  }
+
   // ── Daily summaries ───────────────────────────────────────────────────────
 
   @override
@@ -326,6 +360,23 @@ class InMemoryUserRepository implements UserRepository {
         sleepHours: sleepHours ?? 0,
         updatedAt: now,
       );
+    }
+  }
+
+  @override
+  Future<void> deleteAccount(String uid) async {
+    final account = _accounts[uid];
+    final email = account?.email?.trim().toLowerCase();
+    if (email != null && email.isNotEmpty) {
+      _emailToUid.remove(email);
+    }
+    _passwordByUid.remove(uid);
+    _accounts.remove(uid);
+    _profiles.remove(uid);
+    _meals.remove(uid);
+    _dailySummaries.remove(uid);
+    if (_uid == uid) {
+      _uid = null;
     }
   }
 

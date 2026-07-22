@@ -10,6 +10,7 @@ class MonthDateSelector extends StatelessWidget {
     required this.hasLoggedMealsOn,
     required this.onDateSelected,
     this.showHeader = true,
+    this.hasSleepOn,
   });
 
   final DateTime selectedDate;
@@ -17,6 +18,7 @@ class MonthDateSelector extends StatelessWidget {
   final bool Function(DateTime date) hasLoggedMealsOn;
   final ValueChanged<DateTime> onDateSelected;
   final bool showHeader;
+  final bool Function(DateTime date)? hasSleepOn;
 
   bool _isSameDay(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month && a.day == b.day;
@@ -118,6 +120,7 @@ class MonthDateSelector extends StatelessWidget {
             final selected = _isSameDay(date, selectedDate);
             final hasEvents = hasEventsOn(date);
             final hasLoggedMeals = hasLoggedMealsOn(date);
+            final hasSleep = hasSleepOn?.call(date) ?? false;
 
             return GestureDetector(
               key: Key(
@@ -152,7 +155,7 @@ class MonthDateSelector extends StatelessWidget {
                                 : AppColors.textMuted.withValues(alpha: 0.5),
                       ),
                     ),
-                    if (hasEvents || hasLoggedMeals) ...[
+                    if (hasEvents || hasLoggedMeals || hasSleep) ...[
                       const SizedBox(height: 2),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -163,13 +166,20 @@ class MonthDateSelector extends StatelessWidget {
                                   ? AppColors.onLime
                                   : scheduleLoggedMealColor,
                             ),
-                          if (hasLoggedMeals && hasEvents)
+                          if (hasLoggedMeals && (hasEvents || hasSleep))
                             const SizedBox(width: 3),
                           if (hasEvents)
                             _CalendarDot(
                               color: selected
                                   ? AppColors.onLime
                                   : scheduleEventColor,
+                            ),
+                          if (hasEvents && hasSleep) const SizedBox(width: 3),
+                          if (hasSleep)
+                            _CalendarDot(
+                              color: selected
+                                  ? AppColors.onLime
+                                  : scheduleSleepColor,
                             ),
                         ],
                       ),
