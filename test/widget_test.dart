@@ -558,6 +558,7 @@ void main() {
     expect(find.text('Greek Salad Bowl'), findsOneWidget);
 
     await tester.enterText(find.byType(TextField), 'salmon');
+    await tester.testTextInput.receiveAction(TextInputAction.search);
     await tester.pumpAndSettle(const Duration(milliseconds: 500));
 
     expect(tastyClient.lastQuery, 'salmon');
@@ -1158,6 +1159,21 @@ class _FakeTastyRecipeClient implements TastyRecipeClient {
       ],
     );
   }
+
+  @override
+  Future<TastyRecipeDetail> fetchRecipeDetail(int recipeId) async {
+    return TastyRecipeDetail(
+      recipe: TastyRecipe(
+        id: recipeId,
+        name: recipeId == 1 ? 'One-Pan Chicken' : 'Greek Salad Bowl',
+        description: 'A simple weeknight dinner.',
+        totalTimeMinutes: 35,
+        numServings: 4,
+      ),
+      ingredients: const ['2 chicken breasts', '1 tbsp olive oil'],
+      instructions: const ['Season the chicken.', 'Cook until done.'],
+    );
+  }
 }
 
 class _FailingTastyRecipeClient implements TastyRecipeClient {
@@ -1167,6 +1183,11 @@ class _FailingTastyRecipeClient implements TastyRecipeClient {
     int from = 0,
     int size = 20,
   }) async {
+    throw StateError('Tasty API failed on purpose');
+  }
+
+  @override
+  Future<TastyRecipeDetail> fetchRecipeDetail(int recipeId) async {
     throw StateError('Tasty API failed on purpose');
   }
 }

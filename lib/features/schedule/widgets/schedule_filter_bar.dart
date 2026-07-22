@@ -23,18 +23,22 @@ class ScheduleFilterBar extends StatelessWidget {
         .toList(growable: false);
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SegmentedButton<ScheduleViewFilter>(
-          segments: [
-            for (final option in options)
-              ButtonSegment(
-                value: option,
-                label: Text(option.label),
-              ),
-          ],
-          selected: {filter},
-          onSelectionChanged: (selection) => onFilterChanged(selection.first),
+        SizedBox(
+          width: double.infinity,
+          child: SegmentedButton<ScheduleViewFilter>(
+            showSelectedIcon: false,
+            segments: [
+              for (final option in options)
+                ButtonSegment(
+                  value: option,
+                  label: Text(option.label),
+                ),
+            ],
+            selected: {filter},
+            onSelectionChanged: (selection) => onFilterChanged(selection.first),
+          ),
         ),
         const SizedBox(height: 12),
         Wrap(

@@ -11,6 +11,8 @@ abstract class TastyRecipeClient {
     int from = 0,
     int size = 20,
   });
+
+  Future<TastyRecipeDetail> fetchRecipeDetail(int recipeId);
 }
 
 class RapidApiTastyRecipeClient implements TastyRecipeClient {
@@ -83,5 +85,28 @@ class RapidApiTastyRecipeClient implements TastyRecipeClient {
       recipes: recipes,
       totalCount: totalCount is num ? totalCount.toInt() : recipes.length,
     );
+  }
+
+  @override
+  Future<TastyRecipeDetail> fetchRecipeDetail(int recipeId) async {
+    _ensureConfigured();
+
+    final uri = Uri.https(_host, '/recipes/get-more-info', {
+      'id': '$recipeId',
+    });
+
+    final response = await _client.get(uri, headers: _headers);
+    if (response.statusCode != 200) {
+      throw StateError(
+        'Tasty recipe detail request failed (${response.statusCode}): ${response.body}',
+      );
+    }
+
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic>) {
+      throw StateError('Unexpected Tasty recipe detail response shape.');
+    }
+
+    return TastyRecipeDetail.fromMap(decoded);
   }
 }

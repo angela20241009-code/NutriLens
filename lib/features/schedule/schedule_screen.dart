@@ -17,7 +17,7 @@ import 'package:nutrilens/features/schedule/widgets/week_date_selector.dart';
 import 'package:nutrilens/features/sleep/sleep_log_actions.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/services/date_key.dart';
-import 'package:nutrilens/services/edamam_meal_plan_client.dart';
+import 'package:nutrilens/services/openai_meal_plan_client.dart';
 
 class ScheduleScreen extends StatefulWidget {
   const ScheduleScreen({super.key, this.isActive = true});
@@ -222,13 +222,11 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     try {
       final client =
           MealPlanScope.maybeOf(context)?.client ??
-          EdamamMealPlanClient.fromEnvironment();
-      final weekStart = _selectedDate.subtract(
-        Duration(days: _selectedDate.weekday - 1),
-      );
+          OpenAiMealPlanClient.fromEnvironment();
+      final planStart = DateUtils.dateOnly(DateTime.now());
       mealPlan = await client.fetchWeeklyPlan(
         profile: profile,
-        startDate: weekStart,
+        startDate: planStart,
       );
       mealPlanError = null;
     } catch (error) {

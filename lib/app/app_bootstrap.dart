@@ -16,12 +16,11 @@ import 'package:nutrilens/features/auth/auth_screen.dart';
 import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/models/app_language.dart';
 import 'package:nutrilens/models/models.dart';
-import 'package:nutrilens/services/edamam_meal_plan_client.dart';
-import 'package:nutrilens/services/firestore_user_repository.dart';
 import 'package:nutrilens/services/in_memory_user_repository.dart';
 import 'package:nutrilens/services/meal_analysis_client.dart';
 import 'package:nutrilens/services/meal_plan_client.dart';
 import 'package:nutrilens/services/openai_meal_analysis_client.dart';
+import 'package:nutrilens/services/openai_meal_plan_client.dart';
 import 'package:nutrilens/services/tasty_recipe_client.dart';
 import 'package:nutrilens/services/user_repository.dart';
 import 'package:nutrilens/theme/app_theme.dart';
@@ -46,7 +45,7 @@ class _AppBootstrapState extends State<AppBootstrap> {
   @override
   void initState() {
     super.initState();
-    _mealPlanClient = EdamamMealPlanClient.fromEnvironment();
+    _mealPlanClient = OpenAiMealPlanClient.fromEnvironment();
     _mealAnalysisClient = OpenAiMealAnalysisClient.fromEnvironment();
     _tastyRecipeClient = RapidApiTastyRecipeClient.fromEnvironment();
     _mealPlanRefreshNotifier = MealPlanRefreshNotifier();

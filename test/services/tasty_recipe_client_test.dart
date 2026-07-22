@@ -19,4 +19,28 @@ void main() {
     expect(recipe.numServings, 4);
     expect(recipe.slug, 'garlic-butter-chicken');
   });
+
+  test('TastyRecipeDetail.fromMap parses ingredients and instructions', () {
+    final detail = TastyRecipeDetail.fromMap({
+      'id': 7,
+      'name': 'Garlic Butter Chicken',
+      'description': 'Quick skillet chicken.',
+      'sections': [
+        {
+          'components': [
+            {'raw_text': '2 chicken breasts'},
+            {'raw_text': '2 tbsp butter'},
+          ],
+        },
+      ],
+      'instructions': [
+        {'display_text': 'Season the chicken.'},
+        {'display_text': 'Cook until golden.'},
+      ],
+    });
+
+    expect(detail.recipe.name, 'Garlic Butter Chicken');
+    expect(detail.ingredients, ['2 chicken breasts', '2 tbsp butter']);
+    expect(detail.instructions, ['Season the chicken.', 'Cook until golden.']);
+  });
 }

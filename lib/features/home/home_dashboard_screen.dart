@@ -16,7 +16,7 @@ import 'package:nutrilens/features/meals/log_meal_sheet.dart';
 import 'package:nutrilens/features/sleep/sleep_log_actions.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/services/date_key.dart';
-import 'package:nutrilens/services/edamam_meal_plan_client.dart';
+import 'package:nutrilens/services/openai_meal_plan_client.dart';
 import 'package:nutrilens/services/meal_plan_client.dart';
 import 'package:nutrilens/services/user_repository.dart';
 
@@ -55,7 +55,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     final scope = UserScope.of(context);
     final mealPlanClient =
         MealPlanScope.maybeOf(context)?.client ??
-        EdamamMealPlanClient.fromEnvironment();
+        OpenAiMealPlanClient.fromEnvironment();
 
     if (_dataFuture == null ||
         _repository != scope.repository ||

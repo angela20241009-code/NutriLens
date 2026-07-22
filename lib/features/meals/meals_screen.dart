@@ -1,11 +1,9 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:nutrilens/app/tasty_recipe_scope.dart';
+import 'package:nutrilens/features/meals/widgets/recipe_detail_sheet.dart';
 import 'package:nutrilens/models/tasty_recipe.dart';
 import 'package:nutrilens/services/tasty_recipe_client.dart';
 import 'package:nutrilens/theme/app_colors.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class MealsScreen extends StatefulWidget {
   const MealsScreen({super.key});
@@ -16,8 +14,9 @@ class MealsScreen extends StatefulWidget {
 
 class _MealsScreenState extends State<MealsScreen> {
   final _searchController = TextEditingController();
-  Timer? _debounce;
+  final _searchFocusNode = FocusNode();
   bool _loading = true;
+  bool _hasSearched = false;
   String? _error;
   List<TastyRecipe> _recipes = const [];
   String _activeQuery = '';
@@ -30,8 +29,8 @@ class _MealsScreenState extends State<MealsScreen> {
 
   @override
   void dispose() {
-    _debounce?.cancel();
     _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -40,11 +39,17 @@ class _MealsScreenState extends State<MealsScreen> {
         RapidApiTastyRecipeClient.fromEnvironment();
   }
 
+  void _dismissKeyboard() {
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
+
   Future<void> _search({required String query}) async {
+    _dismissKeyboard();
     setState(() {
       _loading = true;
       _error = null;
       _activeQuery = query.trim();
+      _hasSearched = true;
     });
 
     try {
@@ -71,181 +76,177 @@ class _MealsScreenState extends State<MealsScreen> {
     }
   }
 
-  void _onQueryChanged(String value) {
-    _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 400), () {
-      _search(query: value);
-    });
-  }
-
   Future<void> _openRecipe(TastyRecipe recipe) async {
-    final slug = recipe.slug;
-    if (slug == null || slug.isEmpty) {
-      if (!mounted) {
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Recipe link is unavailable.')),
-      );
+    _dismissKeyboard();
+    if (!mounted) {
       return;
     }
 
-    final uri = Uri.parse('https://tasty.co/recipe/$slug');
-    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!launched && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to open recipe.')),
-      );
-    }
+    await showRecipeDetailSheet(
+      context: context,
+      client: _client(context),
+      recipe: recipe,
+    );
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    setState(() {});
+    _search(query: '');
   }
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
-      color: AppColors.background,
-      child: SafeArea(
-        bottom: false,
-        child: CustomScrollView(
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              sliver: SliverToBoxAdapter(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Find dishes',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Search Tasty recipes for meal inspiration.',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textMuted.withValues(alpha: 0.75),
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    TextField(
-                      controller: _searchController,
-                      onSubmitted: (value) => _search(query: value),
-                      onChanged: (value) {
-                        setState(() {});
-                        _onQueryChanged(value);
-                      },
-                      textInputAction: TextInputAction.search,
-                      decoration: InputDecoration(
-                        hintText: 'Search chicken, pasta, salad...',
-                        prefixIcon: const Icon(Icons.search_rounded),
-                        suffixIcon: _searchController.text.isEmpty
-                            ? null
-                            : IconButton(
-                                icon: const Icon(Icons.close_rounded),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  _search(query: '');
-                                },
-                              ),
-                        filled: true,
-                        fillColor: AppColors.cardDark,
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          borderSide: BorderSide(
-                            color: AppColors.lime.withValues(alpha: 0.35),
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          borderSide: const BorderSide(
-                            color: AppColors.lime,
-                            width: 2,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    if (_activeQuery.isNotEmpty)
-                      Text(
-                        'Results for "$_activeQuery"',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      )
-                    else
-                      Text(
-                        'Popular dishes',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                  ],
-                ),
-              ),
-            ),
-            if (_loading)
-              const SliverFillRemaining(
-                hasScrollBody: false,
-                child: Center(child: CircularProgressIndicator()),
-              )
-            else if (_error != null)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
+    return GestureDetector(
+      onTap: _dismissKeyboard,
+      behavior: HitTestBehavior.translucent,
+      child: ColoredBox(
+        color: AppColors.background,
+        child: SafeArea(
+          bottom: false,
+          child: CustomScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                sliver: SliverToBoxAdapter(
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Unable to load dishes',
-                        style: Theme.of(context).textTheme.titleLarge,
-                        textAlign: TextAlign.center,
+                        'Find dishes',
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       Text(
-                        _error!,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium,
+                        'Search recipes and view ingredients and steps in the app.',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppColors.textMuted.withValues(alpha: 0.75),
+                        ),
                       ),
-                      const SizedBox(height: 16),
-                      FilledButton(
-                        onPressed: () => _search(query: _searchController.text),
-                        child: const Text('Try again'),
+                      const SizedBox(height: 18),
+                      TextField(
+                        controller: _searchController,
+                        focusNode: _searchFocusNode,
+                        onSubmitted: (value) => _search(query: value),
+                        textInputAction: TextInputAction.search,
+                        decoration: InputDecoration(
+                          hintText: 'Search chicken, pasta, salad...',
+                          prefixIcon: const Icon(Icons.search_rounded),
+                          suffixIcon: _searchController.text.isEmpty
+                              ? null
+                              : IconButton(
+                                  icon: const Icon(Icons.close_rounded),
+                                  onPressed: _clearSearch,
+                                ),
+                          filled: true,
+                          fillColor: AppColors.cardDark,
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: BorderSide(
+                              color: AppColors.lime.withValues(alpha: 0.35),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: const BorderSide(
+                              color: AppColors.lime,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                        onChanged: (_) => setState(() {}),
                       ),
+                      const SizedBox(height: 18),
+                      if (_activeQuery.isNotEmpty)
+                        Text(
+                          'Results for "$_activeQuery"',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        )
+                      else
+                        Text(
+                          'Popular dishes',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
                     ],
                   ),
                 ),
-              )
-            else if (_recipes.isEmpty)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: Center(
-                  child: Text(
-                    'No dishes found. Try another search.',
-                    style: Theme.of(context).textTheme.bodyLarge,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              )
-            else
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                sliver: SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 14,
-                    crossAxisSpacing: 14,
-                    childAspectRatio: 0.72,
-                  ),
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final recipe = _recipes[index];
-                      return _DishCard(
-                        recipe: recipe,
-                        onTap: () => _openRecipe(recipe),
-                      );
-                    },
-                    childCount: _recipes.length,
-                  ),
-                ),
               ),
-          ],
+              if (_loading)
+                const SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (_error != null)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Unable to load dishes',
+                          style: Theme.of(context).textTheme.titleLarge,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _error!,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: 16),
+                        FilledButton(
+                          onPressed: () => _search(query: _searchController.text),
+                          child: const Text('Try again'),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else if (_recipes.isEmpty)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        _hasSearched
+                            ? 'No dishes found. Try another search.'
+                            : 'Enter a dish name and tap Search on your keyboard.',
+                        style: Theme.of(context).textTheme.bodyLarge,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                  sliver: SliverGrid(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 14,
+                      crossAxisSpacing: 14,
+                      childAspectRatio: 0.72,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final recipe = _recipes[index];
+                        return _DishCard(
+                          recipe: recipe,
+                          onTap: () => _openRecipe(recipe),
+                        );
+                      },
+                      childCount: _recipes.length,
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
