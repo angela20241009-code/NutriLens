@@ -14,6 +14,22 @@ class WeeklySleepDay {
   final bool isToday;
 }
 
+class WeeklyFuelDay {
+  const WeeklyFuelDay({
+    required this.date,
+    required this.dateKey,
+    required this.totals,
+    required this.isToday,
+  });
+
+  final DateTime date;
+  final String dateKey;
+  final NutritionEntry totals;
+  final bool isToday;
+
+  bool get hasLoggedMeals => totals.caloriesKcal > 0;
+}
+
 class HomeDashboardData {
   const HomeDashboardData({
     required this.profile,

@@ -4,6 +4,7 @@ import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/services/date_key.dart';
 import 'package:nutrilens/services/firestore_paths.dart';
 import 'package:nutrilens/services/firestore_serializer.dart';
+import 'package:nutrilens/services/meal_plan_serializer.dart';
 import 'package:nutrilens/services/user_repository.dart';
 import 'package:timezone/timezone.dart' as tz;
 
@@ -490,6 +491,24 @@ class FirestoreUserRepository implements UserRepository {
     }
   }
 
+  // ── Meal plans ────────────────────────────────────────────────────────────
+
+  @override
+  Future<MealPlanWeek?> getMealPlanWeek(String uid) async {
+    final snap = await _firestore.doc(FirestorePaths.mealPlanDoc(uid)).get();
+    if (!snap.exists || snap.data() == null) {
+      return null;
+    }
+    return MealPlanSerializer.weekFromMap(fromFirestoreMap(snap.data()!));
+  }
+
+  @override
+  Future<void> saveMealPlanWeek(String uid, MealPlanWeek week) async {
+    await _firestore.doc(FirestorePaths.mealPlanDoc(uid)).set(
+      toFirestoreMap(MealPlanSerializer.weekToMap(week)),
+    );
+  }
+
   @override
   Future<void> deleteAccount(String uid) async {
     final user = _auth.currentUser;
@@ -509,7 +528,8 @@ class FirestoreUserRepository implements UserRepository {
 
     final batch = _firestore.batch()
       ..delete(_firestore.doc(FirestorePaths.userDoc(uid)))
-      ..delete(_firestore.doc(FirestorePaths.userProfileDoc(uid)));
+      ..delete(_firestore.doc(FirestorePaths.userProfileDoc(uid)))
+      ..delete(_firestore.doc(FirestorePaths.mealPlanDoc(uid)));
     await batch.commit();
   }
 

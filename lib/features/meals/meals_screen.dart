@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nutrilens/app/meals_search_scope.dart';
 import 'package:nutrilens/app/tasty_recipe_scope.dart';
 import 'package:nutrilens/features/meals/widgets/recipe_detail_sheet.dart';
 import 'package:nutrilens/models/tasty_recipe.dart';
@@ -20,6 +21,8 @@ class _MealsScreenState extends State<MealsScreen> {
   String? _error;
   List<TastyRecipe> _recipes = const [];
   String _activeQuery = '';
+  int _lastSearchGeneration = 0;
+  MealsSearchController? _mealsSearchController;
 
   @override
   void initState() {
@@ -28,7 +31,34 @@ class _MealsScreenState extends State<MealsScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final controller = MealsSearchScope.maybeOf(context);
+    if (controller == _mealsSearchController) {
+      return;
+    }
+    _mealsSearchController?.removeListener(_handleExternalSearchRequest);
+    _mealsSearchController = controller;
+    _mealsSearchController?.addListener(_handleExternalSearchRequest);
+    _handleExternalSearchRequest();
+  }
+
+  void _handleExternalSearchRequest() {
+    final controller = _mealsSearchController;
+    if (controller == null ||
+        controller.generation == _lastSearchGeneration ||
+        controller.query.isEmpty) {
+      return;
+    }
+
+    _lastSearchGeneration = controller.generation;
+    _searchController.text = controller.query;
+    _search(query: controller.query);
+  }
+
+  @override
   void dispose() {
+    _mealsSearchController?.removeListener(_handleExternalSearchRequest);
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();

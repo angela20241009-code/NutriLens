@@ -24,6 +24,8 @@
   "authSignIn": "Sign in",
   "authMealPreferences": "Meal preferences",
   "authMealPreferencesHint": "Tell us what you like and what to avoid before you sign in.",
+  "authMealsPerDay": "Meals per day",
+  "authMealsPerDayHint": "How many meals do you usually eat?",
   "authEmail": "Email",
   "authPassword": "Password",
   "authCreateAccount": "Create account",

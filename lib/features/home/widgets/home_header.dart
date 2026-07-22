@@ -22,11 +22,13 @@ class HomeHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                _greetingFor(DateTime.now()),
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 4),
+              if (_greetingFor(DateTime.now()) case final greeting?) ...[
+                Text(
+                  greeting,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 4),
+              ],
               Text(
                 '$name 👋',
                 style: Theme.of(context).textTheme.headlineLarge,
@@ -81,14 +83,17 @@ class HomeHeader extends StatelessWidget {
     return 'Athlete';
   }
 
-  String _greetingFor(DateTime now) {
+  String? _greetingFor(DateTime now) {
     final hour = now.hour;
-    if (hour < 12) {
+    if (hour >= 5 && hour < 12) {
       return 'Good Morning';
     }
-    if (hour < 17) {
+    if (hour >= 12 && hour < 17) {
       return 'Good Afternoon';
     }
-    return 'Good Evening';
+    if (hour >= 17 && hour < 21) {
+      return 'Good Evening';
+    }
+    return null;
   }
 }

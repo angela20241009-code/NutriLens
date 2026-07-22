@@ -40,6 +40,7 @@ void main() {
       );
 
       final plan = await client.fetchWeeklyPlan(
+        uid: 'uid_123',
         profile: profile,
         startDate: DateTime(2026, 7, 22),
       );
@@ -55,6 +56,7 @@ void main() {
 
       await expectLater(
         () => client.fetchWeeklyPlan(
+          uid: 'uid_123',
           profile: UserProfile.demoAngela(
             userId: 'uid_123',
             now: DateTime(2026, 7, 22),

@@ -19,6 +19,7 @@ class InMemoryUserRepository implements UserRepository {
   final Map<String, List<Meal>> _meals = {};
   // uid → (dateKey → DailySummary)
   final Map<String, Map<String, DailySummary>> _dailySummaries = {};
+  final Map<String, MealPlanWeek> _mealPlans = {};
   int _accountCounter = 0;
   int _mealCounter = 0;
 
@@ -364,6 +365,16 @@ class InMemoryUserRepository implements UserRepository {
   }
 
   @override
+  Future<MealPlanWeek?> getMealPlanWeek(String uid) async {
+    return _mealPlans[uid];
+  }
+
+  @override
+  Future<void> saveMealPlanWeek(String uid, MealPlanWeek week) async {
+    _mealPlans[uid] = week;
+  }
+
+  @override
   Future<void> deleteAccount(String uid) async {
     final account = _accounts[uid];
     final email = account?.email?.trim().toLowerCase();
@@ -375,6 +386,7 @@ class InMemoryUserRepository implements UserRepository {
     _profiles.remove(uid);
     _meals.remove(uid);
     _dailySummaries.remove(uid);
+    _mealPlans.remove(uid);
     if (_uid == uid) {
       _uid = null;
     }

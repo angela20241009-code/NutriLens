@@ -19,10 +19,14 @@ class AuthScreen extends StatefulWidget {
     String email,
     String password,
     DietaryProfile dietaryProfile,
+    int mealsPerDay,
   )
   onCreateAccount;
   final Future<void> Function(String email, String password) onSignIn;
-  final Future<void> Function(DietaryProfile dietaryProfile) onContinueAsGuest;
+  final Future<void> Function(
+    DietaryProfile dietaryProfile,
+    int mealsPerDay,
+  ) onContinueAsGuest;
 
   @override
   State<AuthScreen> createState() => _AuthScreenState();
@@ -39,6 +43,7 @@ class _AuthScreenState extends State<AuthScreen> {
   bool _othersSelected = false;
 
   AuthMode _mode = AuthMode.createAccount;
+  int _mealsPerDay = 3;
   bool _busy = false;
   String? _error;
 
@@ -74,7 +79,12 @@ class _AuthScreenState extends State<AuthScreen> {
       final email = _emailController.text.trim();
       final password = _passwordController.text.trim();
       if (_mode == AuthMode.createAccount) {
-        await widget.onCreateAccount(email, password, _dietaryProfile);
+        await widget.onCreateAccount(
+          email,
+          password,
+          _dietaryProfile,
+          _mealsPerDay,
+        );
       } else {
         await widget.onSignIn(email, password);
       }
@@ -97,7 +107,7 @@ class _AuthScreenState extends State<AuthScreen> {
       _error = null;
     });
     try {
-      await widget.onContinueAsGuest(_dietaryProfile);
+      await widget.onContinueAsGuest(_dietaryProfile, _mealsPerDay);
     } catch (error) {
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
@@ -229,6 +239,34 @@ class _AuthScreenState extends State<AuthScreen> {
                         },
                         enabled: !_busy,
                         useLimeBorders: true,
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                    if (_mode != AuthMode.signIn) ...[
+                      Text(
+                        l10n.authMealsPerDay,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        l10n.authMealsPerDayHint,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 12),
+                      SegmentedButton<int>(
+                        showSelectedIcon: false,
+                        segments: const [
+                          ButtonSegment(value: 2, label: Text('2')),
+                          ButtonSegment(value: 3, label: Text('3')),
+                          ButtonSegment(value: 4, label: Text('4')),
+                          ButtonSegment(value: 5, label: Text('5')),
+                        ],
+                        selected: {_mealsPerDay},
+                        onSelectionChanged: _busy
+                            ? null
+                            : (selection) {
+                                setState(() => _mealsPerDay = selection.first);
+                              },
                       ),
                       const SizedBox(height: 24),
                     ],

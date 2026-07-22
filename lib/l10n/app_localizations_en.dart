@@ -63,6 +63,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tell us what you like and what to avoid before you sign in.';
 
   @override
+  String get authMealsPerDay => 'Meals per day';
+
+  @override
+  String get authMealsPerDayHint => 'How many meals do you usually eat?';
+
+  @override
   String get authEmail => 'Email';
 
   @override

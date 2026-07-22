@@ -62,6 +62,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authMealPreferencesHint => '登录前告诉我们您喜欢什么以及需要避免什么。';
 
   @override
+  String get authMealsPerDay => '每日餐数';
+
+  @override
+  String get authMealsPerDayHint => '您通常一天吃几餐？';
+
+  @override
   String get authEmail => '电子邮件';
 
   @override

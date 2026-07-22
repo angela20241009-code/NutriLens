@@ -116,6 +116,7 @@ void main() {
           );
 
       final plan = await client.fetchWeeklyPlan(
+        uid: 'uid_123',
         profile: profile,
         startDate: DateTime(2026, 4, 14),
       );
@@ -218,6 +219,7 @@ void main() {
     );
 
     final meal = await client.regenerateMeal(
+      uid: 'uid_123',
       profile: profile,
       date: DateTime(2026, 6, 9),
       slot: MealSlot.lunch,

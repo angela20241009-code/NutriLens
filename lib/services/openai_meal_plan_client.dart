@@ -33,19 +33,27 @@ class OpenAiMealPlanClient implements MealPlanClient {
 
   @override
   Future<MealPlanWeek> fetchWeeklyPlan({
+    required String uid,
     required UserProfile profile,
     required DateTime startDate,
+    bool forceRefresh = false,
   }) async {
     final normalizedStart = DateUtils.dateOnly(startDate);
+    final mealsPerDay = profile.nutritionSettings.mealsPerDay.clamp(2, 5);
     final content = await _completeJson(
       systemPrompt: _weeklySystemPrompt,
-      userPrompt: _weeklyUserPrompt(profile, normalizedStart),
+      userPrompt: _weeklyUserPrompt(profile, normalizedStart, mealsPerDay),
     );
-    return _parseWeeklyPlan(content, normalizedStart);
+    return _parseWeeklyPlan(
+      content,
+      normalizedStart,
+      mealsPerDay: mealsPerDay,
+    );
   }
 
   @override
   Future<MealPlanMeal> regenerateMeal({
+    required String uid,
     required UserProfile profile,
     required DateTime date,
     required MealSlot slot,
@@ -106,7 +114,11 @@ class OpenAiMealPlanClient implements MealPlanClient {
     return content.trim();
   }
 
-  MealPlanWeek _parseWeeklyPlan(String content, DateTime startDate) {
+  MealPlanWeek _parseWeeklyPlan(
+    String content,
+    DateTime startDate, {
+    required int mealsPerDay,
+  }) {
     final parsed = jsonDecode(content) as Map<String, dynamic>;
     final daysRaw = parsed['days'];
     if (daysRaw is! List || daysRaw.length != 7) {
@@ -130,8 +142,10 @@ class OpenAiMealPlanClient implements MealPlanClient {
           .map(_parseMeal)
           .toList(growable: false);
 
-      if (meals.length < 3) {
-        throw StateError('Each day must include breakfast, lunch, and dinner.');
+      if (meals.length < mealsPerDay) {
+        throw StateError(
+          'Each day must include at least $mealsPerDay meals.',
+        );
       }
 
       days.add(
@@ -235,7 +249,7 @@ class OpenAiMealPlanClient implements MealPlanClient {
       '    }\n'
       '  ]\n'
       '}\n\n'
-      'Return exactly 7 day objects. Each day must include breakfast, lunch, and dinner. '
+      'Return exactly 7 day objects. Each day must include the requested number of meals. '
       'Use non-negative integers for macros. Keep titles concise.';
 
   static const _singleMealSystemPrompt =
@@ -252,9 +266,14 @@ class OpenAiMealPlanClient implements MealPlanClient {
       '  }\n'
       '}';
 
-  static String _weeklyUserPrompt(UserProfile profile, DateTime startDate) {
+  static String _weeklyUserPrompt(
+    UserProfile profile,
+    DateTime startDate,
+    int mealsPerDay,
+  ) {
     return _profileContext(profile) +
-        '\nCreate a 7-day meal plan starting on ${startDate.year}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}.';
+        '\nPlan exactly $mealsPerDay meals per day. '
+        'Create a 7-day meal plan starting on ${startDate.year}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}.';
   }
 
   static String _singleMealUserPrompt(
@@ -278,7 +297,8 @@ class OpenAiMealPlanClient implements MealPlanClient {
       ..writeln('- Daily fats target: ${targets.fatsG} g')
       ..writeln('- Food preferences: ${dietary.preferences.join(', ')}')
       ..writeln('- Allergens to avoid: ${dietary.allergens.join(', ')}')
-      ..writeln('- Dietary restrictions: ${dietary.restrictions.join(', ')}');
+      ..writeln('- Dietary restrictions: ${dietary.restrictions.join(', ')}')
+      ..writeln('- Meals per day: ${profile.nutritionSettings.mealsPerDay}');
     return buffer.toString();
   }
 }

@@ -11,21 +11,25 @@ class MealTrackingShell extends StatelessWidget {
     super.key,
     required this.selectedIndex,
     required this.onIndexChanged,
+    this.onMealPlanMealTap,
   });
 
   final int selectedIndex;
   final ValueChanged<int> onIndexChanged;
+  final ValueChanged<String>? onMealPlanMealTap;
 
   @override
   Widget build(BuildContext context) {
     final screens = [
       HomeDashboardScreen(
-        onMealsTap: () => onIndexChanged(1),
         onProfileTap: () => onIndexChanged(4),
       ),
       const MealsScreen(),
       const ScanScreen(),
-      ScheduleScreen(isActive: selectedIndex == 3),
+      ScheduleScreen(
+        isActive: selectedIndex == 3,
+        onMealPlanMealTap: onMealPlanMealTap,
+      ),
       const ProfileScreen(),
     ];
 

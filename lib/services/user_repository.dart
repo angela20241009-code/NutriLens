@@ -112,6 +112,12 @@ abstract class UserRepository {
     double? sleepHours,
   });
 
+  /// Returns the cached weekly meal plan for [uid], if one exists.
+  Future<MealPlanWeek?> getMealPlanWeek(String uid);
+
+  /// Persists the weekly meal plan for [uid].
+  Future<void> saveMealPlanWeek(String uid, MealPlanWeek week);
+
   /// Permanently deletes the user's auth record and stored app data.
   Future<void> deleteAccount(String uid);
 

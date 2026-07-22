@@ -27,4 +27,9 @@ abstract final class FirestorePaths {
   /// A specific daily summary document: `dailySummaries/{uid}/days/{dateKey}`
   static String dailySummaryDoc(String uid, String dateKey) =>
       'dailySummaries/$uid/days/$dateKey';
+
+  // ── Meal plans ────────────────────────────────────────────────────────────
+
+  /// Current cached weekly meal plan: `mealPlans/{uid}`
+  static String mealPlanDoc(String uid) => 'mealPlans/$uid';
 }

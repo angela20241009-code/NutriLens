@@ -202,6 +202,18 @@ abstract class AppLocalizations {
   /// **'Tell us what you like and what to avoid before you sign in.'**
   String get authMealPreferencesHint;
 
+  /// No description provided for @authMealsPerDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Meals per day'**
+  String get authMealsPerDay;
+
+  /// No description provided for @authMealsPerDayHint.
+  ///
+  /// In en, this message translates to:
+  /// **'How many meals do you usually eat?'**
+  String get authMealsPerDayHint;
+
   /// No description provided for @authEmail.
   ///
   /// In en, this message translates to:

@@ -3,6 +3,7 @@ import 'package:nutrilens/app/meal_plan_scope.dart';
 import 'package:nutrilens/app/sleep_log_refresh_scope.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/features/home/home_dashboard_data.dart';
+import 'package:nutrilens/features/home/weekly_fuel_summary_screen.dart';
 import 'package:nutrilens/features/home/widgets/home_header.dart';
 import 'package:nutrilens/features/home/widgets/hydration_card.dart';
 import 'package:nutrilens/features/home/widgets/meal_capture_card.dart';
@@ -25,13 +26,11 @@ class HomeDashboardScreen extends StatefulWidget {
     super.key,
     DateTime Function()? now,
     required this.onProfileTap,
-    required this.onMealsTap,
     this.onPreferencesTap,
   }) : _nowProvider = now;
 
   final DateTime Function()? _nowProvider;
   final VoidCallback onProfileTap;
-  final VoidCallback onMealsTap;
   final VoidCallback? onPreferencesTap;
 
   @override
@@ -140,6 +139,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     var plannedMeals = const <HomeMealPlanItem>[];
     try {
       final plan = await mealPlanClient.fetchWeeklyPlan(
+        uid: uid,
         profile: profile,
         startDate: today,
       );
@@ -218,6 +218,14 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     } else if (result == FavoriteMealSheetResult.edit) {
       await _openLogMealSheet();
     }
+  }
+
+  Future<void> _openWeeklyFuelSummary() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (context) => WeeklyFuelSummaryScreen(now: widget._nowProvider),
+      ),
+    );
   }
 
   Future<void> _openMealPreferencesSheet() async {
@@ -305,7 +313,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                   sport: profile.primarySportName,
                   totals: data.summary.totals,
                   targets: profile.dailyTargets,
-                  onViewDetailsTap: widget.onMealsTap,
+                  onViewDetailsTap: _openWeeklyFuelSummary,
                 ),
                 if (profile.sleepModeEnabled) ...[
                   const SizedBox(height: 16),

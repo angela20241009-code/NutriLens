@@ -20,9 +20,14 @@ import 'package:nutrilens/services/date_key.dart';
 import 'package:nutrilens/services/openai_meal_plan_client.dart';
 
 class ScheduleScreen extends StatefulWidget {
-  const ScheduleScreen({super.key, this.isActive = true});
+  const ScheduleScreen({
+    super.key,
+    this.isActive = true,
+    this.onMealPlanMealTap,
+  });
 
   final bool isActive;
+  final ValueChanged<String>? onMealPlanMealTap;
 
   @override
   State<ScheduleScreen> createState() => _ScheduleScreenState();
@@ -42,6 +47,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   String? _mealPlanError;
   bool _mealPlanLoading = false;
   bool _mealDataReloadInProgress = false;
+  MealSlot? _regeneratingMealSlot;
   bool _wasActive = false;
   bool _mealsRequested = false;
   MealLogRefreshNotifier? _mealLogRefreshNotifier;
@@ -88,8 +94,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       _profileFuture = scope.repository.getProfile(scope.uid);
       _mealsRequested = false;
     } else if (widget.isActive && !_wasActive) {
-      _mealsRequested = false;
-      _reloadMealData(force: true);
+      _returnToTodayOnOpen();
     }
     _wasActive = widget.isActive;
   }
@@ -98,10 +103,24 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   void didUpdateWidget(covariant ScheduleScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.isActive && !oldWidget.isActive) {
-      _mealsRequested = false;
-      _reloadMealData(force: true);
+      _returnToTodayOnOpen();
     }
     _wasActive = widget.isActive;
+  }
+
+  void _returnToTodayOnOpen() {
+    final today = _dayKey(DateTime.now());
+    if (!_isSameDay(today, _selectedDate) ||
+        _calendarMode != ScheduleCalendarMode.week) {
+      setState(() {
+        _selectedDate = today;
+        _calendarMode = ScheduleCalendarMode.week;
+        _mealsRequested = false;
+      });
+    } else {
+      _mealsRequested = false;
+    }
+    _reloadMealData(force: true);
   }
 
   @override
@@ -143,6 +162,79 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     _lastMealPlanRefreshGeneration = notifier.generation;
     _mealsRequested = false;
     _reloadMealData(force: true);
+  }
+
+  Future<void> _regeneratePlannedMeal(MealPlanMeal meal) async {
+    if (_regeneratingMealSlot != null) {
+      return;
+    }
+
+    final scope = UserScope.of(context);
+    final profile = await scope.repository.getProfile(scope.uid);
+    if (!mounted || profile == null) {
+      return;
+    }
+
+    setState(() => _regeneratingMealSlot = meal.slot);
+
+    try {
+      final client =
+          MealPlanScope.maybeOf(context)?.client ??
+          OpenAiMealPlanClient.fromEnvironment();
+      final regenerated = await client.regenerateMeal(
+        uid: scope.uid,
+        profile: profile,
+        date: _selectedDate,
+        slot: meal.slot,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      final plan = _mealPlan;
+      if (plan != null) {
+        final updatedDays = plan.days.map((day) {
+          if (!_isSameDay(day.date, _selectedDate)) {
+            return day;
+          }
+
+          final meals = day.meals
+              .map((plannedMeal) {
+                return plannedMeal.slot == meal.slot ? regenerated : plannedMeal;
+              })
+              .toList(growable: false);
+          return MealPlanDay(date: day.date, meals: meals);
+        }).toList(growable: false);
+
+        setState(() {
+          _mealPlan = MealPlanWeek(
+            generatedAt: plan.generatedAt,
+            days: updatedDays,
+          );
+          _mealPlanError = null;
+          _regeneratingMealSlot = null;
+        });
+      } else {
+        setState(() => _regeneratingMealSlot = null);
+        await _reloadMealData(force: false);
+      }
+
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('New ${meal.slot.label.toLowerCase()} meal ready')),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _regeneratingMealSlot = null);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not generate a new meal: $error')),
+      );
+    }
   }
 
   Future<void> _reloadMealData({bool force = false}) async {
@@ -225,8 +317,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           OpenAiMealPlanClient.fromEnvironment();
       final planStart = DateUtils.dateOnly(DateTime.now());
       mealPlan = await client.fetchWeeklyPlan(
+        uid: scope.uid,
         profile: profile,
         startDate: planStart,
+        forceRefresh: force,
       );
       mealPlanError = null;
     } catch (error) {
@@ -519,6 +613,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   meals: _plannedMealsForSelectedDate,
                   error: _mealPlanError,
                   loading: _mealPlanLoading,
+                  onMealTap: widget.onMealPlanMealTap,
+                  onRegenerateMeal: _regeneratePlannedMeal,
+                  regeneratingSlot: _regeneratingMealSlot,
                 ),
                 const SizedBox(height: 24),
                 ScheduleTimeline(

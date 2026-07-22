@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nutrilens/app/meals_search_scope.dart';
 import 'package:nutrilens/app/sleep_log_refresh_scope.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/features/shell/meal_tracking_shell.dart';
@@ -15,10 +16,23 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> {
+  late final MealsSearchController _mealsSearchController;
   int _mealTabIndex = 0;
   bool _sleepCheckInInProgress = false;
   bool _sleepCheckInSkippedThisSession = false;
   String? _sleepCheckInHandledForDateKey;
+
+  @override
+  void initState() {
+    super.initState();
+    _mealsSearchController = MealsSearchController();
+  }
+
+  @override
+  void dispose() {
+    _mealsSearchController.dispose();
+    super.dispose();
+  }
 
   @override
   void didChangeDependencies() {
@@ -26,6 +40,11 @@ class _AppShellState extends State<AppShell> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _requestSleepCheckIn();
     });
+  }
+
+  void _openMealsSearch(String query) {
+    setState(() => _mealTabIndex = 1);
+    _mealsSearchController.openSearch(query);
   }
 
   Future<void> _requestSleepCheckIn() async {
@@ -125,13 +144,17 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        bottom: false,
-        child: MealTrackingShell(
-          selectedIndex: _mealTabIndex,
-          onIndexChanged: (i) => setState(() => _mealTabIndex = i),
+    return MealsSearchScope(
+      controller: _mealsSearchController,
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          bottom: false,
+          child: MealTrackingShell(
+            selectedIndex: _mealTabIndex,
+            onIndexChanged: (index) => setState(() => _mealTabIndex = index),
+            onMealPlanMealTap: _openMealsSearch,
+          ),
         ),
       ),
     );

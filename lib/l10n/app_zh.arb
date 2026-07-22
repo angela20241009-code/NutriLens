@@ -17,6 +17,8 @@
   "authSignIn": "登录",
   "authMealPreferences": "饮食偏好",
   "authMealPreferencesHint": "登录前告诉我们您喜欢什么以及需要避免什么。",
+  "authMealsPerDay": "每日餐数",
+  "authMealsPerDayHint": "您通常一天吃几餐？",
   "authEmail": "电子邮件",
   "authPassword": "密码",
   "authCreateAccount": "创建账户",

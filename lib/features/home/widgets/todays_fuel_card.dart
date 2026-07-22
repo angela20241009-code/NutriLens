@@ -23,7 +23,6 @@ class TodaysFuelCard extends StatelessWidget {
       totals.caloriesKcal,
       targets.caloriesKcal,
     );
-    final caloriesRemaining = targets.caloriesKcal - totals.caloriesKcal;
 
     return Container(
       padding: const EdgeInsets.all(22),
@@ -107,62 +106,6 @@ class TodaysFuelCard extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(height: 24),
-          Divider(height: 1, color: Colors.white.withValues(alpha: 0.1)),
-          const SizedBox(height: 18),
-          Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppColors.lime.withValues(alpha: 0.16),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: const Icon(
-                  Icons.restaurant_menu_rounded,
-                  color: AppColors.lime,
-                  size: 25,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _remainingLabel(caloriesRemaining),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      caloriesRemaining > 0
-                          ? 'Great pace! Keep it up.'
-                          : 'Target reached. Nice work.',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.textMuted,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.textMuted.withValues(alpha: 0.8),
-                size: 28,
-              ),
-            ],
-          ),
         ],
       ),
     );
@@ -173,22 +116,6 @@ class TodaysFuelCard extends StatelessWidget {
       return 0;
     }
     return (current / target).clamp(0.0, 1.0);
-  }
-
-  String _remainingLabel(int caloriesRemaining) {
-    if (caloriesRemaining > 0) {
-      return "You're ${_formatNumber(caloriesRemaining)} kcal left";
-    }
-    if (caloriesRemaining == 0) {
-      return "You're right on target";
-    }
-    return "You're ${_formatNumber(caloriesRemaining.abs())} kcal over";
-  }
-
-  String _formatNumber(int n) {
-    final s = n.toString();
-    if (s.length <= 3) return s;
-    return '${s.substring(0, s.length - 3)},${s.substring(s.length - 3)}';
   }
 }
 

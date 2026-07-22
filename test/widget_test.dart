@@ -45,9 +45,9 @@ void main() {
     await tester.pumpWidget(
       wrapLocalized(
         child: AuthScreen(
-          onCreateAccount: (_, _, __) async => createCalled = true,
+          onCreateAccount: (_, _, __, ___) async => createCalled = true,
           onSignIn: (_, _) async => signInCalled = true,
-          onContinueAsGuest: (_) async {},
+          onContinueAsGuest: (_, __) async {},
         ),
       ),
     );
@@ -79,9 +79,9 @@ void main() {
     await tester.pumpWidget(
       wrapLocalized(
         child: AuthScreen(
-          onCreateAccount: (_, _, __) async {},
+          onCreateAccount: (_, _, __, ___) async {},
           onSignIn: (_, _) async {},
-          onContinueAsGuest: (_) async {},
+          onContinueAsGuest: (_, __) async {},
         ),
       ),
     );
@@ -535,6 +535,63 @@ void main() {
     expect(find.text('Meal plan'), findsOneWidget);
     expect(find.text('Power Oats & Berries Bowl'), findsOneWidget);
     expect(mealPlanClient.callCount, 1);
+  });
+
+  testWidgets('Schedule can regenerate a single planned meal', (
+    WidgetTester tester,
+  ) async {
+    final repository = InMemoryUserRepository();
+    repository.seedCatalog(
+      sportProfile: CatalogSeedData.tennisSport(),
+      teamProgram: CatalogSeedData.lincolnHighTennis(),
+    );
+    final account = await repository.signInAnonymously(
+      timezone: 'America/Los_Angeles',
+    );
+    await repository.completeOnboarding(
+      uid: account.uid,
+      profile: UserProfile.demoAngela(
+        userId: account.uid,
+        now: DateTime.now().toUtc(),
+      ),
+    );
+
+    final mealPlanClient = _FakeMealPlanClient();
+
+    await tester.pumpWidget(
+      MealPlanScope(
+        client: mealPlanClient,
+        child: UserScope(
+          repository: repository,
+          uid: account.uid,
+          child: MaterialApp(
+            theme: AppTheme.dark,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const Scaffold(body: ScheduleScreen(isActive: true)),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    for (var i = 0; i < 30; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+      if (find.text('Power Oats & Berries Bowl').evaluate().isNotEmpty) {
+        break;
+      }
+    }
+
+    await tester.tap(find.text('New meal').first);
+    await tester.pump();
+    for (var i = 0; i < 30; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+      if (find.text('Regenerated Breakfast Bowl').evaluate().isNotEmpty) {
+        break;
+      }
+    }
+
+    expect(find.text('Regenerated Breakfast Bowl'), findsOneWidget);
+    expect(mealPlanClient.lastRegeneratedSlot, MealSlot.breakfast);
   });
 
   testWidgets('Meals tab searches dishes from Tasty', (
@@ -1200,8 +1257,10 @@ class _FakeMealPlanClient implements MealPlanClient {
 
   @override
   Future<MealPlanWeek> fetchWeeklyPlan({
+    required String uid,
     required UserProfile profile,
     required DateTime startDate,
+    bool forceRefresh = false,
   }) async {
     callCount += 1;
     lastStartDate = startDate;
@@ -1255,6 +1314,7 @@ class _FakeMealPlanClient implements MealPlanClient {
 
   @override
   Future<MealPlanMeal> regenerateMeal({
+    required String uid,
     required UserProfile profile,
     required DateTime date,
     required MealSlot slot,
@@ -1431,14 +1491,17 @@ Future<void> _pumpSleepDashboard(
 class _FailingMealPlanClient implements MealPlanClient {
   @override
   Future<MealPlanWeek> fetchWeeklyPlan({
+    required String uid,
     required UserProfile profile,
     required DateTime startDate,
+    bool forceRefresh = false,
   }) async {
     throw StateError('Edamam failed on purpose');
   }
 
   @override
   Future<MealPlanMeal> regenerateMeal({
+    required String uid,
     required UserProfile profile,
     required DateTime date,
     required MealSlot slot,
@@ -1450,6 +1513,7 @@ class _FailingMealPlanClient implements MealPlanClient {
 class _FailingRefreshMealPlanClient extends _FakeMealPlanClient {
   @override
   Future<MealPlanMeal> regenerateMeal({
+    required String uid,
     required UserProfile profile,
     required DateTime date,
     required MealSlot slot,

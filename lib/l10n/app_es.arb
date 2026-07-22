@@ -17,6 +17,8 @@
   "authSignIn": "Iniciar sesión",
   "authMealPreferences": "Preferencias de comidas",
   "authMealPreferencesHint": "Cuéntanos qué te gusta y qué evitar antes de iniciar sesión.",
+  "authMealsPerDay": "Comidas por día",
+  "authMealsPerDayHint": "¿Cuántas comidas sueles hacer al día?",
   "authEmail": "Correo electrónico",
   "authPassword": "Contraseña",
   "authCreateAccount": "Crear cuenta",

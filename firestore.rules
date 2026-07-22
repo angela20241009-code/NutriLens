@@ -41,5 +41,10 @@ service cloud.firestore {
     match /dailySummaries/{userId}/days/{dateKey} {
       allow read, write: if isOwner(userId);
     }
+
+    // Cached weekly meal plan — owner read/write only.
+    match /mealPlans/{userId} {
+      allow read, write: if isOwner(userId);
+    }
   }
 }
