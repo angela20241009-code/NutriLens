@@ -21,6 +21,7 @@ import 'package:nutrilens/services/meal_analysis_client.dart';
 import 'package:nutrilens/services/openai_meal_analysis_client.dart';
 import 'package:nutrilens/services/openai_meal_plan_client.dart';
 import 'package:nutrilens/services/persisted_meal_plan_client.dart';
+import 'package:nutrilens/services/tasty_image_meal_plan_client.dart';
 import 'package:nutrilens/services/tasty_recipe_client.dart';
 import 'package:nutrilens/services/user_repository.dart';
 import 'package:nutrilens/theme/app_theme.dart';
@@ -98,25 +99,17 @@ class _AppBootstrapState extends State<AppBootstrap> {
     });
   }
 
-  Future<void> _saveInitialDietaryProfile(
+  Future<void> _saveInitialProfileLocale(
     UserRepository repository,
-    String uid,
-    DietaryProfile dietaryProfile, {
+    String uid, {
     String? locale,
-    int mealsPerDay = 3,
   }) async {
     final profile = await repository.getProfile(uid);
     if (profile == null) {
       return;
     }
     await repository.saveProfile(
-      profile.copyWith(
-        dietaryProfile: dietaryProfile,
-        locale: locale ?? profile.locale,
-        nutritionSettings: profile.nutritionSettings.copyWith(
-          mealsPerDay: mealsPerDay,
-        ),
-      ),
+      profile.copyWith(locale: locale ?? profile.locale),
     );
   }
 
@@ -131,20 +124,16 @@ class _AppBootstrapState extends State<AppBootstrap> {
     UserRepository repository,
     String email,
     String password,
-    DietaryProfile dietaryProfile,
-    int mealsPerDay,
   ) async {
     final account = await repository.createAccountWithEmail(
       email: email,
       password: password,
       timezone: _defaultTimezone,
     );
-    await _saveInitialDietaryProfile(
+    await _saveInitialProfileLocale(
       repository,
       account.uid,
-      dietaryProfile,
       locale: _currentProfileLocale(),
-      mealsPerDay: mealsPerDay,
     );
     _activateSession(repository, account);
   }
@@ -164,18 +153,14 @@ class _AppBootstrapState extends State<AppBootstrap> {
 
   Future<void> _continueAsGuest(
     UserRepository repository,
-    DietaryProfile dietaryProfile,
-    int mealsPerDay,
   ) async {
     final account = await repository.signInAnonymously(
       timezone: _defaultTimezone,
     );
-    await _saveInitialDietaryProfile(
+    await _saveInitialProfileLocale(
       repository,
       account.uid,
-      dietaryProfile,
       locale: _currentProfileLocale(),
-      mealsPerDay: mealsPerDay,
     );
     _activateSession(repository, account);
   }
@@ -251,23 +236,16 @@ class _AppBootstrapState extends State<AppBootstrap> {
                           AppLocalizations.localizationsDelegates,
                       supportedLocales: AppLocalizations.supportedLocales,
                       home: AuthScreen(
-                        onCreateAccount:
-                            (email, password, dietaryProfile, mealsPerDay) =>
-                                _createAccount(
-                                  result.repository,
-                                  email,
-                                  password,
-                                  dietaryProfile,
-                                  mealsPerDay,
-                                ),
+                        onCreateAccount: (email, password) =>
+                            _createAccount(
+                              result.repository,
+                              email,
+                              password,
+                            ),
                         onSignIn: (email, password) =>
                             _signIn(result.repository, email, password),
-                        onContinueAsGuest: (dietaryProfile, mealsPerDay) =>
-                            _continueAsGuest(
-                          result.repository,
-                          dietaryProfile,
-                          mealsPerDay,
-                        ),
+                        onContinueAsGuest: () =>
+                            _continueAsGuest(result.repository),
                       ),
                     );
                   }
@@ -284,7 +262,10 @@ class _AppBootstrapState extends State<AppBootstrap> {
                             client: _mealAnalysisClient,
                             child: MealPlanScope(
                               client: PersistedMealPlanClient(
-                                delegate: OpenAiMealPlanClient.fromEnvironment(),
+                                delegate: TastyImageMealPlanClient(
+                                  delegate: OpenAiMealPlanClient.fromEnvironment(),
+                                  tastyClient: _tastyRecipeClient,
+                                ),
                                 repository: result.repository,
                               ),
                               child: SessionScope(

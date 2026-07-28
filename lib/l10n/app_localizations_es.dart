@@ -60,7 +60,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get authMealPreferencesHint =>
-      'Cuéntanos qué te gusta y qué evitar antes de iniciar sesión.';
+      'Cuéntanos qué te gusta y qué evitar después de registrarte.';
 
   @override
   String get authMealsPerDay => 'Comidas por día';
@@ -79,6 +79,20 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get authContinueAsGuest => 'Continuar como invitado';
+
+  @override
+  String get authLegalAgreement =>
+      'Acepto la Política de privacidad y los Términos y condiciones';
+
+  @override
+  String get authPrivacyPolicy => 'Política de privacidad';
+
+  @override
+  String get authTermsAndConditions => 'Términos y condiciones';
+
+  @override
+  String get authValidationLegalRequired =>
+      'Acepta la Política de privacidad y los Términos y condiciones para continuar';
 
   @override
   String get authValidationEmailRequired => 'Ingresa un correo electrónico';

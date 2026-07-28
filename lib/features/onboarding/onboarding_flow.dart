@@ -4,7 +4,9 @@ import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/features/profile/meal_preferences_form.dart';
 import 'package:nutrilens/features/profile/widgets/profile_text_field.dart';
 import 'package:nutrilens/features/shell/app_shell.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/models/daily_targets.dart';
+import 'package:nutrilens/models/nutrition_settings.dart';
 import 'package:nutrilens/models/user_profile.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
@@ -115,6 +117,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   double? _lastDerivedWeightKg;
   final _selectedStyles = <String>{};
   bool _othersSelected = false;
+  int _mealsPerDay = 3;
   String? _wakeTiredAnswer;
   String? _bedtimeConsistencyAnswer;
   String? _sleepReminderAnswer;
@@ -273,6 +276,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
             restrictionsText: _restrictionsController.text,
             otherStyleText: _otherStyleController.text,
             othersSelected: _othersSelected,
+          ),
+          nutritionSettings: NutritionSettings(
+            mealsPerDay: _mealsPerDay,
           ),
           dailyTargets: DailyTargets(
             caloriesKcal: int.parse(_caloriesController.text.trim()),
@@ -455,6 +461,10 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               child: _MealPreferencesStep(
                 formKey: _mealPrefsFormKey,
                 selectedStyles: _selectedStyles,
+                mealsPerDay: _mealsPerDay,
+                onMealsPerDayChanged: (value) {
+                  setState(() => _mealsPerDay = value);
+                },
                 onStyleToggled: (style) {
                   setState(() {
                     if (_selectedStyles.contains(style)) {
@@ -1070,6 +1080,8 @@ class _MealPreferencesStep extends StatelessWidget {
   const _MealPreferencesStep({
     required this.formKey,
     required this.selectedStyles,
+    required this.mealsPerDay,
+    required this.onMealsPerDayChanged,
     required this.onStyleToggled,
     required this.allergensController,
     required this.restrictionsController,
@@ -1082,6 +1094,8 @@ class _MealPreferencesStep extends StatelessWidget {
 
   final GlobalKey<FormState> formKey;
   final Set<String> selectedStyles;
+  final int mealsPerDay;
+  final ValueChanged<int> onMealsPerDayChanged;
   final ValueChanged<String> onStyleToggled;
   final TextEditingController allergensController;
   final TextEditingController restrictionsController;
@@ -1093,6 +1107,8 @@ class _MealPreferencesStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Form(
       key: formKey,
       child: LayoutBuilder(
@@ -1105,12 +1121,12 @@ class _MealPreferencesStep extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'Meal preferences',
+                      l10n.authMealPreferences,
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Pick food styles you like and anything you need to avoid.',
+                      l10n.authMealPreferencesHint,
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 24),
@@ -1123,6 +1139,30 @@ class _MealPreferencesStep extends StatelessWidget {
                       othersSelected: othersSelected,
                       onOthersSelectedChanged: onOthersSelectedChanged,
                       useLimeBorders: true,
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      l10n.authMealsPerDay,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.authMealsPerDayHint,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 12),
+                    SegmentedButton<int>(
+                      showSelectedIcon: false,
+                      segments: const [
+                        ButtonSegment(value: 2, label: Text('2')),
+                        ButtonSegment(value: 3, label: Text('3')),
+                        ButtonSegment(value: 4, label: Text('4')),
+                        ButtonSegment(value: 5, label: Text('5')),
+                      ],
+                      selected: {mealsPerDay},
+                      onSelectionChanged: (selection) {
+                        onMealsPerDayChanged(selection.first);
+                      },
                     ),
                     const Spacer(),
                     SizedBox(

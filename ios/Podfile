@@ -1,6 +1,28 @@
 # Uncomment this line to define a global platform for your project
 platform :ios, '16.0'
 
+# Firebase iOS SDK requires iOS 15+. Flutter's generated Swift package defaults
+# to 13.0 until flutter build ios updates it, which breaks Xcode-only builds.
+def fix_flutter_swift_package_ios_deployment
+  package_swift = File.expand_path(
+    'Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage/Package.swift',
+    __dir__,
+  )
+  return unless File.exist?(package_swift)
+
+  deployment_target = '15.0'
+  contents = File.read(package_swift)
+  return if contents.match?(/\.iOS\("(1[5-9]|[2-9][0-9])\.\d+"\)/)
+
+  updated = contents.gsub(/\.iOS\("13\.0"\)/, ".iOS(\"#{deployment_target}\")")
+  return if updated == contents
+
+  File.write(package_swift, updated)
+  puts "Updated FlutterGeneratedPluginSwiftPackage minimum iOS to #{deployment_target}"
+end
+
+fix_flutter_swift_package_ios_deployment
+
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
@@ -39,5 +61,11 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+    target.build_configurations.each do |config|
+      if config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'].to_f < 15.0
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+      end
+    end
   end
+  fix_flutter_swift_package_ios_deployment
 end

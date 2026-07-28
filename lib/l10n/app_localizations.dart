@@ -199,7 +199,7 @@ abstract class AppLocalizations {
   /// No description provided for @authMealPreferencesHint.
   ///
   /// In en, this message translates to:
-  /// **'Tell us what you like and what to avoid before you sign in.'**
+  /// **'Tell us what you like and what to avoid after you sign up.'**
   String get authMealPreferencesHint;
 
   /// No description provided for @authMealsPerDay.
@@ -237,6 +237,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Continue as guest'**
   String get authContinueAsGuest;
+
+  /// No description provided for @authLegalAgreement.
+  ///
+  /// In en, this message translates to:
+  /// **'I agree to the Privacy Policy and Terms & Conditions'**
+  String get authLegalAgreement;
+
+  /// No description provided for @authPrivacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get authPrivacyPolicy;
+
+  /// No description provided for @authTermsAndConditions.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms & Conditions'**
+  String get authTermsAndConditions;
+
+  /// No description provided for @authValidationLegalRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept the Privacy Policy and Terms & Conditions to continue'**
+  String get authValidationLegalRequired;
 
   /// No description provided for @authValidationEmailRequired.
   ///

@@ -35,6 +35,26 @@ class MealPlanRecipe {
   final String sourceUrl;
   final double calories;
   final NutritionEntry nutrition;
+
+  MealPlanRecipe copyWith({
+    String? recipeId,
+    String? title,
+    String? imageUrl,
+    String? sourceName,
+    String? sourceUrl,
+    double? calories,
+    NutritionEntry? nutrition,
+  }) {
+    return MealPlanRecipe(
+      recipeId: recipeId ?? this.recipeId,
+      title: title ?? this.title,
+      imageUrl: imageUrl ?? this.imageUrl,
+      sourceName: sourceName ?? this.sourceName,
+      sourceUrl: sourceUrl ?? this.sourceUrl,
+      calories: calories ?? this.calories,
+      nutrition: nutrition ?? this.nutrition,
+    );
+  }
 }
 
 class MealPlanMeal {

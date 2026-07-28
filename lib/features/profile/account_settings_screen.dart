@@ -67,6 +67,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   bool _loading = true;
   bool _saving = false;
   bool _busy = false;
+  final _sectionNavigatorKey = GlobalKey<NavigatorState>();
 
   @override
   void initState() {
@@ -586,499 +587,122 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
   // ─── Build ────────────────────────────────────────────────────────────────
 
-  @override
-  Widget build(BuildContext context) {
+  void _openSettingsSection(String routeName) {
+    _sectionNavigatorKey.currentState?.pushNamed(routeName);
+  }
+
+  void _popSettingsSection() {
+    final navigator = _sectionNavigatorKey.currentState;
+    if (navigator != null && navigator.canPop()) {
+      navigator.pop();
+      return;
+    }
+    Navigator.of(context).pop();
+  }
+
+  void updateGender(String? value) => setState(() => _genderValue = value);
+
+  void updateTrainingDays(int? value) =>
+      setState(() => _trainingDaysValue = value);
+
+  void updateActivityLevel(String? value) =>
+      setState(() => _activityLevelValue = value);
+
+  void toggleMealStyle(String style) {
+    setState(() {
+      if (_selectedStyles.contains(style)) {
+        _selectedStyles.remove(style);
+      } else {
+        _selectedStyles.add(style);
+      }
+    });
+  }
+
+  void updateOthersSelected(bool selected) =>
+      setState(() => _othersSelected = selected);
+
+  Route<void> _onGenerateSectionRoute(RouteSettings settings) {
     final l10n = AppLocalizations.of(context)!;
-    final localeScope = AppLocaleScope.of(context);
-    final genderOptions = localizedGenderOptions(l10n);
-    final activityOptions = localizedActivityOptions(l10n);
-    final appSettings = AppSettingsScope.of(context);
-    final isAnonymous = _account?.isAnonymous ?? true;
     final isBusy = _saving || _busy;
 
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: Text(l10n.settingsTitle),
-        leading: BackButton(
-          color: AppColors.lime,
-          onPressed: isBusy ? null : () => Navigator.of(context).pop(),
-        ),
+    late final String title;
+    late final Widget body;
+    var showSave = false;
+
+    switch (settings.name) {
+      case '/account':
+        title = l10n.sectionAccount;
+        body = _AccountSettingsPage(host: this);
+        showSave = true;
+      case '/personal':
+        title = l10n.sectionPersonal;
+        body = _PersonalSettingsPage(host: this);
+        showSave = true;
+      case '/athlete':
+        title = l10n.sectionAthlete;
+        body = _AthleteSettingsPage(host: this);
+        showSave = true;
+      case '/nutrition':
+        title = l10n.sectionNutritionGoals;
+        body = _NutritionSettingsPage(host: this);
+        showSave = true;
+      case '/dietary':
+        title = l10n.sectionDietary;
+        body = _DietarySettingsPage(host: this);
+        showSave = true;
+      case '/display':
+        title = l10n.sectionDisplay;
+        body = _DisplaySettingsPage(host: this);
+      case '/app':
+        title = l10n.sectionApp;
+        body = _AppSettingsPage(host: this);
+      case '/':
+      default:
+        title = l10n.settingsTitle;
+        body = _SettingsHubPage(
+          host: this,
+          onSectionTap: _openSettingsSection,
+        );
+    }
+
+    return MaterialPageRoute<void>(
+      settings: settings,
+      builder: (context) => _SettingsPageScaffold(
+        title: title,
+        showSave: showSave,
+        saving: _saving,
+        busy: isBusy,
+        onSave: showSave ? _saveProfile : null,
+        onBack: isBusy ? null : _popSettingsSection,
+        child: body,
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : Stack(
-              children: [
-                Form(
-                  key: _formKey,
-                  child: ListView(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
-                    children: [
-                      // ── Account ──────────────────────────────────────────
-                      _sectionLabel(l10n.sectionAccount),
-                      _FormCard(
-                        children: [
-                          ProfileTextField(
-                            label: l10n.displayName,
-                            controller: _displayNameController,
-                            enabled: !isBusy,
-                            limeBorder: true,
-                            validator: (v) {
-                              if (v == null || v.trim().isEmpty) {
-                                return l10n.nameRequired;
-                              }
-                              return null;
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      SettingsSection(
-                        title: '',
-                        children: [
-                          SettingsRow(
-                            label: l10n.email,
-                            value: _account?.email?.isNotEmpty == true
-                                ? _account!.email!
-                                : l10n.notLinked,
-                            showChevron: !isAnonymous,
-                            onTap: (!isAnonymous && !isBusy)
-                                ? _changeEmail
-                                : null,
-                          ),
-                          if (isAnonymous)
-                            SettingsRow(
-                              label: l10n.createAccount,
-                              onTap: isBusy ? null : _linkEmail,
-                              showDivider: false,
-                            )
-                          else
-                            SettingsRow(
-                              label: l10n.changePassword,
-                              showDivider: false,
-                              onTap: isBusy ? null : _changePassword,
-                            ),
-                        ],
-                      ),
+    );
+  }
 
-                      const SizedBox(height: 28),
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      return Scaffold(
+        appBar: AppBar(
+          centerTitle: true,
+          title: Text(AppLocalizations.of(context)!.settingsTitle),
+          leading: BackButton(color: AppColors.lime),
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
 
-                      _sectionLabel(l10n.sectionPersonal),
-                      _FormCard(
-                        children: [
-                          _dropdownField<String>(
-                            label: l10n.gender,
-                            value: _genderValue,
-                            items: genderOptions,
-                            hint: l10n.selectGender,
-                            enabled: !isBusy,
-                            onChanged: (v) =>
-                                setState(() => _genderValue = v),
-                          ),
-                          const SizedBox(height: 16),
-                          ProfileTextField(
-                            label: l10n.phoneNumber,
-                            controller: _phoneController,
-                            keyboardType: TextInputType.phone,
-                            enabled: !isBusy,
-                            limeBorder: true,
-                          ),
-                          const SizedBox(height: 16),
-                          ProfileTextField(
-                            label: l10n.birthYear,
-                            controller: _birthYearController,
-                            keyboardType: TextInputType.number,
-                            enabled: !isBusy,
-                            limeBorder: true,
-                            validator: (v) {
-                              if (v != null &&
-                                  v.trim().isNotEmpty &&
-                                  int.tryParse(v.trim()) == null) {
-                                return l10n.enterValidYear;
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: ProfileTextField(
-                                  label: l10n.heightCm,
-                                  controller: _heightController,
-                                  keyboardType: TextInputType.number,
-                                  allowDecimal: true,
-                                  enabled: !isBusy,
-                                  limeBorder: true,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: ProfileTextField(
-                                  label: l10n.weightKg,
-                                  controller: _weightController,
-                                  keyboardType: TextInputType.number,
-                                  allowDecimal: true,
-                                  enabled: !isBusy,
-                                  limeBorder: true,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 28),
-
-                      _sectionLabel(l10n.sectionAthlete),
-                      _FormCard(
-                        children: [
-                          Text(
-                            l10n.primarySport,
-                            style: Theme.of(context).textTheme.labelSmall,
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 18,
-                              horizontal: 16,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.cardDarker,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: AppColors.cardDark),
-                            ),
-                            child: Text(
-                              _profile?.primarySportName.isNotEmpty == true
-                                  ? _profile!.primarySportName
-                                  : l10n.noSportSelected,
-                              style: TextStyle(
-                                color: AppColors.textMuted.withValues(alpha: 0.5),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          ProfileTextField(
-                            label: l10n.school,
-                            controller: _schoolController,
-                            enabled: !isBusy,
-                            limeBorder: true,
-                          ),
-                          const SizedBox(height: 16),
-                          ProfileTextField(
-                            label: l10n.graduationYear,
-                            controller: _graduationYearController,
-                            keyboardType: TextInputType.number,
-                            enabled: !isBusy,
-                            limeBorder: true,
-                            validator: (v) {
-                              if (v != null &&
-                                  v.trim().isNotEmpty &&
-                                  int.tryParse(v.trim()) == null) {
-                                return l10n.enterValidYear;
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          _dropdownField<int>(
-                            label: l10n.trainingDaysPerWeek,
-                            value: _trainingDaysValue,
-                            items: {
-                              for (int i = 0; i <= 7; i++)
-                                i: l10n.trainingDaysCount(i),
-                            },
-                            hint: l10n.selectTrainingDays,
-                            enabled: !isBusy,
-                            onChanged: (v) =>
-                                setState(() => _trainingDaysValue = v),
-                          ),
-                          const SizedBox(height: 16),
-                          _dropdownField<String>(
-                            label: l10n.activityLevel,
-                            value: _activityLevelValue,
-                            items: activityOptions,
-                            hint: l10n.selectActivityLevel,
-                            enabled: !isBusy,
-                            onChanged: (v) =>
-                                setState(() => _activityLevelValue = v),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 28),
-
-                      _sectionLabel(l10n.sectionNutritionGoals),
-                      _FormCard(
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: ProfileTextField(
-                                  label: l10n.caloriesKcal,
-                                  controller: _caloriesController,
-                                  keyboardType: TextInputType.number,
-                                  enabled: !isBusy,
-                                  limeBorder: true,
-                                  validator: (v) => _requirePositiveInt(v, l10n),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: ProfileTextField(
-                                  label: l10n.proteinG,
-                                  controller: _proteinController,
-                                  keyboardType: TextInputType.number,
-                                  enabled: !isBusy,
-                                  limeBorder: true,
-                                  validator: (v) => _requirePositiveInt(v, l10n),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: ProfileTextField(
-                                  label: l10n.carbsG,
-                                  controller: _carbsController,
-                                  keyboardType: TextInputType.number,
-                                  enabled: !isBusy,
-                                  limeBorder: true,
-                                  validator: (v) => _requirePositiveInt(v, l10n),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: ProfileTextField(
-                                  label: l10n.fatsG,
-                                  controller: _fatsController,
-                                  keyboardType: TextInputType.number,
-                                  enabled: !isBusy,
-                                  limeBorder: true,
-                                  validator: (v) => _requirePositiveInt(v, l10n),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: ProfileTextField(
-                                  label: l10n.hydrationL,
-                                  controller: _hydrationController,
-                                  keyboardType: TextInputType.number,
-                                  allowDecimal: true,
-                                  enabled: !isBusy,
-                                  limeBorder: true,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: ProfileTextField(
-                                  label: l10n.sleepHrs,
-                                  controller: _sleepHoursController,
-                                  keyboardType: TextInputType.number,
-                                  allowDecimal: true,
-                                  enabled: !isBusy,
-                                  limeBorder: true,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 28),
-
-                      _sectionLabel(l10n.sectionDietary),
-                      _FormCard(
-                        children: [
-                          MealPreferencesForm(
-                            selectedStyles: _selectedStyles,
-                            onStyleToggled: (style) {
-                              setState(() {
-                                if (_selectedStyles.contains(style)) {
-                                  _selectedStyles.remove(style);
-                                } else {
-                                  _selectedStyles.add(style);
-                                }
-                              });
-                            },
-                            allergensController: _allergensController,
-                            restrictionsController: _restrictionsController,
-                            otherStyleController: _otherStyleController,
-                            othersSelected: _othersSelected,
-                            onOthersSelectedChanged: (selected) {
-                              setState(() => _othersSelected = selected);
-                            },
-                            enabled: !isBusy,
-                            useLimeBorders: true,
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 28),
-
-                      // ── Display ───────────────────────────────────────────
-                      SettingsSection(
-                        title: l10n.sectionDisplay,
-                        children: [
-                          SettingsRow(
-                            label: l10n.languageLabel,
-                            value: localeScope.language.label(l10n),
-                            onTap: isBusy ? null : _showLanguagePicker,
-                          ),
-                          SettingsRow(
-                            label: l10n.accessibilityMode,
-                            trailing: Switch(
-                              value: appSettings.accessibilityModeEnabled,
-                              activeThumbColor: AppColors.lime,
-                              onChanged: isBusy || appSettings.saving
-                                  ? null
-                                  : _toggleAccessibilityMode,
-                            ),
-                            showChevron: false,
-                            onTap: isBusy || appSettings.saving
-                                ? null
-                                : () => _toggleAccessibilityMode(
-                                      !appSettings.accessibilityModeEnabled,
-                                    ),
-                          ),
-                          SettingsRow(
-                            label: l10n.textSize,
-                            value: localizedTextScaleLabel(
-                              l10n,
-                              appSettings.textScale,
-                            ),
-                            onTap: isBusy || appSettings.saving
-                                ? null
-                                : _showTextScalePicker,
-                          ),
-                          SettingsRow(
-                            label: l10n.themeColors,
-                            value: localizedThemePaletteLabel(
-                              l10n,
-                              appSettings.themePalette,
-                            ),
-                            showDivider: false,
-                            onTap: isBusy || appSettings.saving
-                                ? null
-                                : _showThemePalettePicker,
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      SettingsSection(
-                        title: l10n.sectionApp,
-                        children: [
-                          SettingsRow(
-                            label: l10n.sleepMode,
-                            trailing: Switch(
-                              value: appSettings.sleepModeEnabled,
-                              activeThumbColor: AppColors.sleepAccent,
-                              onChanged: isBusy || appSettings.saving
-                                  ? null
-                                  : _toggleSleepMode,
-                            ),
-                            showChevron: false,
-                            onTap: isBusy || appSettings.saving
-                                ? null
-                                : () => _toggleSleepMode(
-                                      !appSettings.sleepModeEnabled,
-                                    ),
-                          ),
-                          SettingsRow(
-                            label: l10n.notifications,
-                            onTap: isBusy
-                                ? null
-                                : () => _showComingSoon(l10n.notifications),
-                          ),
-                          SettingsRow(
-                            label: l10n.units,
-                            showDivider: false,
-                            onTap: isBusy
-                                ? null
-                                : () => _showComingSoon(l10n.units),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 32),
-
-                      // ── Save ──────────────────────────────────────────────
-                      SizedBox(
-                        height: 52,
-                        child: FilledButton(
-                          onPressed: isBusy ? null : _saveProfile,
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.lime,
-                            foregroundColor: AppColors.onLime,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: _saving
-                              ? const SizedBox.square(
-                                  dimension: 20,
-                                  child: CircularProgressIndicator(
-                                    color: AppColors.onLime,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Text(
-                                  l10n.saveChanges,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      TextButton(
-                        onPressed: isBusy ? null : _signOut,
-                        style: TextButton.styleFrom(
-                          foregroundColor: AppColors.orange,
-                        ),
-                        child: Text(l10n.signOut),
-                      ),
-                      TextButton(
-                        onPressed: isBusy ? null : _deleteAccount,
-                        style: TextButton.styleFrom(
-                          foregroundColor: AppColors.orange,
-                        ),
-                        child: Text(l10n.deleteAccount),
-                      ),
-                    ],
-                  ),
-                ),
-                if (isBusy)
-                  const ColoredBox(
-                    color: Color(0x33000000),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-              ],
-            ),
+    return Form(
+      key: _formKey,
+      child: Navigator(
+        key: _sectionNavigatorKey,
+        initialRoute: '/',
+        onGenerateRoute: _onGenerateSectionRoute,
+      ),
     );
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
-
-  Widget _sectionLabel(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 8),
-      child: Text(
-        title.toUpperCase(),
-        style: Theme.of(context).textTheme.labelSmall,
-      ),
-    );
-  }
 
   Widget _dropdownField<T>({
     required String label,
@@ -1145,10 +769,586 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     return null;
   }
 
-  String _modeSwitcherLabel(SegmentControlStyle style) => switch (style) {
-        SegmentControlStyle.minimalTabs => 'Minimal tabs',
-        SegmentControlStyle.classicPill => 'Classic pill',
-      };
+}
+
+// ─── Settings navigation shell ────────────────────────────────────────────────
+
+class _SettingsPageScaffold extends StatelessWidget {
+  const _SettingsPageScaffold({
+    required this.title,
+    required this.child,
+    required this.onBack,
+    this.showSave = false,
+    this.saving = false,
+    this.busy = false,
+    this.onSave,
+  });
+
+  final String title;
+  final Widget child;
+  final VoidCallback? onBack;
+  final bool showSave;
+  final bool saving;
+  final bool busy;
+  final VoidCallback? onSave;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return Scaffold(
+      appBar: AppBar(
+        centerTitle: true,
+        title: Text(title),
+        leading: BackButton(
+          color: AppColors.lime,
+          onPressed: onBack,
+        ),
+      ),
+      body: Stack(
+        children: [
+          ListView(
+            padding: EdgeInsets.fromLTRB(16, 16, 16, showSave ? 24 : 40),
+            children: [
+              child,
+              if (showSave) ...[
+                const SizedBox(height: 24),
+                SizedBox(
+                  height: 52,
+                  child: FilledButton(
+                    onPressed: busy || onSave == null ? null : onSave,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.lime,
+                      foregroundColor: AppColors.onLime,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: saving
+                        ? const SizedBox.square(
+                            dimension: 20,
+                            child: CircularProgressIndicator(
+                              color: AppColors.onLime,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            l10n.saveChanges,
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          if (busy)
+            const ColoredBox(
+              color: Color(0x33000000),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SettingsHubPage extends StatelessWidget {
+  const _SettingsHubPage({
+    required this.host,
+    required this.onSectionTap,
+  });
+
+  final _AccountSettingsScreenState host;
+  final ValueChanged<String> onSectionTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final isBusy = host._saving || host._busy;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SettingsSection(
+          title: '',
+          children: [
+            SettingsRow(
+              label: l10n.sectionAccount,
+              onTap: isBusy ? null : () => onSectionTap('/account'),
+            ),
+            SettingsRow(
+              label: l10n.sectionPersonal,
+              onTap: isBusy ? null : () => onSectionTap('/personal'),
+            ),
+            SettingsRow(
+              label: l10n.sectionAthlete,
+              onTap: isBusy ? null : () => onSectionTap('/athlete'),
+            ),
+            SettingsRow(
+              label: l10n.sectionNutritionGoals,
+              onTap: isBusy ? null : () => onSectionTap('/nutrition'),
+            ),
+            SettingsRow(
+              label: l10n.sectionDietary,
+              onTap: isBusy ? null : () => onSectionTap('/dietary'),
+            ),
+            SettingsRow(
+              label: l10n.sectionDisplay,
+              onTap: isBusy ? null : () => onSectionTap('/display'),
+            ),
+            SettingsRow(
+              label: l10n.sectionApp,
+              showDivider: false,
+              onTap: isBusy ? null : () => onSectionTap('/app'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        TextButton(
+          onPressed: isBusy ? null : host._signOut,
+          style: TextButton.styleFrom(foregroundColor: AppColors.orange),
+          child: Text(l10n.signOut),
+        ),
+        TextButton(
+          onPressed: isBusy ? null : host._deleteAccount,
+          style: TextButton.styleFrom(foregroundColor: AppColors.orange),
+          child: Text(l10n.deleteAccount),
+        ),
+      ],
+    );
+  }
+}
+
+class _AccountSettingsPage extends StatelessWidget {
+  const _AccountSettingsPage({required this.host});
+
+  final _AccountSettingsScreenState host;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final isBusy = host._saving || host._busy;
+    final isAnonymous = host._account?.isAnonymous ?? true;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _FormCard(
+          children: [
+            ProfileTextField(
+              label: l10n.displayName,
+              controller: host._displayNameController,
+              enabled: !isBusy,
+              limeBorder: true,
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) {
+                  return l10n.nameRequired;
+                }
+                return null;
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        SettingsSection(
+          title: '',
+          children: [
+            SettingsRow(
+              label: l10n.email,
+              value: host._account?.email?.isNotEmpty == true
+                  ? host._account!.email!
+                  : l10n.notLinked,
+              showChevron: !isAnonymous,
+              onTap: (!isAnonymous && !isBusy) ? host._changeEmail : null,
+            ),
+            if (isAnonymous)
+              SettingsRow(
+                label: l10n.createAccount,
+                onTap: isBusy ? null : host._linkEmail,
+                showDivider: false,
+              )
+            else
+              SettingsRow(
+                label: l10n.changePassword,
+                showDivider: false,
+                onTap: isBusy ? null : host._changePassword,
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _PersonalSettingsPage extends StatelessWidget {
+  const _PersonalSettingsPage({required this.host});
+
+  final _AccountSettingsScreenState host;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final isBusy = host._saving || host._busy;
+    final genderOptions = localizedGenderOptions(l10n);
+
+    return _FormCard(
+      children: [
+        host._dropdownField<String>(
+          label: l10n.gender,
+          value: host._genderValue,
+          items: genderOptions,
+          hint: l10n.selectGender,
+          enabled: !isBusy,
+          onChanged: (v) => host.updateGender(v),
+        ),
+        const SizedBox(height: 16),
+        ProfileTextField(
+          label: l10n.phoneNumber,
+          controller: host._phoneController,
+          keyboardType: TextInputType.phone,
+          enabled: !isBusy,
+          limeBorder: true,
+        ),
+        const SizedBox(height: 16),
+        ProfileTextField(
+          label: l10n.birthYear,
+          controller: host._birthYearController,
+          keyboardType: TextInputType.number,
+          enabled: !isBusy,
+          limeBorder: true,
+          validator: (v) {
+            if (v != null &&
+                v.trim().isNotEmpty &&
+                int.tryParse(v.trim()) == null) {
+              return l10n.enterValidYear;
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: ProfileTextField(
+                label: l10n.heightCm,
+                controller: host._heightController,
+                keyboardType: TextInputType.number,
+                allowDecimal: true,
+                enabled: !isBusy,
+                limeBorder: true,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ProfileTextField(
+                label: l10n.weightKg,
+                controller: host._weightController,
+                keyboardType: TextInputType.number,
+                allowDecimal: true,
+                enabled: !isBusy,
+                limeBorder: true,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _AthleteSettingsPage extends StatelessWidget {
+  const _AthleteSettingsPage({required this.host});
+
+  final _AccountSettingsScreenState host;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final isBusy = host._saving || host._busy;
+    final activityOptions = localizedActivityOptions(l10n);
+
+    return _FormCard(
+      children: [
+        Text(
+          l10n.primarySport,
+          style: Theme.of(context).textTheme.labelSmall,
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+          decoration: BoxDecoration(
+            color: AppColors.cardDarker,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.cardDark),
+          ),
+          child: Text(
+            host._profile?.primarySportName.isNotEmpty == true
+                ? host._profile!.primarySportName
+                : l10n.noSportSelected,
+            style: TextStyle(
+              color: AppColors.textMuted.withValues(alpha: 0.5),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        ProfileTextField(
+          label: l10n.school,
+          controller: host._schoolController,
+          enabled: !isBusy,
+          limeBorder: true,
+        ),
+        const SizedBox(height: 16),
+        ProfileTextField(
+          label: l10n.graduationYear,
+          controller: host._graduationYearController,
+          keyboardType: TextInputType.number,
+          enabled: !isBusy,
+          limeBorder: true,
+          validator: (v) {
+            if (v != null &&
+                v.trim().isNotEmpty &&
+                int.tryParse(v.trim()) == null) {
+              return l10n.enterValidYear;
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 16),
+        host._dropdownField<int>(
+          label: l10n.trainingDaysPerWeek,
+          value: host._trainingDaysValue,
+          items: {for (int i = 0; i <= 7; i++) i: l10n.trainingDaysCount(i)},
+          hint: l10n.selectTrainingDays,
+          enabled: !isBusy,
+          onChanged: (v) => host.updateTrainingDays(v),
+        ),
+        const SizedBox(height: 16),
+        host._dropdownField<String>(
+          label: l10n.activityLevel,
+          value: host._activityLevelValue,
+          items: activityOptions,
+          hint: l10n.selectActivityLevel,
+          enabled: !isBusy,
+          onChanged: (v) => host.updateActivityLevel(v),
+        ),
+      ],
+    );
+  }
+}
+
+class _NutritionSettingsPage extends StatelessWidget {
+  const _NutritionSettingsPage({required this.host});
+
+  final _AccountSettingsScreenState host;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final isBusy = host._saving || host._busy;
+
+    return _FormCard(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: ProfileTextField(
+                label: l10n.caloriesKcal,
+                controller: host._caloriesController,
+                keyboardType: TextInputType.number,
+                enabled: !isBusy,
+                limeBorder: true,
+                validator: (v) => host._requirePositiveInt(v, l10n),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ProfileTextField(
+                label: l10n.proteinG,
+                controller: host._proteinController,
+                keyboardType: TextInputType.number,
+                enabled: !isBusy,
+                limeBorder: true,
+                validator: (v) => host._requirePositiveInt(v, l10n),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: ProfileTextField(
+                label: l10n.carbsG,
+                controller: host._carbsController,
+                keyboardType: TextInputType.number,
+                enabled: !isBusy,
+                limeBorder: true,
+                validator: (v) => host._requirePositiveInt(v, l10n),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ProfileTextField(
+                label: l10n.fatsG,
+                controller: host._fatsController,
+                keyboardType: TextInputType.number,
+                enabled: !isBusy,
+                limeBorder: true,
+                validator: (v) => host._requirePositiveInt(v, l10n),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: ProfileTextField(
+                label: l10n.hydrationL,
+                controller: host._hydrationController,
+                keyboardType: TextInputType.number,
+                allowDecimal: true,
+                enabled: !isBusy,
+                limeBorder: true,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ProfileTextField(
+                label: l10n.sleepHrs,
+                controller: host._sleepHoursController,
+                keyboardType: TextInputType.number,
+                allowDecimal: true,
+                enabled: !isBusy,
+                limeBorder: true,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _DietarySettingsPage extends StatelessWidget {
+  const _DietarySettingsPage({required this.host});
+
+  final _AccountSettingsScreenState host;
+
+  @override
+  Widget build(BuildContext context) {
+    final isBusy = host._saving || host._busy;
+
+    return _FormCard(
+      children: [
+        MealPreferencesForm(
+          selectedStyles: host._selectedStyles,
+          onStyleToggled: host.toggleMealStyle,
+          allergensController: host._allergensController,
+          restrictionsController: host._restrictionsController,
+          otherStyleController: host._otherStyleController,
+          othersSelected: host._othersSelected,
+          onOthersSelectedChanged: host.updateOthersSelected,
+          enabled: !isBusy,
+          useLimeBorders: true,
+        ),
+      ],
+    );
+  }
+}
+
+class _DisplaySettingsPage extends StatelessWidget {
+  const _DisplaySettingsPage({required this.host});
+
+  final _AccountSettingsScreenState host;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final localeScope = AppLocaleScope.of(context);
+    final appSettings = AppSettingsScope.of(context);
+    final isBusy = host._saving || host._busy;
+
+    return SettingsSection(
+      title: '',
+      children: [
+        SettingsRow(
+          label: l10n.languageLabel,
+          value: localeScope.language.label(l10n),
+          onTap: isBusy ? null : host._showLanguagePicker,
+        ),
+        SettingsRow(
+          label: l10n.accessibilityMode,
+          trailing: Switch(
+            value: appSettings.accessibilityModeEnabled,
+            activeThumbColor: AppColors.lime,
+            onChanged: isBusy || appSettings.saving
+                ? null
+                : host._toggleAccessibilityMode,
+          ),
+          showChevron: false,
+          onTap: isBusy || appSettings.saving
+              ? null
+              : () => host._toggleAccessibilityMode(
+                    !appSettings.accessibilityModeEnabled,
+                  ),
+        ),
+        SettingsRow(
+          label: l10n.textSize,
+          value: localizedTextScaleLabel(l10n, appSettings.textScale),
+          onTap: isBusy || appSettings.saving ? null : host._showTextScalePicker,
+        ),
+        SettingsRow(
+          label: l10n.themeColors,
+          value: localizedThemePaletteLabel(l10n, appSettings.themePalette),
+          showDivider: false,
+          onTap: isBusy || appSettings.saving
+              ? null
+              : host._showThemePalettePicker,
+        ),
+      ],
+    );
+  }
+}
+
+class _AppSettingsPage extends StatelessWidget {
+  const _AppSettingsPage({required this.host});
+
+  final _AccountSettingsScreenState host;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final appSettings = AppSettingsScope.of(context);
+    final isBusy = host._saving || host._busy;
+
+    return SettingsSection(
+      title: '',
+      children: [
+        SettingsRow(
+          label: l10n.sleepMode,
+          trailing: Switch(
+            value: appSettings.sleepModeEnabled,
+            activeThumbColor: AppColors.sleepAccent,
+            onChanged: isBusy || appSettings.saving ? null : host._toggleSleepMode,
+          ),
+          showChevron: false,
+          onTap: isBusy || appSettings.saving
+              ? null
+              : () => host._toggleSleepMode(!appSettings.sleepModeEnabled),
+        ),
+        SettingsRow(
+          label: l10n.notifications,
+          onTap: isBusy ? null : () => host._showComingSoon(l10n.notifications),
+        ),
+        SettingsRow(
+          label: l10n.units,
+          showDivider: false,
+          onTap: isBusy ? null : () => host._showComingSoon(l10n.units),
+        ),
+      ],
+    );
+  }
 }
 
 // ─── Form card wrapper ────────────────────────────────────────────────────────

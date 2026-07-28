@@ -17,6 +17,7 @@ import 'package:nutrilens/features/schedule/widgets/week_date_selector.dart';
 import 'package:nutrilens/features/sleep/sleep_log_actions.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/services/date_key.dart';
+import 'package:nutrilens/services/meal_plan_serializer.dart';
 import 'package:nutrilens/services/openai_meal_plan_client.dart';
 
 class ScheduleScreen extends StatefulWidget {
@@ -711,11 +712,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       return const [];
     }
 
-    for (final day in plan.days) {
-      if (_isSameDay(day.date, _selectedDate)) {
-        return day.meals;
-      }
-    }
-    return const [];
+    return plan.mealsFor(_selectedDate);
   }
 }

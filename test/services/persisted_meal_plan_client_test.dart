@@ -18,11 +18,11 @@ void main() {
       );
 
       const uid = 'uid_test';
+      final today = DateUtils.dateOnly(DateTime.now());
       final profile = UserProfile.demoAngela(
         userId: uid,
-        now: DateTime(2026, 7, 22),
+        now: today,
       );
-      final today = DateUtils.dateOnly(DateTime(2026, 7, 22));
       final cachedWeek = _sampleWeek(today);
 
       await repository.saveMealPlanWeek(uid, cachedWeek);
@@ -46,14 +46,13 @@ void main() {
       );
 
       const uid = 'uid_test';
+      final today = DateUtils.dateOnly(DateTime.now());
       final profile = UserProfile.demoAngela(
         userId: uid,
-        now: DateTime(2026, 7, 22),
+        now: today,
       );
-      final expiredStart = DateTime(2026, 7, 10);
+      final expiredStart = today.subtract(const Duration(days: 12));
       await repository.saveMealPlanWeek(uid, _sampleWeek(expiredStart));
-
-      final today = DateUtils.dateOnly(DateTime(2026, 7, 22));
       final plan = await client.fetchWeeklyPlan(
         uid: uid,
         profile: profile,
@@ -78,11 +77,11 @@ void main() {
       );
 
       const uid = 'uid_test';
+      final today = DateUtils.dateOnly(DateTime.now());
       final profile = UserProfile.demoAngela(
         userId: uid,
-        now: DateTime(2026, 7, 22),
+        now: today,
       );
-      final today = DateUtils.dateOnly(DateTime(2026, 7, 22));
       await repository.saveMealPlanWeek(uid, _sampleWeek(today));
 
       await client.fetchWeeklyPlan(

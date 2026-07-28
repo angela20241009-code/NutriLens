@@ -36,6 +36,7 @@ class HomeDashboardData {
     required this.summary,
     required this.loggedMeals,
     required this.plannedMeals,
+    required this.hydrationTargetLiters,
     this.mealPlanError,
     this.weeklySleepDays = const [],
   });
@@ -44,8 +45,24 @@ class HomeDashboardData {
   final DailySummary summary;
   final List<Meal> loggedMeals;
   final List<HomeMealPlanItem> plannedMeals;
+  final double hydrationTargetLiters;
   final String? mealPlanError;
   final List<WeeklySleepDay> weeklySleepDays;
+
+  HomeDashboardData copyWith({
+    DailySummary? summary,
+    double? hydrationTargetLiters,
+  }) {
+    return HomeDashboardData(
+      profile: profile,
+      summary: summary ?? this.summary,
+      loggedMeals: loggedMeals,
+      plannedMeals: plannedMeals,
+      hydrationTargetLiters: hydrationTargetLiters ?? this.hydrationTargetLiters,
+      mealPlanError: mealPlanError,
+      weeklySleepDays: weeklySleepDays,
+    );
+  }
 }
 
 class HomeMealPlanItem {

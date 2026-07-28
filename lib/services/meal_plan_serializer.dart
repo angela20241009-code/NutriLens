@@ -147,4 +147,34 @@ extension MealPlanWeekDates on MealPlanWeek {
     }
     return DateUtils.dateOnly(date).isAfter(endDate);
   }
+
+  MealPlanDay? dayFor(DateTime date) {
+    for (final day in days) {
+      if (DateUtils.isSameDay(day.date, date)) {
+        return day;
+      }
+    }
+    return null;
+  }
+
+  List<MealPlanMeal> mealsFor(DateTime date) {
+    return dayFor(date)?.meals ?? const [];
+  }
+
+  bool get needsTastyEnrichment {
+    for (final day in days) {
+      for (final meal in day.meals) {
+        if (!_recipeHasTastyMatch(meal.recipe)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  static bool _recipeHasTastyMatch(MealPlanRecipe recipe) {
+    return recipe.sourceName == 'Tasty' &&
+        recipe.imageUrl != null &&
+        recipe.imageUrl!.isNotEmpty;
+  }
 }

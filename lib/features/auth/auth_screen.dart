@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:nutrilens/app/app_locale_scope.dart';
-import 'package:nutrilens/features/profile/meal_preferences_form.dart';
 import 'package:nutrilens/features/settings/language_picker.dart';
 import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/l10n/l10n_extensions.dart';
-import 'package:nutrilens/models/dietary_profile.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -15,18 +13,9 @@ class AuthScreen extends StatefulWidget {
     required this.onContinueAsGuest,
   });
 
-  final Future<void> Function(
-    String email,
-    String password,
-    DietaryProfile dietaryProfile,
-    int mealsPerDay,
-  )
-  onCreateAccount;
+  final Future<void> Function(String email, String password) onCreateAccount;
   final Future<void> Function(String email, String password) onSignIn;
-  final Future<void> Function(
-    DietaryProfile dietaryProfile,
-    int mealsPerDay,
-  ) onContinueAsGuest;
+  final Future<void> Function() onContinueAsGuest;
 
   @override
   State<AuthScreen> createState() => _AuthScreenState();
@@ -36,37 +25,24 @@ class _AuthScreenState extends State<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _allergensController = TextEditingController();
-  final _restrictionsController = TextEditingController();
-  final _otherStyleController = TextEditingController();
-  final _selectedStyles = <String>{};
-  bool _othersSelected = false;
 
   AuthMode _mode = AuthMode.createAccount;
-  int _mealsPerDay = 3;
   bool _busy = false;
+  bool _acceptedLegalTerms = false;
   String? _error;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
-    _allergensController.dispose();
-    _restrictionsController.dispose();
-    _otherStyleController.dispose();
     super.dispose();
   }
 
-  DietaryProfile get _dietaryProfile => dietaryProfileFromForm(
-    selectedStyles: _selectedStyles,
-    allergensText: _allergensController.text,
-    restrictionsText: _restrictionsController.text,
-    otherStyleText: _otherStyleController.text,
-    othersSelected: _othersSelected,
-  );
-
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate() || _busy) {
+      return;
+    }
+    if (_mode == AuthMode.createAccount && !_acceptedLegalTerms) {
       return;
     }
 
@@ -79,12 +55,7 @@ class _AuthScreenState extends State<AuthScreen> {
       final email = _emailController.text.trim();
       final password = _passwordController.text.trim();
       if (_mode == AuthMode.createAccount) {
-        await widget.onCreateAccount(
-          email,
-          password,
-          _dietaryProfile,
-          _mealsPerDay,
-        );
+        await widget.onCreateAccount(email, password);
       } else {
         await widget.onSignIn(email, password);
       }
@@ -107,7 +78,7 @@ class _AuthScreenState extends State<AuthScreen> {
       _error = null;
     });
     try {
-      await widget.onContinueAsGuest(_dietaryProfile, _mealsPerDay);
+      await widget.onContinueAsGuest();
     } catch (error) {
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
@@ -149,7 +120,7 @@ class _AuthScreenState extends State<AuthScreen> {
     final l10n = AppLocalizations.of(context)!;
     final localeScope = AppLocaleScope.of(context);
     final isCreate = _mode == AuthMode.createAccount;
-    final showPreferences = isCreate;
+    final canSubmitCreateAccount = !isCreate || _acceptedLegalTerms;
 
     return Scaffold(
       body: SafeArea(
@@ -204,73 +175,13 @@ class _AuthScreenState extends State<AuthScreen> {
                               setState(() {
                                 _mode = selection.first;
                                 _error = null;
+                                if (_mode != AuthMode.createAccount) {
+                                  _acceptedLegalTerms = false;
+                                }
                               });
                             },
                     ),
-                    if (showPreferences) ...[
-                      const SizedBox(height: 24),
-                      Text(
-                        l10n.authMealPreferences,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        l10n.authMealPreferencesHint,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 16),
-                      MealPreferencesForm(
-                        selectedStyles: _selectedStyles,
-                        onStyleToggled: (style) {
-                          setState(() {
-                            if (_selectedStyles.contains(style)) {
-                              _selectedStyles.remove(style);
-                            } else {
-                              _selectedStyles.add(style);
-                            }
-                          });
-                        },
-                        allergensController: _allergensController,
-                        restrictionsController: _restrictionsController,
-                        otherStyleController: _otherStyleController,
-                        othersSelected: _othersSelected,
-                        onOthersSelectedChanged: (selected) {
-                          setState(() => _othersSelected = selected);
-                        },
-                        enabled: !_busy,
-                        useLimeBorders: true,
-                      ),
-                      const SizedBox(height: 24),
-                    ],
-                    if (_mode != AuthMode.signIn) ...[
-                      Text(
-                        l10n.authMealsPerDay,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        l10n.authMealsPerDayHint,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 12),
-                      SegmentedButton<int>(
-                        showSelectedIcon: false,
-                        segments: const [
-                          ButtonSegment(value: 2, label: Text('2')),
-                          ButtonSegment(value: 3, label: Text('3')),
-                          ButtonSegment(value: 4, label: Text('4')),
-                          ButtonSegment(value: 5, label: Text('5')),
-                        ],
-                        selected: {_mealsPerDay},
-                        onSelectionChanged: _busy
-                            ? null
-                            : (selection) {
-                                setState(() => _mealsPerDay = selection.first);
-                              },
-                      ),
-                      const SizedBox(height: 24),
-                    ],
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 24),
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
@@ -291,8 +202,39 @@ class _AuthScreenState extends State<AuthScreen> {
                       decoration: InputDecoration(labelText: l10n.authPassword),
                       enabled: !_busy,
                       validator: (value) => _validatePassword(value, l10n),
-                      onFieldSubmitted: (_) => _submit(),
+                      onFieldSubmitted: (_) {
+                        if (canSubmitCreateAccount) {
+                          _submit();
+                        }
+                      },
                     ),
+                    if (isCreate) ...[
+                      const SizedBox(height: 16),
+                      CheckboxListTile(
+                        value: _acceptedLegalTerms,
+                        onChanged: _busy
+                            ? null
+                            : (accepted) {
+                                setState(
+                                  () => _acceptedLegalTerms = accepted ?? false,
+                                );
+                              },
+                        controlAffinity: ListTileControlAffinity.leading,
+                        contentPadding: EdgeInsets.zero,
+                        activeColor: AppColors.lime,
+                        checkColor: AppColors.onLime,
+                        title: Text(
+                          l10n.authLegalAgreement,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        subtitle: Text(
+                          '${l10n.authPrivacyPolicy} • ${l10n.authTermsAndConditions}',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ),
+                    ],
                     if (_error != null) ...[
                       const SizedBox(height: 14),
                       Text(
@@ -304,7 +246,9 @@ class _AuthScreenState extends State<AuthScreen> {
                     SizedBox(
                       height: 52,
                       child: FilledButton(
-                        onPressed: _busy ? null : _submit,
+                        onPressed: _busy || !canSubmitCreateAccount
+                            ? null
+                            : _submit,
                         child: _busy
                             ? const SizedBox.square(
                                 dimension: 20,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nutrilens/app/meal_plan_scope.dart';
+import 'package:nutrilens/app/meal_plan_refresh_scope.dart';
 import 'package:nutrilens/app/sleep_log_refresh_scope.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/features/home/home_dashboard_data.dart';
@@ -17,8 +18,10 @@ import 'package:nutrilens/features/meals/log_meal_sheet.dart';
 import 'package:nutrilens/features/sleep/sleep_log_actions.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/services/date_key.dart';
+import 'package:nutrilens/services/openai_hydration_target_client.dart';
 import 'package:nutrilens/services/openai_meal_plan_client.dart';
 import 'package:nutrilens/services/meal_plan_client.dart';
+import 'package:nutrilens/services/meal_plan_serializer.dart';
 import 'package:nutrilens/services/user_repository.dart';
 
 class HomeDashboardScreen extends StatefulWidget {
@@ -39,11 +42,16 @@ class HomeDashboardScreen extends StatefulWidget {
 
 class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   Future<HomeDashboardData>? _dataFuture;
+  HomeDashboardData? _dashboardData;
   UserRepository? _repository;
   MealPlanClient? _mealPlanClient;
   String? _uid;
   SleepLogRefreshNotifier? _sleepLogRefreshNotifier;
   int _lastSleepLogRefreshGeneration = 0;
+  MealPlanRefreshNotifier? _mealPlanRefreshNotifier;
+  int _lastMealPlanRefreshGeneration = 0;
+  double? _cachedHydrationTargetLiters;
+  String? _cachedHydrationTargetUid;
 
   DateTime get _today =>
       DateUtils.dateOnly(widget._nowProvider?.call() ?? DateTime.now());
@@ -63,11 +71,16 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       _repository = scope.repository;
       _uid = scope.uid;
       _mealPlanClient = mealPlanClient;
+      if (_cachedHydrationTargetUid != scope.uid) {
+        _cachedHydrationTargetLiters = null;
+        _cachedHydrationTargetUid = null;
+      }
       _dataFuture = _loadData(
         repository: scope.repository,
         uid: scope.uid,
         mealPlanClient: mealPlanClient,
       );
+      _trackDashboardFuture(_dataFuture!);
     }
 
     final sleepLogRefresh = SleepLogRefreshScope.maybeOf(context);
@@ -77,12 +90,31 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       _lastSleepLogRefreshGeneration = sleepLogRefresh?.generation ?? 0;
       sleepLogRefresh?.addListener(_handleSleepLogRefreshRequest);
     }
+
+    final mealPlanRefresh = MealPlanRefreshScope.maybeOf(context);
+    if (_mealPlanRefreshNotifier != mealPlanRefresh) {
+      _mealPlanRefreshNotifier?.removeListener(_handleMealPlanRefreshRequest);
+      _mealPlanRefreshNotifier = mealPlanRefresh;
+      _lastMealPlanRefreshGeneration = mealPlanRefresh?.generation ?? 0;
+      mealPlanRefresh?.addListener(_handleMealPlanRefreshRequest);
+    }
   }
 
   @override
   void dispose() {
     _sleepLogRefreshNotifier?.removeListener(_handleSleepLogRefreshRequest);
+    _mealPlanRefreshNotifier?.removeListener(_handleMealPlanRefreshRequest);
     super.dispose();
+  }
+
+  void _handleMealPlanRefreshRequest() {
+    final notifier = _mealPlanRefreshNotifier;
+    if (notifier == null ||
+        notifier.generation == _lastMealPlanRefreshGeneration) {
+      return;
+    }
+    _lastMealPlanRefreshGeneration = notifier.generation;
+    _refresh(forceMealPlan: true);
   }
 
   void _handleSleepLogRefreshRequest() {
@@ -99,6 +131,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     required UserRepository repository,
     required String uid,
     required MealPlanClient mealPlanClient,
+    bool forceMealPlan = false,
   }) async {
     final profile = await repository.getProfile(uid);
     if (profile == null) {
@@ -142,14 +175,10 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
         uid: uid,
         profile: profile,
         startDate: today,
+        forceRefresh: forceMealPlan,
       );
-      final todayPlan = plan.days.firstWhere(
-        (day) => DateUtils.isSameDay(day.date, today),
-        orElse: () => plan.days.isNotEmpty
-            ? plan.days.first
-            : MealPlanDay(date: today, meals: const []),
-      );
-      plannedMeals = todayPlan.meals
+      plannedMeals = plan
+          .mealsFor(today)
           .map(
             (meal) => HomeMealPlanItem.fromMealPlanMeal(
               meal: meal,
@@ -162,6 +191,8 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       debugPrint('Home meal plan unavailable: $error');
     }
 
+    final hydrationTargetLiters = await _resolveHydrationTarget(profile);
+
     return HomeDashboardData(
       profile: profile,
       summary:
@@ -173,12 +204,68 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
           ),
       loggedMeals: loggedMeals,
       plannedMeals: plannedMeals,
+      hydrationTargetLiters: hydrationTargetLiters,
       mealPlanError: mealPlanError,
       weeklySleepDays: weeklySleepDays,
     );
   }
 
-  Future<void> _refresh() async {
+  Future<double> _resolveHydrationTarget(UserProfile profile) async {
+    if (_cachedHydrationTargetLiters != null &&
+        _cachedHydrationTargetUid == profile.userId) {
+      return _cachedHydrationTargetLiters!;
+    }
+
+    final target = await OpenAiHydrationTargetClient.fromEnvironment()
+        .fetchDailyTargetLiters(profile);
+    _cachedHydrationTargetLiters = target;
+    _cachedHydrationTargetUid = profile.userId;
+    return target;
+  }
+
+  void _trackDashboardFuture(Future<HomeDashboardData> future) {
+    future
+        .then((data) {
+          if (!mounted) {
+            return;
+          }
+          setState(() => _dashboardData = data);
+        })
+        .catchError((_) {});
+  }
+
+  Future<void> _updateHydrationLiters(double liters) async {
+    final repository = _repository;
+    final uid = _uid;
+    final data = _dashboardData;
+    if (repository == null || uid == null || data == null) {
+      return;
+    }
+
+    setState(() {
+      _dashboardData = data.copyWith(
+        summary: data.summary.copyWith(hydrationLiters: liters),
+      );
+    });
+
+    try {
+      final todayKey = dateKeyFor(_today, data.profile.timezone);
+      await repository.updateDailySummary(
+        uid,
+        todayKey,
+        hydrationLiters: liters,
+      );
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Unable to save hydration: $error')),
+        );
+        await _refresh();
+      }
+    }
+  }
+
+  Future<void> _refresh({bool forceMealPlan = false}) async {
     final repository = _repository;
     final uid = _uid;
     final mealPlanClient = _mealPlanClient;
@@ -190,10 +277,12 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       repository: repository,
       uid: uid,
       mealPlanClient: mealPlanClient,
+      forceMealPlan: forceMealPlan,
     );
     setState(() {
       _dataFuture = future;
     });
+    _trackDashboardFuture(future);
     await future;
   }
 
@@ -234,6 +323,8 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       return;
     }
     if (saved == true) {
+      _cachedHydrationTargetLiters = null;
+      _cachedHydrationTargetUid = null;
       await _refresh();
       if (!mounted) {
         return;
@@ -246,7 +337,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
 
 
   Future<void> _openSleepLogDialog() async {
-    final data = await _dataFuture;
+    final data = _dashboardData;
     if (!mounted || data == null) {
       return;
     }
@@ -268,77 +359,88 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<HomeDashboardData>(
-      future: _dataFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return const Center(child: CircularProgressIndicator());
-        }
+    final data = _dashboardData;
 
-        if (snapshot.hasError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Text(
-                'Failed to load home data:\n${snapshot.error}',
-                textAlign: TextAlign.center,
+    if (data == null) {
+      return FutureBuilder<HomeDashboardData>(
+        future: _dataFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  'Failed to load home data:\n${snapshot.error}',
+                  textAlign: TextAlign.center,
+                ),
               ),
-            ),
-          );
-        }
+            );
+          }
 
-        final data = snapshot.requireData;
-        final profile = data.profile;
+          return const Center(child: CircularProgressIndicator());
+        },
+      );
+    }
 
-        return RefreshIndicator(
-          onRefresh: _refresh,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                HomeHeader(profile: profile, onProfileTap: widget.onProfileTap),
-                const SizedBox(height: 16),
-                ProgramBanner(profile: profile),
-                const SizedBox(height: 20),
-                MealCaptureCard(
-                  onManualTap: _openLogMealSheet,
-                  onPreferencesTap:
-                      widget.onPreferencesTap ?? _openMealPreferencesSheet,
-                  onFavoritesTap: _openFavoriteMealSheet,
-                ),
-                const SizedBox(height: 16),
-                TodaysFuelCard(
-                  sport: profile.primarySportName,
-                  totals: data.summary.totals,
-                  targets: profile.dailyTargets,
-                  onViewDetailsTap: _openWeeklyFuelSummary,
-                ),
-                if (profile.sleepModeEnabled) ...[
-                  const SizedBox(height: 16),
-                  WeeklySleepSummaryCard(
-                    days: data.weeklySleepDays,
-                    targetHours: profile.dailyTargets.sleepHours,
-                    onLogSleepTap: _openSleepLogDialog,
-                  ),
-                ],
-                const SizedBox(height: 24),
-                MealPlanSection(
-                  meals: data.plannedMeals,
-                  error: data.mealPlanError,
-                ),
-                const SizedBox(height: 20),
-                HydrationCard(
-                  currentLiters: data.summary.hydrationLiters,
-                  targetLiters: profile.dailyTargets.hydrationLiters,
-                ),
-                const SizedBox(height: 16),
-              ],
+    return _buildDashboard(data);
+  }
+
+  Widget _buildDashboard(HomeDashboardData data) {
+    final profile = data.profile;
+
+    return RefreshIndicator(
+      onRefresh: _refresh,
+      child: SingleChildScrollView(
+        key: const PageStorageKey<String>('home_dashboard_scroll'),
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            HomeHeader(profile: profile, onProfileTap: widget.onProfileTap),
+            const SizedBox(height: 16),
+            ProgramBanner(profile: profile),
+            const SizedBox(height: 20),
+            MealCaptureCard(
+              onManualTap: _openLogMealSheet,
+              onPreferencesTap:
+                  widget.onPreferencesTap ?? _openMealPreferencesSheet,
+              onFavoritesTap: _openFavoriteMealSheet,
             ),
-          ),
-        );
-      },
+            const SizedBox(height: 16),
+            TodaysFuelCard(
+              sport: profile.primarySportName,
+              totals: data.summary.totals,
+              targets: profile.dailyTargets,
+              onViewDetailsTap: _openWeeklyFuelSummary,
+            ),
+            if (profile.sleepModeEnabled) ...[
+              const SizedBox(height: 16),
+              WeeklySleepSummaryCard(
+                days: data.weeklySleepDays,
+                targetHours: profile.dailyTargets.sleepHours,
+                onLogSleepTap: _openSleepLogDialog,
+              ),
+            ],
+            const SizedBox(height: 24),
+            MealPlanSection(
+              meals: data.plannedMeals,
+              error: data.mealPlanError,
+            ),
+            const SizedBox(height: 20),
+            HydrationCard(
+              currentLiters: data.summary.hydrationLiters,
+              targetLiters: data.hydrationTargetLiters,
+              onLitersCommitted: _updateHydrationLiters,
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
     );
   }
 }

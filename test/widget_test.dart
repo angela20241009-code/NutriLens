@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nutrilens/app.dart';
+import 'package:nutrilens/app/app_locale_scope.dart';
 import 'package:nutrilens/app/app_settings_scope.dart';
 import 'package:nutrilens/app/meal_plan_scope.dart';
 import 'package:nutrilens/app/sleep_log_refresh_scope.dart';
@@ -22,6 +23,7 @@ import 'package:nutrilens/features/schedule/widgets/week_date_selector.dart';
 import 'package:nutrilens/features/shell/app_shell.dart';
 import 'package:nutrilens/features/sleep/sleep_dashboard_screen.dart';
 import 'package:nutrilens/l10n/app_localizations.dart';
+import 'package:nutrilens/models/app_language.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/models/tasty_recipe.dart';
 import 'package:nutrilens/services/meal_plan_client.dart';
@@ -45,9 +47,9 @@ void main() {
     await tester.pumpWidget(
       wrapLocalized(
         child: AuthScreen(
-          onCreateAccount: (_, _, __, ___) async => createCalled = true,
-          onSignIn: (_, _) async => signInCalled = true,
-          onContinueAsGuest: (_, __) async {},
+          onCreateAccount: (_, __) async => createCalled = true,
+          onSignIn: (_, __) async => signInCalled = true,
+          onContinueAsGuest: () async {},
         ),
       ),
     );
@@ -64,9 +66,18 @@ void main() {
       find.widgetWithText(TextFormField, 'Password'),
       'secret123',
     );
-    await tester.ensureVisible(find.widgetWithText(FilledButton, 'Create account'));
+    final createButton = find.widgetWithText(FilledButton, 'Create account');
+    expect(tester.widget<FilledButton>(createButton).onPressed, isNull);
+
+    await tester.ensureVisible(find.byType(CheckboxListTile));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, 'Create account'));
+    await tester.tap(find.byType(CheckboxListTile));
+    await tester.pumpAndSettle();
+    expect(tester.widget<FilledButton>(createButton).onPressed, isNotNull);
+
+    await tester.ensureVisible(createButton);
+    await tester.pumpAndSettle();
+    await tester.tap(createButton);
     await tester.pump();
 
     expect(createCalled, true);
@@ -79,9 +90,9 @@ void main() {
     await tester.pumpWidget(
       wrapLocalized(
         child: AuthScreen(
-          onCreateAccount: (_, _, __, ___) async {},
-          onSignIn: (_, _) async {},
-          onContinueAsGuest: (_, __) async {},
+          onCreateAccount: (_, __) async {},
+          onSignIn: (_, __) async {},
+          onContinueAsGuest: () async {},
         ),
       ),
     );
@@ -272,7 +283,11 @@ void main() {
       ),
     );
 
-    await _pumpAccountSettings(tester, repository, account.uid);
+    await _pumpAccountSettings(tester, repository, account.uid, openAppSection: false);
+    expect(find.text('Delete account'), findsOneWidget);
+
+    await tester.tap(find.text('App'));
+    await tester.pumpAndSettle();
 
     final sleepModeSwitch = find.descendant(
       of: find.ancestor(
@@ -286,13 +301,6 @@ void main() {
     expect(find.text('Mode switcher'), findsNothing);
     expect(find.text('Notifications'), findsOneWidget);
     expect(find.text('Units'), findsOneWidget);
-
-    await tester.scrollUntilVisible(
-      find.text('Delete account'),
-      500,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(find.text('Delete account'), findsOneWidget);
 
     await tester.tap(sleepModeSwitch);
     await tester.pumpAndSettle();
@@ -433,7 +441,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pumpAndSettle();
 
-    expect(find.text('Full name'), findsOneWidget);
+    expect(find.text('No name set'), findsOneWidget);
     final upgraded = await repository.getAccount(account.uid);
     expect(upgraded?.isAnonymous, false);
   });
@@ -1373,6 +1381,7 @@ Future<void> _completeOnboardingMealPrefsStep(WidgetTester tester) async {
   expect(find.text('Meal preferences'), findsOneWidget);
   await tester.ensureVisible(find.text('Meal preferences'));
   await tester.pumpAndSettle();
+  expect(find.text('Meals per day'), findsOneWidget);
   final continueButton = find.widgetWithText(FilledButton, 'Continue');
   await tester.ensureVisible(continueButton.last);
   await tester.tap(continueButton.last);
@@ -1393,16 +1402,37 @@ Future<void> _pumpOnboarding(
   String uid,
 ) async {
   await tester.pumpWidget(
-    wrapLocalized(
-      child: MealPlanScope(
-        client: _FakeMealPlanClient(),
-        child: UserScope(
+    AppLocaleScope(
+      child: UserScope(
+        repository: repository,
+        uid: uid,
+        child: AppSettingsScope(
           repository: repository,
           uid: uid,
-          child: AppSettingsScope(
-            repository: repository,
-            uid: uid,
-            child: const OnboardingFlow(),
+          child: MealPlanScope(
+            client: _FakeMealPlanClient(),
+            child: Builder(
+              builder: (context) {
+                final localeScope = AppLocaleScope.of(context);
+                return ListenableBuilder(
+                  listenable: localeScope,
+                  builder: (context, _) {
+                    final locale = localeScope.ready
+                        ? localeScope.locale
+                        : AppLanguage.english.locale;
+
+                    return MaterialApp(
+                      theme: AppTheme.dark,
+                      locale: locale,
+                      localizationsDelegates:
+                          AppLocalizations.localizationsDelegates,
+                      supportedLocales: AppLocalizations.supportedLocales,
+                      home: const OnboardingFlow(),
+                    );
+                  },
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -1444,8 +1474,9 @@ Future<void> _pumpAppShell(
 Future<void> _pumpAccountSettings(
   WidgetTester tester,
   InMemoryUserRepository repository,
-  String uid,
-) async {
+  String uid, {
+  bool openAppSection = true,
+}) async {
   await tester.pumpWidget(
     wrapLocalized(
       child: UserScope(
@@ -1464,11 +1495,11 @@ Future<void> _pumpAccountSettings(
   );
   await tester.pump();
   await tester.pumpAndSettle();
-  await tester.scrollUntilVisible(
-    find.text('Sleep Mode'),
-    500,
-    scrollable: find.byType(Scrollable).first,
-  );
+
+  if (openAppSection) {
+    await tester.tap(find.text('App'));
+    await tester.pumpAndSettle();
+  }
 }
 
 Future<void> _pumpSleepDashboard(

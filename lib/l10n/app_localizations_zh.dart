@@ -59,7 +59,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authMealPreferences => '饮食偏好';
 
   @override
-  String get authMealPreferencesHint => '登录前告诉我们您喜欢什么以及需要避免什么。';
+  String get authMealPreferencesHint => '注册后告诉我们您喜欢什么以及需要避免什么。';
 
   @override
   String get authMealsPerDay => '每日餐数';
@@ -78,6 +78,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get authContinueAsGuest => '以访客身份继续';
+
+  @override
+  String get authLegalAgreement => '我同意隐私政策和服务条款';
+
+  @override
+  String get authPrivacyPolicy => '隐私政策';
+
+  @override
+  String get authTermsAndConditions => '服务条款';
+
+  @override
+  String get authValidationLegalRequired => '创建账户前请先同意隐私政策和服务条款';
 
   @override
   String get authValidationEmailRequired => '请输入电子邮件';
