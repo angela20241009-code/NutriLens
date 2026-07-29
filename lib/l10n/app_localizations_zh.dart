@@ -402,6 +402,18 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get deleteAccountReauthTitle => '确认密码';
+
+  @override
+  String get deleteAccountReauthBody => '为保障账户安全，请输入密码以永久删除此账户。';
+
+  @override
+  String get deleteAccountReauthPassword => '密码';
+
+  @override
+  String get authErrorRequiresRecentLogin => '为保障安全，请确认密码后重试。';
+
+  @override
   String failedToInitializeApp(String error) {
     return '无法初始化应用：\n$error';
   }

@@ -119,7 +119,7 @@ abstract class UserRepository {
   Future<void> saveMealPlanWeek(String uid, MealPlanWeek week);
 
   /// Permanently deletes the user's auth record and stored app data.
-  Future<void> deleteAccount(String uid);
+  Future<void> deleteAccount(String uid, {String? password});
 
   Future<void> signOut();
 }

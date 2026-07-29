@@ -347,9 +347,20 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
     if (!confirmed || !mounted) return;
 
+    String? password;
+    if (!_account!.isAnonymous) {
+      password = await showDeleteAccountReauthDialog(
+        context: context,
+        email: _account!.email,
+      );
+      if (!mounted || password == null) {
+        return;
+      }
+    }
+
     setState(() => _busy = true);
     try {
-      await _repository.deleteAccount(_uid);
+      await _repository.deleteAccount(_uid, password: password);
       if (!mounted) {
         return;
       }
@@ -360,7 +371,12 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              AppLocalizations.of(context)!.unableToDeleteAccount('$error'),
+              AppLocalizations.of(context)!.unableToDeleteAccount(
+                friendlyAuthErrorMessage(
+                  AppLocalizations.of(context)!,
+                  error,
+                ),
+              ),
             ),
           ),
         );

@@ -125,6 +125,10 @@
   "unableToUpdateLanguage": "No se pudo actualizar el idioma: {error}",
   "unableToSignOut": "No se pudo cerrar sesión: {error}",
   "unableToDeleteAccount": "No se pudo eliminar la cuenta: {error}",
+  "deleteAccountReauthTitle": "Confirma tu contraseña",
+  "deleteAccountReauthBody": "Por seguridad, ingresa tu contraseña para eliminar permanentemente esta cuenta.",
+  "deleteAccountReauthPassword": "Contraseña",
+  "authErrorRequiresRecentLogin": "Por seguridad, confirma tu contraseña e inténtalo de nuevo.",
   "failedToInitializeApp": "No se pudo inicializar la app:\n{error}",
   "failedToLoadAccount": "No se pudo cargar la cuenta:\n{error}"
 }

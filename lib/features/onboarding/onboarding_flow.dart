@@ -14,8 +14,19 @@ const _sports = <({String id, String name})>[
   (id: 'tennis', name: 'Tennis'),
   (id: 'basketball', name: 'Basketball'),
   (id: 'soccer', name: 'Soccer'),
+  (id: 'american_football', name: 'American Football'),
+  (id: 'baseball', name: 'Baseball'),
+  (id: 'softball', name: 'Softball'),
+  (id: 'volleyball', name: 'Volleyball'),
   (id: 'swimming', name: 'Swimming'),
   (id: 'track_and_field', name: 'Track & Field'),
+  (id: 'cross_country', name: 'Cross Country'),
+  (id: 'wrestling', name: 'Wrestling'),
+  (id: 'lacrosse', name: 'Lacrosse'),
+  (id: 'hockey', name: 'Hockey'),
+  (id: 'golf', name: 'Golf'),
+  (id: 'gymnastics', name: 'Gymnastics'),
+  (id: 'cycling', name: 'Cycling'),
   (id: 'other', name: 'Other'),
 ];
 
@@ -57,6 +68,34 @@ const _sportTargets = <String, _SportTargets>{
     fatsG: 85,
     hydrationLiters: 3.6,
   ),
+  'american_football': _SportTargets(
+    caloriesKcal: 3800,
+    proteinG: 200,
+    carbsG: 500,
+    fatsG: 100,
+    hydrationLiters: 4.0,
+  ),
+  'baseball': _SportTargets(
+    caloriesKcal: 2800,
+    proteinG: 160,
+    carbsG: 350,
+    fatsG: 80,
+    hydrationLiters: 3.0,
+  ),
+  'softball': _SportTargets(
+    caloriesKcal: 2900,
+    proteinG: 165,
+    carbsG: 360,
+    fatsG: 82,
+    hydrationLiters: 3.2,
+  ),
+  'volleyball': _SportTargets(
+    caloriesKcal: 3300,
+    proteinG: 175,
+    carbsG: 450,
+    fatsG: 85,
+    hydrationLiters: 3.5,
+  ),
   'swimming': _SportTargets(
     caloriesKcal: 3600,
     proteinG: 175,
@@ -71,12 +110,68 @@ const _sportTargets = <String, _SportTargets>{
     fatsG: 80,
     hydrationLiters: 3.2,
   ),
+  'cross_country': _SportTargets(
+    caloriesKcal: 3400,
+    proteinG: 165,
+    carbsG: 480,
+    fatsG: 80,
+    hydrationLiters: 3.8,
+  ),
+  'wrestling': _SportTargets(
+    caloriesKcal: 3000,
+    proteinG: 200,
+    carbsG: 380,
+    fatsG: 75,
+    hydrationLiters: 3.5,
+  ),
+  'lacrosse': _SportTargets(
+    caloriesKcal: 3500,
+    proteinG: 180,
+    carbsG: 470,
+    fatsG: 90,
+    hydrationLiters: 3.7,
+  ),
+  'hockey': _SportTargets(
+    caloriesKcal: 3700,
+    proteinG: 185,
+    carbsG: 480,
+    fatsG: 95,
+    hydrationLiters: 4.0,
+  ),
+  'golf': _SportTargets(
+    caloriesKcal: 2600,
+    proteinG: 140,
+    carbsG: 320,
+    fatsG: 70,
+    hydrationLiters: 2.8,
+  ),
+  'gymnastics': _SportTargets(
+    caloriesKcal: 2800,
+    proteinG: 170,
+    carbsG: 380,
+    fatsG: 75,
+    hydrationLiters: 3.2,
+  ),
+  'cycling': _SportTargets(
+    caloriesKcal: 3600,
+    proteinG: 170,
+    carbsG: 500,
+    fatsG: 85,
+    hydrationLiters: 4.0,
+  ),
   'other': _SportTargets(
     caloriesKcal: 2800,
     proteinG: 150,
     carbsG: 350,
     fatsG: 75,
     hydrationLiters: 3.0,
+  ),
+  'none': _SportTargets(
+    caloriesKcal: 2400,
+    proteinG: 130,
+    carbsG: 280,
+    fatsG: 70,
+    hydrationLiters: 2.8,
   ),
 };
 
@@ -93,11 +188,13 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   final _pageController = PageController();
   final _nameFormKey = GlobalKey<FormState>();
   final _schoolFormKey = GlobalKey<FormState>();
+  final _sportFormKey = GlobalKey<FormState>();
   final _mealPrefsFormKey = GlobalKey<FormState>();
   final _bodyFormKey = GlobalKey<FormState>();
   final _goalsFormKey = GlobalKey<FormState>();
 
   final _nameController = TextEditingController();
+  final _otherSportController = TextEditingController();
   final _schoolController = TextEditingController();
   final _graduationController = TextEditingController();
   final _allergensController = TextEditingController();
@@ -112,6 +209,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
   String? _selectedSportId;
   String? _selectedSportName;
+  bool? _playsSport;
   String? _lastDerivedSportId;
   double? _lastDerivedHeightCm;
   double? _lastDerivedWeightKg;
@@ -138,6 +236,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   void dispose() {
     _pageController.dispose();
     _nameController.dispose();
+    _otherSportController.dispose();
     _schoolController.dispose();
     _graduationController.dispose();
     _allergensController.dispose();
@@ -181,6 +280,27 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     );
   }
 
+  String get _nutritionSportId {
+    if (_playsSport != true) {
+      return 'none';
+    }
+    return _selectedSportId ?? 'other';
+  }
+
+  bool get _hasSelectedSportProfile {
+    if (_playsSport != true) {
+      return true;
+    }
+    if (_selectedSportId == null) {
+      return false;
+    }
+    if (_selectedSportId == 'other') {
+      final name = _selectedSportName ?? _otherSportController.text.trim();
+      return name.isNotEmpty;
+    }
+    return _selectedSportName?.trim().isNotEmpty == true;
+  }
+
   void _applyBodyAdjustedTargets({
     required String sportId,
     required double heightCm,
@@ -217,14 +337,13 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     setState(() => _currentPage = page);
 
     if (page == 7 &&
-        _selectedSportId != null &&
-        (_selectedSportId != _lastDerivedSportId ||
+        (_lastDerivedSportId != _nutritionSportId ||
             _lastDerivedHeightCm !=
                 double.tryParse(_heightController.text.trim()) ||
             _lastDerivedWeightKg !=
                 double.tryParse(_weightController.text.trim()))) {
       _applyBodyAdjustedTargets(
-        sportId: _selectedSportId!,
+        sportId: _nutritionSportId,
         heightCm: double.parse(_heightController.text.trim()),
         weightKg: double.parse(_weightController.text.trim()),
       );
@@ -239,13 +358,15 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
   Future<void> _finishOnboarding() async {
     if (!_goalsFormKey.currentState!.validate()) return;
-    if (_selectedSportId == null || _selectedSportName == null) return;
+    if (_playsSport == null || !_hasSelectedSportProfile) return;
 
     final scope = UserScope.of(context);
     final uid = scope.uid;
     final now = DateTime.now().toUtc();
-    final sportId = _selectedSportId!;
-    final targets = _sportTargets[sportId] ?? _sportTargets['other']!;
+    final profileSportId = _playsSport! ? (_selectedSportId ?? '') : '';
+    final profileSportName = _playsSport! ? (_selectedSportName ?? '') : '';
+    final targets =
+        _sportTargets[_nutritionSportId] ?? _sportTargets['other']!;
     final sleepRecommendation = _sleepRecommendation;
 
     final graduationText = _graduationController.text.trim();
@@ -266,8 +387,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               ? null
               : _schoolController.text.trim(),
           graduationYear: graduationYear,
-          primarySportId: sportId,
-          primarySportName: _selectedSportName!,
+          primarySportId: profileSportId,
+          primarySportName: profileSportName,
           heightCm: heightCm,
           weightKg: weightKg,
           dietaryProfile: dietaryProfileFromForm(
@@ -324,27 +445,27 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     final reasons = <String>[];
     var moderateSignals = 0;
 
-    if (_wakeTiredAnswer == 'Most days') {
+    if (_wakeTiredAnswer == 'Often') {
       reasons.add('You often wake up tired.');
     } else if (_wakeTiredAnswer == 'Sometimes') {
       moderateSignals++;
     }
 
     if (_bedtimeConsistencyAnswer == 'Often') {
-      reasons.add('Your bedtime is often inconsistent.');
+      reasons.add('Your bedtime changes a lot.');
     } else if (_bedtimeConsistencyAnswer == 'Sometimes') {
       moderateSignals++;
     }
 
     if (_sleepReminderAnswer == 'Yes') {
-      reasons.add('Sleep reminders could support recovery.');
+      reasons.add('A reminder could help you wind down.');
     } else if (_sleepReminderAnswer == 'Maybe') {
       moderateSignals++;
     }
 
     final recommended = reasons.isNotEmpty || moderateSignals >= 2;
     if (recommended && reasons.isEmpty) {
-      reasons.add('A few small sleep habits could improve recovery.');
+      reasons.add('Sleep Mode can help you build a steadier routine.');
     }
 
     return _SleepRecommendation(recommended: recommended, reasons: reasons);
@@ -368,12 +489,12 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   void _continueFromBodyStep() {
-    if (!_bodyFormKey.currentState!.validate() || _selectedSportId == null) {
+    if (!_bodyFormKey.currentState!.validate()) {
       return;
     }
 
     _applyBodyAdjustedTargets(
-      sportId: _selectedSportId!,
+      sportId: _nutritionSportId,
       heightCm: double.parse(_heightController.text.trim()),
       weightKg: double.parse(_weightController.text.trim()),
     );
@@ -382,10 +503,13 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: PageView(
+    return GestureDetector(
+      onTap: _dismissKeyboard,
+      behavior: HitTestBehavior.translucent,
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: PageView(
           controller: _pageController,
           physics: const NeverScrollableScrollPhysics(),
           onPageChanged: (page) => setState(() => _currentPage = page),
@@ -418,18 +542,51 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               showBack: true,
               onBack: _goBack,
               child: _SportStep(
+                formKey: _sportFormKey,
+                playsSport: _playsSport,
                 selectedSportId: _selectedSportId,
+                otherSportController: _otherSportController,
+                onPlaysSportChanged: (playsSport) {
+                  setState(() {
+                    _playsSport = playsSport;
+                    if (!playsSport) {
+                      _selectedSportId = null;
+                      _selectedSportName = null;
+                      _otherSportController.clear();
+                    }
+                  });
+                },
                 onSportSelected: (id, name) {
                   setState(() {
                     _selectedSportId = id;
-                    _selectedSportName = name;
+                    if (id == 'other') {
+                      _selectedSportName = null;
+                    } else {
+                      _selectedSportName = name;
+                      _otherSportController.clear();
+                    }
                   });
                 },
                 onContinue: () {
-                  if (_selectedSportId != null) {
-                    _applySportDefaults(_selectedSportId!);
-                    _goToPage(3);
+                  if (_playsSport == null) {
+                    return;
                   }
+                  if (!_playsSport!) {
+                    _applySportDefaults('none');
+                    _goToPage(3);
+                    return;
+                  }
+                  if (_selectedSportId == null) {
+                    return;
+                  }
+                  if (_selectedSportId == 'other') {
+                    if (!_sportFormKey.currentState!.validate()) {
+                      return;
+                    }
+                    _selectedSportName = _otherSportController.text.trim();
+                  }
+                  _applySportDefaults(_selectedSportId!);
+                  _goToPage(3);
                 },
                 primaryButtonStyle: _primaryButtonStyle,
               ),
@@ -535,6 +692,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               onBack: _goBack,
               child: _GoalsStep(
                 formKey: _goalsFormKey,
+                hasSport: _playsSport == true,
                 caloriesController: _caloriesController,
                 proteinController: _proteinController,
                 carbsController: _carbsController,
@@ -546,6 +704,45 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
             ),
           ],
         ),
+      ),
+      ),
+    );
+  }
+}
+
+void _dismissKeyboard() {
+  FocusManager.instance.primaryFocus?.unfocus();
+}
+
+class _OnboardingScrollStep extends StatelessWidget {
+  const _OnboardingScrollStep({
+    required this.formKey,
+    required this.content,
+    required this.bottom,
+  });
+
+  final GlobalKey<FormState> formKey;
+  final Widget content;
+  final Widget bottom;
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      key: formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              keyboardDismissBehavior:
+                  ScrollViewKeyboardDismissBehavior.onDrag,
+              child: content,
+            ),
+          ),
+          const SizedBox(height: 16),
+          bottom,
+          const SizedBox(height: 24),
+        ],
       ),
     );
   }
@@ -662,9 +859,9 @@ class _NameStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Form(
-      key: formKey,
-      child: Column(
+    return _OnboardingScrollStep(
+      formKey: formKey,
+      content: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text('Your name', style: Theme.of(context).textTheme.headlineMedium),
@@ -672,6 +869,7 @@ class _NameStep extends StatelessWidget {
           ProfileTextField(
             label: 'FULL NAME',
             controller: nameController,
+            limeBorder: true,
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
                 return 'Name is required';
@@ -679,17 +877,15 @@ class _NameStep extends StatelessWidget {
               return null;
             },
           ),
-          const Spacer(),
-          SizedBox(
-            height: 52,
-            child: FilledButton(
-              onPressed: onContinue,
-              style: primaryButtonStyle,
-              child: const Text('Continue'),
-            ),
-          ),
-          const SizedBox(height: 24),
         ],
+      ),
+      bottom: SizedBox(
+        height: 52,
+        child: FilledButton(
+          onPressed: onContinue,
+          style: primaryButtonStyle,
+          child: const Text('Continue'),
+        ),
       ),
     );
   }
@@ -697,84 +893,193 @@ class _NameStep extends StatelessWidget {
 
 class _SportStep extends StatelessWidget {
   const _SportStep({
+    required this.formKey,
+    required this.playsSport,
     required this.selectedSportId,
+    required this.otherSportController,
+    required this.onPlaysSportChanged,
     required this.onSportSelected,
     required this.onContinue,
     required this.primaryButtonStyle,
   });
 
+  final GlobalKey<FormState> formKey;
+  final bool? playsSport;
   final String? selectedSportId;
+  final TextEditingController otherSportController;
+  final ValueChanged<bool> onPlaysSportChanged;
   final void Function(String id, String name) onSportSelected;
   final VoidCallback onContinue;
   final ButtonStyle primaryButtonStyle;
 
+  bool get _canContinue {
+    if (playsSport == null) {
+      return false;
+    }
+    if (playsSport == false) {
+      return true;
+    }
+    return selectedSportId != null;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          "What's your primary sport?",
-          style: Theme.of(context).textTheme.headlineMedium,
-        ),
-        const SizedBox(height: 24),
-        Expanded(
-          child: ListView.separated(
-            itemCount: _sports.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final sport = _sports[index];
-              final isSelected = selectedSportId == sport.id;
+    final textTheme = Theme.of(context).textTheme;
+    final otherSelected = selectedSportId == 'other';
+    final showSportList = playsSport == true;
 
-              return Material(
-                color: isSelected
-                    ? AppColors.lime.withValues(alpha: 0.12)
-                    : AppColors.cardDark,
-                borderRadius: BorderRadius.circular(16),
-                child: InkWell(
-                  onTap: () => onSportSelected(sport.id, sport.name),
-                  borderRadius: BorderRadius.circular(16),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 18,
-                    ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: isSelected ? AppColors.lime : AppColors.cardDark,
-                        width: isSelected ? 2 : 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            sport.name,
-                            style: Theme.of(context).textTheme.titleMedium,
+    return Form(
+      key: formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text('About your sport', style: textTheme.headlineMedium),
+          const SizedBox(height: 8),
+          Text(
+            'Do you currently play a sport?',
+            style: textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ChoiceChip(
+                label: const Text('Yes, I play a sport'),
+                showCheckmark: false,
+                selected: playsSport == true,
+                selectedColor: AppColors.lime,
+                labelStyle: TextStyle(
+                  color: playsSport == true
+                      ? AppColors.onLime
+                      : AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+                backgroundColor: AppColors.fitnessBlack,
+                side: BorderSide(
+                  color: playsSport == true
+                      ? AppColors.lime
+                      : AppColors.textMuted.withValues(alpha: 0.24),
+                ),
+                onSelected: (_) => onPlaysSportChanged(true),
+              ),
+              ChoiceChip(
+                label: const Text('No, not currently'),
+                showCheckmark: false,
+                selected: playsSport == false,
+                selectedColor: AppColors.lime,
+                labelStyle: TextStyle(
+                  color: playsSport == false
+                      ? AppColors.onLime
+                      : AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+                backgroundColor: AppColors.fitnessBlack,
+                side: BorderSide(
+                  color: playsSport == false
+                      ? AppColors.lime
+                      : AppColors.textMuted.withValues(alpha: 0.24),
+                ),
+                onSelected: (_) => onPlaysSportChanged(false),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Expanded(
+            child: showSportList
+                ? ListView.separated(
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    itemCount: _sports.length + (otherSelected ? 1 : 0),
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      if (otherSelected && index == _sports.length) {
+                        return ProfileTextField(
+                          key: const Key('onboarding_other_sport'),
+                          label: 'YOUR SPORT',
+                          controller: otherSportController,
+                          limeBorder: true,
+                          validator: (value) {
+                            if (!otherSelected) return null;
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Enter your sport';
+                            }
+                            return null;
+                          },
+                        );
+                      }
+
+                      final sport = _sports[index];
+                      final isSelected = selectedSportId == sport.id;
+
+                      return Material(
+                        color: isSelected
+                            ? AppColors.lime.withValues(alpha: 0.12)
+                            : AppColors.cardDark,
+                        borderRadius: BorderRadius.circular(16),
+                        child: InkWell(
+                          onTap: () => onSportSelected(sport.id, sport.name),
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 18,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: isSelected
+                                    ? AppColors.lime
+                                    : AppColors.cardDark,
+                                width: isSelected ? 2 : 1,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    sport.name,
+                                    style: textTheme.titleMedium,
+                                  ),
+                                ),
+                                if (isSelected)
+                                  const Icon(
+                                    Icons.check_circle,
+                                    color: AppColors.lime,
+                                  ),
+                              ],
+                            ),
                           ),
                         ),
-                        if (isSelected)
-                          const Icon(Icons.check_circle, color: AppColors.lime),
-                      ],
+                      );
+                    },
+                  )
+                : Align(
+                    alignment: Alignment.topCenter,
+                    child: Text(
+                      playsSport == false
+                          ? "No problem — we'll estimate your nutrition targets from your body metrics."
+                          : 'Choose an option above to continue.',
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textMuted,
+                        height: 1.35,
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
           ),
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 52,
-          child: FilledButton(
-            onPressed: selectedSportId == null ? null : onContinue,
-            style: primaryButtonStyle,
-            child: const Text('Continue'),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 52,
+            child: FilledButton(
+              onPressed: _canContinue ? onContinue : null,
+              style: primaryButtonStyle,
+              child: const Text('Continue'),
+            ),
           ),
-        ),
-        const SizedBox(height: 24),
-      ],
+          const SizedBox(height: 24),
+        ],
+      ),
     );
   }
 }
@@ -796,9 +1101,9 @@ class _SchoolStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Form(
-      key: formKey,
-      child: Column(
+    return _OnboardingScrollStep(
+      formKey: formKey,
+      content: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
@@ -809,12 +1114,14 @@ class _SchoolStep extends StatelessWidget {
           ProfileTextField(
             label: 'SCHOOL NAME (OPTIONAL)',
             controller: schoolController,
+            limeBorder: true,
           ),
           const SizedBox(height: 20),
           ProfileTextField(
             label: 'GRADUATION YEAR (OPTIONAL)',
             controller: graduationController,
             keyboardType: TextInputType.number,
+            limeBorder: true,
             validator: (value) {
               final trimmed = value?.trim() ?? '';
               if (trimmed.isEmpty) return null;
@@ -824,17 +1131,15 @@ class _SchoolStep extends StatelessWidget {
               return null;
             },
           ),
-          const Spacer(),
-          SizedBox(
-            height: 52,
-            child: FilledButton(
-              onPressed: onContinue,
-              style: primaryButtonStyle,
-              child: const Text('Continue'),
-            ),
-          ),
-          const SizedBox(height: 24),
         ],
+      ),
+      bottom: SizedBox(
+        height: 52,
+        child: FilledButton(
+          onPressed: onContinue,
+          style: primaryButtonStyle,
+          child: const Text('Continue'),
+        ),
       ),
     );
   }
@@ -870,9 +1175,9 @@ class _SleepModeStep extends StatelessWidget {
   final String? sleepReminderAnswer;
   final _SleepRecommendation recommendation;
   final bool questionsComplete;
-  final ValueChanged<String> onWakeTiredChanged;
-  final ValueChanged<String> onBedtimeConsistencyChanged;
-  final ValueChanged<String> onSleepReminderChanged;
+  final ValueChanged<String?> onWakeTiredChanged;
+  final ValueChanged<String?> onBedtimeConsistencyChanged;
+  final ValueChanged<String?> onSleepReminderChanged;
   final VoidCallback onUseSleepMode;
   final VoidCallback onSkipSleepMode;
   final ButtonStyle primaryButtonStyle;
@@ -898,43 +1203,55 @@ class _SleepModeStep extends StatelessWidget {
       ),
     );
 
-    return ListView(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Sleep recovery', style: textTheme.headlineMedium),
-        const SizedBox(height: 8),
-        Text(
-          'Answer a few quick questions so we can decide if Sleep Mode belongs in your daily setup.',
-          style: textTheme.bodyMedium,
+        Expanded(
+          child: ListView(
+            keyboardDismissBehavior:
+                ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: const EdgeInsets.only(bottom: 8),
+            children: [
+              Text('Sleep check', style: textTheme.headlineMedium),
+              const SizedBox(height: 8),
+              Text(
+                'Three quick questions. Tap a choice to select it — tap again to clear.',
+                style: textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 24),
+              _SleepQuestionCard(
+                step: 1,
+                question: 'Do you wake up tired?',
+                hint: 'Think about a typical school week.',
+                options: const ['Not often', 'Sometimes', 'Often'],
+                selected: wakeTiredAnswer,
+                onSelected: onWakeTiredChanged,
+              ),
+              const SizedBox(height: 16),
+              _SleepQuestionCard(
+                step: 2,
+                question: 'Does your bedtime change a lot?',
+                hint: 'Games, practice, or homework can push sleep later.',
+                options: const ['Not often', 'Sometimes', 'Often'],
+                selected: bedtimeConsistencyAnswer,
+                onSelected: onBedtimeConsistencyChanged,
+              ),
+              const SizedBox(height: 16),
+              _SleepQuestionCard(
+                step: 3,
+                question: 'Would a bedtime reminder help?',
+                hint: 'A gentle nudge before your target sleep time.',
+                options: const ['No', 'Maybe', 'Yes'],
+                selected: sleepReminderAnswer,
+                onSelected: onSleepReminderChanged,
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 24),
-        _SleepQuestionCard(
-          question: 'How often do you wake up tired?',
-          options: const ['Rarely', 'Sometimes', 'Most days'],
-          selected: wakeTiredAnswer,
-          onSelected: onWakeTiredChanged,
-        ),
-        const SizedBox(height: 16),
-        _SleepQuestionCard(
-          question: 'Do late practices or homework make bedtime inconsistent?',
-          options: const ['Rarely', 'Sometimes', 'Often'],
-          selected: bedtimeConsistencyAnswer,
-          onSelected: onBedtimeConsistencyChanged,
-        ),
-        const SizedBox(height: 16),
-        _SleepQuestionCard(
-          question: 'Would sleep reminders help you recover better?',
-          options: const ['Yes', 'Maybe', 'No'],
-          selected: sleepReminderAnswer,
-          onSelected: onSleepReminderChanged,
-        ),
-        const SizedBox(height: 20),
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 180),
-          child: questionsComplete
-              ? _SleepRecommendationCard(recommendation: recommendation)
-              : const SizedBox.shrink(),
-        ),
-        const SizedBox(height: 20),
+        if (questionsComplete) ...[
+          _SleepRecommendationCard(recommendation: recommendation),
+          const SizedBox(height: 16),
+        ],
         if (recommended) ...[
           useSleepButton,
           const SizedBox(height: 12),
@@ -962,19 +1279,25 @@ class _SleepModeStep extends StatelessWidget {
 
 class _SleepQuestionCard extends StatelessWidget {
   const _SleepQuestionCard({
+    required this.step,
     required this.question,
     required this.options,
     required this.selected,
     required this.onSelected,
+    this.hint,
   });
 
+  final int step;
   final String question;
+  final String? hint;
   final List<String> options;
   final String? selected;
-  final ValueChanged<String> onSelected;
+  final ValueChanged<String?> onSelected;
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -985,7 +1308,20 @@ class _SleepQuestionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(question, style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            '$step. $question',
+            style: textTheme.titleMedium,
+          ),
+          if (hint != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              hint!,
+              style: textTheme.bodySmall?.copyWith(
+                color: AppColors.textMuted,
+                height: 1.35,
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
@@ -994,6 +1330,7 @@ class _SleepQuestionCard extends StatelessWidget {
               for (final option in options)
                 ChoiceChip(
                   label: Text(option),
+                  showCheckmark: false,
                   selected: selected == option,
                   selectedColor: AppColors.lime,
                   labelStyle: TextStyle(
@@ -1008,7 +1345,9 @@ class _SleepQuestionCard extends StatelessWidget {
                         ? AppColors.lime
                         : AppColors.textMuted.withValues(alpha: 0.24),
                   ),
-                  onSelected: (_) => onSelected(option),
+                  onSelected: (isSelected) {
+                    onSelected(isSelected ? option : null);
+                  },
                 ),
             ],
           ),
@@ -1027,11 +1366,13 @@ class _SleepRecommendationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final recommended = recommendation.recommended;
     final title = recommended
-        ? 'Sleep Mode recommended'
+        ? 'We recommend Sleep Mode'
         : 'Sleep Mode is optional';
     final message = recommended
-        ? recommendation.reasons.join(' ')
-        : 'Your answers look steady, so you can add Sleep Mode later if your schedule changes.';
+        ? (recommendation.reasons.length == 1
+              ? recommendation.reasons.first
+              : 'Based on your answers, Sleep Mode could help you recover.')
+        : 'You can turn it on later in Settings if your schedule changes.';
 
     return Container(
       key: ValueKey(recommended),
@@ -1109,77 +1450,64 @@ class _MealPreferencesStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return Form(
-      key: formKey,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: IntrinsicHeight(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      l10n.authMealPreferences,
-                      style: Theme.of(context).textTheme.headlineMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      l10n.authMealPreferencesHint,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 24),
-                    MealPreferencesForm(
-                      selectedStyles: selectedStyles,
-                      onStyleToggled: onStyleToggled,
-                      allergensController: allergensController,
-                      restrictionsController: restrictionsController,
-                      otherStyleController: otherStyleController,
-                      othersSelected: othersSelected,
-                      onOthersSelectedChanged: onOthersSelectedChanged,
-                      useLimeBorders: true,
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      l10n.authMealsPerDay,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      l10n.authMealsPerDayHint,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 12),
-                    SegmentedButton<int>(
-                      showSelectedIcon: false,
-                      segments: const [
-                        ButtonSegment(value: 2, label: Text('2')),
-                        ButtonSegment(value: 3, label: Text('3')),
-                        ButtonSegment(value: 4, label: Text('4')),
-                        ButtonSegment(value: 5, label: Text('5')),
-                      ],
-                      selected: {mealsPerDay},
-                      onSelectionChanged: (selection) {
-                        onMealsPerDayChanged(selection.first);
-                      },
-                    ),
-                    const Spacer(),
-                    SizedBox(
-                      height: 52,
-                      child: FilledButton(
-                        onPressed: onContinue,
-                        style: primaryButtonStyle,
-                        child: const Text('Continue'),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
+    return _OnboardingScrollStep(
+      formKey: formKey,
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            l10n.authMealPreferences,
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.authMealPreferencesHint,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 24),
+          MealPreferencesForm(
+            selectedStyles: selectedStyles,
+            onStyleToggled: onStyleToggled,
+            allergensController: allergensController,
+            restrictionsController: restrictionsController,
+            otherStyleController: otherStyleController,
+            othersSelected: othersSelected,
+            onOthersSelectedChanged: onOthersSelectedChanged,
+            useLimeBorders: true,
+          ),
+          const SizedBox(height: 24),
+          Text(
+            l10n.authMealsPerDay,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.authMealsPerDayHint,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 12),
+          SegmentedButton<int>(
+            showSelectedIcon: false,
+            segments: const [
+              ButtonSegment(value: 2, label: Text('2')),
+              ButtonSegment(value: 3, label: Text('3')),
+              ButtonSegment(value: 4, label: Text('4')),
+              ButtonSegment(value: 5, label: Text('5')),
+            ],
+            selected: {mealsPerDay},
+            onSelectionChanged: (selection) {
+              onMealsPerDayChanged(selection.first);
+            },
+          ),
+        ],
+      ),
+      bottom: SizedBox(
+        height: 52,
+        child: FilledButton(
+          onPressed: onContinue,
+          style: primaryButtonStyle,
+          child: const Text('Continue'),
+        ),
       ),
     );
   }
@@ -1200,72 +1528,74 @@ class _BodyMetricsStep extends StatelessWidget {
   final VoidCallback onContinue;
   final ButtonStyle primaryButtonStyle;
 
-  String? _positiveNumberValidator(String? value) {
+  static const _maxHeightCm = 300;
+  static const _maxWeightKg = 700;
+
+  String? _heightValidator(String? value) {
     final trimmed = value?.trim() ?? '';
     if (trimmed.isEmpty) return 'Required';
     final parsed = double.tryParse(trimmed);
     if (parsed == null || parsed <= 0) return 'Enter a positive number';
+    if (parsed > _maxHeightCm) return 'Maximum height is $_maxHeightCm cm';
+    return null;
+  }
+
+  String? _weightValidator(String? value) {
+    final trimmed = value?.trim() ?? '';
+    if (trimmed.isEmpty) return 'Required';
+    final parsed = double.tryParse(trimmed);
+    if (parsed == null || parsed <= 0) return 'Enter a positive number';
+    if (parsed > _maxWeightKg) return 'Maximum weight is $_maxWeightKg kg';
     return null;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Form(
-      key: formKey,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: IntrinsicHeight(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      'Your body metrics',
-                      style: Theme.of(context).textTheme.headlineMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'We use height and weight to estimate your daily nutrition targets.',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 24),
-                    ProfileTextField(
-                      key: const Key('onboarding_height_cm'),
-                      label: 'HEIGHT (CM)',
-                      controller: heightController,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      validator: _positiveNumberValidator,
-                    ),
-                    const SizedBox(height: 16),
-                    ProfileTextField(
-                      key: const Key('onboarding_weight_kg'),
-                      label: 'WEIGHT (KG)',
-                      controller: weightController,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      validator: _positiveNumberValidator,
-                    ),
-                    const Spacer(),
-                    SizedBox(
-                      height: 52,
-                      child: FilledButton(
-                        onPressed: onContinue,
-                        style: primaryButtonStyle,
-                        child: const Text('Continue'),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-                ),
-              ),
+    return _OnboardingScrollStep(
+      formKey: formKey,
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Your body metrics',
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'We use height and weight to estimate your daily nutrition targets.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 24),
+          ProfileTextField(
+            key: const Key('onboarding_height_cm'),
+            label: 'HEIGHT (CM)',
+            controller: heightController,
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
             ),
-          );
-        },
+            limeBorder: true,
+            validator: _heightValidator,
+          ),
+          const SizedBox(height: 16),
+          ProfileTextField(
+            key: const Key('onboarding_weight_kg'),
+            label: 'WEIGHT (KG)',
+            controller: weightController,
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
+            ),
+            limeBorder: true,
+            validator: _weightValidator,
+          ),
+        ],
+      ),
+      bottom: SizedBox(
+        height: 52,
+        child: FilledButton(
+          onPressed: onContinue,
+          style: primaryButtonStyle,
+          child: const Text('Continue'),
+        ),
       ),
     );
   }
@@ -1274,6 +1604,7 @@ class _BodyMetricsStep extends StatelessWidget {
 class _GoalsStep extends StatelessWidget {
   const _GoalsStep({
     required this.formKey,
+    required this.hasSport,
     required this.caloriesController,
     required this.proteinController,
     required this.carbsController,
@@ -1284,6 +1615,7 @@ class _GoalsStep extends StatelessWidget {
   });
 
   final GlobalKey<FormState> formKey;
+  final bool hasSport;
   final TextEditingController caloriesController;
   final TextEditingController proteinController;
   final TextEditingController carbsController;
@@ -1302,74 +1634,67 @@ class _GoalsStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Form(
-      key: formKey,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: IntrinsicHeight(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      'Daily nutrition targets',
-                      style: Theme.of(context).textTheme.headlineMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'We estimated these from your sport, height, and weight. You can adjust.',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 24),
-                    ProfileTextField(
-                      label: 'CALORIES (KCAL)',
-                      controller: caloriesController,
-                      keyboardType: TextInputType.number,
-                      validator: _positiveIntValidator,
-                    ),
-                    const SizedBox(height: 16),
-                    ProfileTextField(
-                      label: 'PROTEIN (G)',
-                      controller: proteinController,
-                      keyboardType: TextInputType.number,
-                      validator: _positiveIntValidator,
-                    ),
-                    const SizedBox(height: 16),
-                    ProfileTextField(
-                      label: 'CARBS (G)',
-                      controller: carbsController,
-                      keyboardType: TextInputType.number,
-                      validator: _positiveIntValidator,
-                    ),
-                    const SizedBox(height: 16),
-                    ProfileTextField(
-                      label: 'FATS (G)',
-                      controller: fatsController,
-                      keyboardType: TextInputType.number,
-                      validator: _positiveIntValidator,
-                    ),
-                    const Spacer(),
-                    SizedBox(
-                      height: 52,
-                      child: FilledButton(
-                        onPressed: saving ? null : onFinish,
-                        style: primaryButtonStyle,
-                        child: saving
-                            ? const CircularProgressIndicator(
-                                color: AppColors.onLime,
-                              )
-                            : const Text('Finish setup'),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
+    return _OnboardingScrollStep(
+      formKey: formKey,
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Daily nutrition targets',
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            hasSport
+                ? 'We estimated these from your sport, height, and weight. You can adjust.'
+                : 'We estimated these from your height and weight. You can adjust.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 24),
+          ProfileTextField(
+            label: 'CALORIES (KCAL)',
+            controller: caloriesController,
+            keyboardType: TextInputType.number,
+            limeBorder: true,
+            validator: _positiveIntValidator,
+          ),
+          const SizedBox(height: 16),
+          ProfileTextField(
+            label: 'PROTEIN (G)',
+            controller: proteinController,
+            keyboardType: TextInputType.number,
+            limeBorder: true,
+            validator: _positiveIntValidator,
+          ),
+          const SizedBox(height: 16),
+          ProfileTextField(
+            label: 'CARBS (G)',
+            controller: carbsController,
+            keyboardType: TextInputType.number,
+            limeBorder: true,
+            validator: _positiveIntValidator,
+          ),
+          const SizedBox(height: 16),
+          ProfileTextField(
+            label: 'FATS (G)',
+            controller: fatsController,
+            keyboardType: TextInputType.number,
+            limeBorder: true,
+            validator: _positiveIntValidator,
+          ),
+        ],
+      ),
+      bottom: SizedBox(
+        height: 52,
+        child: FilledButton(
+          onPressed: saving ? null : onFinish,
+          style: primaryButtonStyle,
+          child: saving
+              ? const CircularProgressIndicator(
+                  color: AppColors.onLime,
+                )
+              : const Text('Finish setup'),
+        ),
       ),
     );
   }

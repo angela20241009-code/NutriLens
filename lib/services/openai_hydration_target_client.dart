@@ -129,7 +129,7 @@ class OpenAiHydrationTargetClient implements HydrationTargetClient {
     final targets = profile.dailyTargets;
     final buffer = StringBuffer()
       ..writeln('Athlete profile:')
-      ..writeln('- Sport: ${profile.primarySportName}')
+      ..writeln('- Sport: ${_sportLabel(profile.primarySportName)}')
       ..writeln('- Height cm: ${profile.heightCm ?? 'unknown'}')
       ..writeln('- Weight kg: ${profile.weightKg ?? 'unknown'}')
       ..writeln('- Daily calories target: ${targets.caloriesKcal} kcal')
@@ -145,5 +145,10 @@ class OpenAiHydrationTargetClient implements HydrationTargetClient {
       '\nRecommend one daily hydration target in liters for this athlete today.',
     );
     return buffer.toString();
+  }
+
+  static String _sportLabel(String sportName) {
+    final trimmed = sportName.trim();
+    return trimmed.isEmpty ? 'None' : trimmed;
   }
 }

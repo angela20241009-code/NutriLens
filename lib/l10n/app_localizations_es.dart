@@ -412,6 +412,20 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get deleteAccountReauthTitle => 'Confirma tu contraseña';
+
+  @override
+  String get deleteAccountReauthBody =>
+      'Por seguridad, ingresa tu contraseña para eliminar permanentemente esta cuenta.';
+
+  @override
+  String get deleteAccountReauthPassword => 'Contraseña';
+
+  @override
+  String get authErrorRequiresRecentLogin =>
+      'Por seguridad, confirma tu contraseña e inténtalo de nuevo.';
+
+  @override
   String failedToInitializeApp(String error) {
     return 'No se pudo inicializar la app:\n$error';
   }

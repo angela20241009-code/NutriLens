@@ -375,7 +375,7 @@ class InMemoryUserRepository implements UserRepository {
   }
 
   @override
-  Future<void> deleteAccount(String uid) async {
+  Future<void> deleteAccount(String uid, {String? password}) async {
     final account = _accounts[uid];
     final email = account?.email?.trim().toLowerCase();
     if (email != null && email.isNotEmpty) {

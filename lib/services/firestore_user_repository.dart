@@ -510,14 +510,43 @@ class FirestoreUserRepository implements UserRepository {
   }
 
   @override
-  Future<void> deleteAccount(String uid) async {
+  Future<void> deleteAccount(String uid, {String? password}) async {
     final user = _auth.currentUser;
     if (user == null || user.uid != uid) {
       throw StateError('No signed-in user matches this account.');
     }
 
+    await _reauthenticateForSensitiveAction(user, password: password);
     await _deleteUserFirestoreData(uid);
     await user.delete();
+  }
+
+  Future<void> _reauthenticateForSensitiveAction(
+    User user, {
+    String? password,
+  }) async {
+    if (user.isAnonymous) {
+      return;
+    }
+
+    final email = user.email?.trim();
+    if (email == null || email.isEmpty) {
+      throw FirebaseAuthException(
+        code: 'requires-recent-login',
+        message: 'Sign in again before deleting your account.',
+      );
+    }
+
+    if (password == null || password.isEmpty) {
+      throw FirebaseAuthException(
+        code: 'requires-recent-login',
+        message: 'Enter your password to confirm account deletion.',
+      );
+    }
+
+    await user.reauthenticateWithCredential(
+      EmailAuthProvider.credential(email: email, password: password),
+    );
   }
 
   Future<void> _deleteUserFirestoreData(String uid) async {

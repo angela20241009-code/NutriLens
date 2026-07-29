@@ -14,25 +14,9 @@ class MealPlanSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              "Today's Meal Plan",
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            GestureDetector(
-              onTap: () {},
-              child: const Text(
-                'See all',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.lime,
-                ),
-              ),
-            ),
-          ],
+        Text(
+          "Today's Meal Plan",
+          style: Theme.of(context).textTheme.titleLarge,
         ),
         const SizedBox(height: 14),
         if (meals.isEmpty)

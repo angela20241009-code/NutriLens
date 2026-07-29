@@ -188,6 +188,10 @@
       }
     }
   },
+  "deleteAccountReauthTitle": "Confirm your password",
+  "deleteAccountReauthBody": "For your security, enter your password to permanently delete this account.",
+  "deleteAccountReauthPassword": "Password",
+  "authErrorRequiresRecentLogin": "For your security, confirm your password and try again.",
   "failedToInitializeApp": "Failed to initialize the app:\n{error}",
   "@failedToInitializeApp": {
     "placeholders": {

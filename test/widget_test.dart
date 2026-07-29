@@ -124,30 +124,29 @@ void main() {
     await tester.enterText(find.byType(TextFormField).first, 'Angela');
     await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Tennis'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Continue'));
-    await tester.pumpAndSettle();
+    await _completeOnboardingSportStep(tester, playsSport: true, sportName: 'Tennis');
     await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
 
     await _completeOnboardingMealPrefsStep(tester);
 
-    expect(find.text('Sleep recovery'), findsOneWidget);
+    expect(find.text('Sleep check'), findsOneWidget);
     expect(find.text('Daily nutrition targets'), findsNothing);
 
-    await tester.tap(find.text('Most days'));
+    await tester.ensureVisible(find.text('Often').first);
+    await tester.tap(find.text('Often').first);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Often'));
+    await tester.ensureVisible(find.text('Often').last);
+    await tester.tap(find.text('Often').last);
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Yes'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Yes'));
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.text('Sleep Mode recommended'));
+    await tester.ensureVisible(find.text('We recommend Sleep Mode'));
     await tester.pumpAndSettle();
-    expect(find.text('Sleep Mode recommended'), findsOneWidget);
+    expect(find.text('We recommend Sleep Mode'), findsOneWidget);
 
     await tester.ensureVisible(find.text('Use Sleep Mode'));
     await tester.pumpAndSettle();
@@ -184,18 +183,17 @@ void main() {
     await tester.enterText(find.byType(TextFormField).first, 'Angela');
     await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Tennis'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Continue'));
-    await tester.pumpAndSettle();
+    await _completeOnboardingSportStep(tester, playsSport: true, sportName: 'Tennis');
     await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
 
     await _completeOnboardingMealPrefsStep(tester);
 
-    await tester.tap(find.text('Rarely').first);
+    await tester.ensureVisible(find.text('Not often').first);
+    await tester.tap(find.text('Not often').first);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Rarely').last);
+    await tester.ensureVisible(find.text('Not often').last);
+    await tester.tap(find.text('Not often').last);
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('No'));
     await tester.pumpAndSettle();
@@ -220,6 +218,55 @@ void main() {
     expect(profile?.sleepModeRecommendationReasons, isEmpty);
     expect(profile?.heightCm, 175);
     expect(profile?.weightKg, 70);
+  });
+
+  testWidgets('Onboarding works without a sport', (WidgetTester tester) async {
+    final repository = InMemoryUserRepository();
+    final account = await repository.signInAnonymously(
+      timezone: 'America/Los_Angeles',
+    );
+
+    await _pumpOnboarding(tester, repository, account.uid);
+
+    await tester.tap(find.text('Get started'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField).first, 'Angela');
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+    await _completeOnboardingSportStep(tester, playsSport: false);
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+
+    await _completeOnboardingMealPrefsStep(tester);
+
+    await tester.ensureVisible(find.text('Not often').first);
+    await tester.tap(find.text('Not often').first);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Not often').last);
+    await tester.tap(find.text('Not often').last);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('No'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('No'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Skip for now'));
+    await tester.tap(find.text('Skip for now'));
+    await tester.pumpAndSettle();
+
+    await _completeOnboardingBodyStep(tester);
+    expect(
+      find.text('We estimated these from your height and weight. You can adjust.'),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Finish setup'));
+    await tester.pumpAndSettle();
+
+    final profile = await repository.getProfile(account.uid);
+    expect(profile?.primarySportId, '');
+    expect(profile?.primarySportName, '');
+    expect(profile?.heightCm, 175);
+    expect(profile?.weightKg, 70);
+    expect(profile?.dailyTargets.caloriesKcal, greaterThan(0));
   });
 
   testWidgets('App shell integrates sleep without top mode tabs', (
@@ -1377,22 +1424,70 @@ Finder _mealsScrollable() {
   return find.byType(Scrollable).first;
 }
 
+Future<void> _completeOnboardingSportStep(
+  WidgetTester tester, {
+  required bool playsSport,
+  String? sportName,
+}) async {
+  expect(find.text('About your sport'), findsOneWidget);
+  if (playsSport) {
+    await tester.ensureVisible(find.text('Yes, I play a sport'));
+    await tester.tap(find.text('Yes, I play a sport'));
+    await tester.pumpAndSettle();
+    if (sportName != null) {
+      await tester.ensureVisible(find.text(sportName));
+      await tester.tap(find.text(sportName));
+      await tester.pumpAndSettle();
+    }
+  } else {
+    await tester.ensureVisible(find.text('No, not currently'));
+    await tester.tap(find.text('No, not currently'));
+    await tester.pumpAndSettle();
+  }
+
+  final continueOnSportStep = find.descendant(
+    of: find.ancestor(
+      of: find.text('About your sport'),
+      matching: find.byType(Form),
+    ),
+    matching: find.widgetWithText(FilledButton, 'Continue'),
+  );
+  await tester.ensureVisible(continueOnSportStep);
+  await tester.tap(continueOnSportStep);
+  await tester.pumpAndSettle();
+}
+
 Future<void> _completeOnboardingMealPrefsStep(WidgetTester tester) async {
   expect(find.text('Meal preferences'), findsOneWidget);
   await tester.ensureVisible(find.text('Meal preferences'));
   await tester.pumpAndSettle();
   expect(find.text('Meals per day'), findsOneWidget);
-  final continueButton = find.widgetWithText(FilledButton, 'Continue');
-  await tester.ensureVisible(continueButton.last);
-  await tester.tap(continueButton.last);
+  final continueOnMealStep = find.descendant(
+    of: find.ancestor(
+      of: find.text('Meal preferences'),
+      matching: find.byType(Form),
+    ),
+    matching: find.widgetWithText(FilledButton, 'Continue'),
+  );
+  await tester.ensureVisible(continueOnMealStep);
+  await tester.tap(continueOnMealStep);
   await tester.pumpAndSettle();
+  expect(find.text('Sleep check'), findsOneWidget);
 }
 
 Future<void> _completeOnboardingBodyStep(WidgetTester tester) async {
   expect(find.text('Your body metrics'), findsOneWidget);
   await tester.enterText(find.byKey(const Key('onboarding_height_cm')), '175');
   await tester.enterText(find.byKey(const Key('onboarding_weight_kg')), '70');
-  await tester.tap(find.text('Continue'));
+  final continueOnBodyStep = find.descendant(
+    of: find.ancestor(
+      of: find.text('Your body metrics'),
+      matching: find.byType(Form),
+    ),
+    matching: find.widgetWithText(FilledButton, 'Continue'),
+  );
+  await tester.ensureVisible(continueOnBodyStep);
+  await tester.tap(continueOnBodyStep);
   await tester.pumpAndSettle();
 }
 

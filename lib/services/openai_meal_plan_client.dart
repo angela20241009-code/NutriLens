@@ -290,7 +290,7 @@ class OpenAiMealPlanClient implements MealPlanClient {
     final targets = profile.dailyTargets;
     final buffer = StringBuffer()
       ..writeln('Athlete profile:')
-      ..writeln('- Sport: ${profile.primarySportName}')
+      ..writeln('- Sport: ${_sportLabel(profile.primarySportName)}')
       ..writeln('- Daily calories target: ${targets.caloriesKcal} kcal')
       ..writeln('- Daily protein target: ${targets.proteinG} g')
       ..writeln('- Daily carbs target: ${targets.carbsG} g')
@@ -300,5 +300,10 @@ class OpenAiMealPlanClient implements MealPlanClient {
       ..writeln('- Dietary restrictions: ${dietary.restrictions.join(', ')}')
       ..writeln('- Meals per day: ${profile.nutritionSettings.mealsPerDay}');
     return buffer.toString();
+  }
+
+  static String _sportLabel(String sportName) {
+    final trimmed = sportName.trim();
+    return trimmed.isEmpty ? 'None' : trimmed;
   }
 }

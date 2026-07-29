@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nutrilens/app/meal_plan_scope.dart';
 import 'package:nutrilens/app/meal_plan_refresh_scope.dart';
 import 'package:nutrilens/app/sleep_log_refresh_scope.dart';
+import 'package:nutrilens/app/tasty_recipe_scope.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/features/home/home_dashboard_data.dart';
 import 'package:nutrilens/features/home/weekly_fuel_summary_screen.dart';
@@ -22,6 +23,8 @@ import 'package:nutrilens/services/openai_hydration_target_client.dart';
 import 'package:nutrilens/services/openai_meal_plan_client.dart';
 import 'package:nutrilens/services/meal_plan_client.dart';
 import 'package:nutrilens/services/meal_plan_serializer.dart';
+import 'package:nutrilens/services/tasty_image_meal_plan_client.dart';
+import 'package:nutrilens/services/tasty_recipe_client.dart';
 import 'package:nutrilens/services/user_repository.dart';
 
 class HomeDashboardScreen extends StatefulWidget {
@@ -45,6 +48,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   HomeDashboardData? _dashboardData;
   UserRepository? _repository;
   MealPlanClient? _mealPlanClient;
+  TastyRecipeClient? _tastyRecipeClient;
   String? _uid;
   SleepLogRefreshNotifier? _sleepLogRefreshNotifier;
   int _lastSleepLogRefreshGeneration = 0;
@@ -63,14 +67,17 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     final mealPlanClient =
         MealPlanScope.maybeOf(context)?.client ??
         OpenAiMealPlanClient.fromEnvironment();
+    final tastyClient = TastyRecipeScope.maybeOf(context)?.client;
 
     if (_dataFuture == null ||
         _repository != scope.repository ||
         _uid != scope.uid ||
-        _mealPlanClient != mealPlanClient) {
+        _mealPlanClient != mealPlanClient ||
+        _tastyRecipeClient != tastyClient) {
       _repository = scope.repository;
       _uid = scope.uid;
       _mealPlanClient = mealPlanClient;
+      _tastyRecipeClient = tastyClient;
       if (_cachedHydrationTargetUid != scope.uid) {
         _cachedHydrationTargetLiters = null;
         _cachedHydrationTargetUid = null;
@@ -79,6 +86,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
         repository: scope.repository,
         uid: scope.uid,
         mealPlanClient: mealPlanClient,
+        tastyClient: tastyClient,
       );
       _trackDashboardFuture(_dataFuture!);
     }
@@ -131,6 +139,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     required UserRepository repository,
     required String uid,
     required MealPlanClient mealPlanClient,
+    TastyRecipeClient? tastyClient,
     bool forceMealPlan = false,
   }) async {
     final profile = await repository.getProfile(uid);
@@ -171,12 +180,22 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     String? mealPlanError;
     var plannedMeals = const <HomeMealPlanItem>[];
     try {
-      final plan = await mealPlanClient.fetchWeeklyPlan(
+      var plan = await mealPlanClient.fetchWeeklyPlan(
         uid: uid,
         profile: profile,
         startDate: today,
         forceRefresh: forceMealPlan,
       );
+      if (tastyClient != null && plan.mealsFor(today).isNotEmpty) {
+        final enriched = await enrichMealPlanWeekWithTastyImages(
+          week: plan,
+          tastyClient: tastyClient,
+        );
+        if (enriched.changed) {
+          plan = enriched.week;
+          await repository.saveMealPlanWeek(uid, plan);
+        }
+      }
       plannedMeals = plan
           .mealsFor(today)
           .map(
@@ -277,6 +296,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       repository: repository,
       uid: uid,
       mealPlanClient: mealPlanClient,
+      tastyClient: _tastyRecipeClient,
       forceMealPlan: forceMealPlan,
     );
     setState(() {

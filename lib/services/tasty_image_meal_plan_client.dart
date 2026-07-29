@@ -1,5 +1,4 @@
 import 'package:nutrilens/models/models.dart';
-import 'package:nutrilens/models/meal_plan.dart';
 import 'package:nutrilens/models/tasty_recipe.dart';
 import 'package:nutrilens/services/meal_plan_client.dart';
 import 'package:nutrilens/services/tasty_recipe_client.dart';
@@ -129,5 +128,38 @@ class TastyImageMealPlanClient implements MealPlanClient {
       return 'https://tasty.co/recipe/$slug';
     }
     return 'https://tasty.co/recipe/${recipe.id}';
+  }
+}
+
+/// Looks up Tasty thumbnails for meals that do not already have them.
+Future<({MealPlanWeek week, bool changed})> enrichMealPlanWeekWithTastyImages({
+  required MealPlanWeek week,
+  required TastyRecipeClient tastyClient,
+}) {
+  return TastyImageMealPlanClient(
+    delegate: _EnrichmentOnlyMealPlanClient(),
+    tastyClient: tastyClient,
+  ).enrichWeeklyPlan(week);
+}
+
+class _EnrichmentOnlyMealPlanClient implements MealPlanClient {
+  @override
+  Future<MealPlanWeek> fetchWeeklyPlan({
+    required String uid,
+    required UserProfile profile,
+    required DateTime startDate,
+    bool forceRefresh = false,
+  }) {
+    throw UnsupportedError('Enrichment-only client cannot fetch meal plans.');
+  }
+
+  @override
+  Future<MealPlanMeal> regenerateMeal({
+    required String uid,
+    required UserProfile profile,
+    required DateTime date,
+    required MealSlot slot,
+  }) {
+    throw UnsupportedError('Enrichment-only client cannot regenerate meals.');
   }
 }

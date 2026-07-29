@@ -65,6 +65,7 @@ String friendlyAuthErrorMessage(AppLocalizations l10n, Object error) {
       'wrong-password' ||
       'invalid-credential' => l10n.authErrorWrongCredentials,
       'network-request-failed' => l10n.authErrorNetwork,
+      'requires-recent-login' => l10n.authErrorRequiresRecentLogin,
       _ => error.message ?? l10n.authErrorGeneric,
     };
   }

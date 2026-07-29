@@ -125,6 +125,10 @@
   "unableToUpdateLanguage": "无法更新语言：{error}",
   "unableToSignOut": "无法退出登录：{error}",
   "unableToDeleteAccount": "无法删除账户：{error}",
+  "deleteAccountReauthTitle": "确认密码",
+  "deleteAccountReauthBody": "为保障账户安全，请输入密码以永久删除此账户。",
+  "deleteAccountReauthPassword": "密码",
+  "authErrorRequiresRecentLogin": "为保障安全，请确认密码后重试。",
   "failedToInitializeApp": "无法初始化应用：\n{error}",
   "failedToLoadAccount": "无法加载账户：\n{error}"
 }

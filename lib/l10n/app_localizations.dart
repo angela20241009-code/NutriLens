@@ -850,6 +850,30 @@ abstract class AppLocalizations {
   /// **'Unable to delete account: {error}'**
   String unableToDeleteAccount(String error);
 
+  /// No description provided for @deleteAccountReauthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your password'**
+  String get deleteAccountReauthTitle;
+
+  /// No description provided for @deleteAccountReauthBody.
+  ///
+  /// In en, this message translates to:
+  /// **'For your security, enter your password to permanently delete this account.'**
+  String get deleteAccountReauthBody;
+
+  /// No description provided for @deleteAccountReauthPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get deleteAccountReauthPassword;
+
+  /// No description provided for @authErrorRequiresRecentLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'For your security, confirm your password and try again.'**
+  String get authErrorRequiresRecentLogin;
+
   /// No description provided for @failedToInitializeApp.
   ///
   /// In en, this message translates to:

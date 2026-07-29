@@ -408,6 +408,20 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get deleteAccountReauthTitle => 'Confirm your password';
+
+  @override
+  String get deleteAccountReauthBody =>
+      'For your security, enter your password to permanently delete this account.';
+
+  @override
+  String get deleteAccountReauthPassword => 'Password';
+
+  @override
+  String get authErrorRequiresRecentLogin =>
+      'For your security, confirm your password and try again.';
+
+  @override
   String failedToInitializeApp(String error) {
     return 'Failed to initialize the app:\n$error';
   }
