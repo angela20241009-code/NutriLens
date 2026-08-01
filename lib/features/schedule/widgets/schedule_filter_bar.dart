@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nutrilens/features/schedule/schedule_view_filter.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
 class ScheduleFilterBar extends StatelessWidget {
@@ -16,6 +17,7 @@ class ScheduleFilterBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final options = ScheduleViewFilter.values
         .where(
           (option) => showSleepFilter || option != ScheduleViewFilter.sleep,
@@ -31,10 +33,7 @@ class ScheduleFilterBar extends StatelessWidget {
             showSelectedIcon: false,
             segments: [
               for (final option in options)
-                ButtonSegment(
-                  value: option,
-                  label: Text(option.label),
-                ),
+                ButtonSegment(value: option, label: Text(option.label(l10n))),
             ],
             selected: {filter},
             onSelectionChanged: (selection) => onFilterChanged(selection.first),
@@ -45,13 +44,13 @@ class ScheduleFilterBar extends StatelessWidget {
           spacing: 16,
           runSpacing: 8,
           children: [
-            const _LegendDot(
+            _LegendDot(
               color: scheduleLoggedMealColor,
-              label: 'Meals',
+              label: l10n.scheduleMeals,
             ),
-            const _LegendDot(color: scheduleEventColor, label: 'Events'),
+            _LegendDot(color: scheduleEventColor, label: l10n.scheduleEvents),
             if (showSleepFilter)
-              const _LegendDot(color: scheduleSleepColor, label: 'Sleep'),
+              _LegendDot(color: scheduleSleepColor, label: l10n.scheduleSleep),
           ],
         ),
       ],

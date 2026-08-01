@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
+import 'package:nutrilens/l10n/l10n_extensions.dart';
 import 'package:nutrilens/models/user_profile.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
@@ -14,7 +16,8 @@ class HomeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final name = _displayName(profile);
+    final l10n = AppLocalizations.of(context)!;
+    final name = _displayName(l10n, profile);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -22,7 +25,7 @@ class HomeHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (_greetingFor(DateTime.now()) case final greeting?) ...[
+              if (_greetingFor(context, DateTime.now()) case final greeting?) ...[
                 Text(
                   greeting,
                   style: Theme.of(context).textTheme.bodyMedium,
@@ -69,7 +72,7 @@ class HomeHeader extends StatelessWidget {
     );
   }
 
-  String _displayName(UserProfile profile) {
+  String _displayName(AppLocalizations l10n, UserProfile profile) {
     final firstName = profile.firstName?.trim();
     if (firstName != null && firstName.isNotEmpty) {
       return firstName;
@@ -80,19 +83,19 @@ class HomeHeader extends StatelessWidget {
       return displayName.split(RegExp(r'\s+')).first;
     }
 
-    return 'Athlete';
+    return l10n.athlete;
   }
 
-  String? _greetingFor(DateTime now) {
+  String? _greetingFor(BuildContext context, DateTime now) {
     final hour = now.hour;
     if (hour >= 5 && hour < 12) {
-      return 'Good Morning';
+      return localizedGreeting(AppLocalizations.of(context)!, hour);
     }
     if (hour >= 12 && hour < 17) {
-      return 'Good Afternoon';
+      return localizedGreeting(AppLocalizations.of(context)!, hour);
     }
     if (hour >= 17 && hour < 21) {
-      return 'Good Evening';
+      return localizedGreeting(AppLocalizations.of(context)!, hour);
     }
     return null;
   }

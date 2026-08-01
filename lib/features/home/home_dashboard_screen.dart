@@ -17,6 +17,7 @@ import 'package:nutrilens/features/meals/favorite_meal_sheet.dart';
 import 'package:nutrilens/features/profile/meal_preferences_sheet.dart';
 import 'package:nutrilens/features/meals/log_meal_sheet.dart';
 import 'package:nutrilens/features/sleep/sleep_log_actions.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/services/date_key.dart';
 import 'package:nutrilens/services/openai_hydration_target_client.dart';
@@ -277,7 +278,11 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Unable to save hydration: $error')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.homeUnableToSaveHydration('$error'),
+            ),
+          ),
         );
         await _refresh();
       }
@@ -350,11 +355,12 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Meal plan refreshed with your preferences')),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.homeMealPlanRefreshed),
+        ),
       );
     }
   }
-
 
   Future<void> _openSleepLogDialog() async {
     final data = _dashboardData;
@@ -367,7 +373,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       context: context,
       profile: data.profile,
       dateKey: todayKey,
-      title: 'Log sleep',
+      title: AppLocalizations.of(context)!.logSleep,
       initialSleepHours: data.summary.sleepHours > 0
           ? data.summary.sleepHours
           : null,
@@ -380,6 +386,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final data = _dashboardData;
+    final l10n = AppLocalizations.of(context)!;
 
     if (data == null) {
       return FutureBuilder<HomeDashboardData>(
@@ -394,7 +401,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Text(
-                  'Failed to load home data:\n${snapshot.error}',
+                  l10n.homeFailedToLoadData('${snapshot.error}'),
                   textAlign: TextAlign.center,
                 ),
               ),

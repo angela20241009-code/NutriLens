@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
 class MealCaptureCard extends StatelessWidget {
@@ -15,6 +16,8 @@ class MealCaptureCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -65,7 +68,7 @@ class MealCaptureCard extends StatelessWidget {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Meal capture',
+                            l10n.homeMealCapture,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: Theme.of(context).textTheme.titleLarge,
@@ -75,7 +78,7 @@ class MealCaptureCard extends StatelessWidget {
                     ),
                     SizedBox(height: isCompact ? 18 : 24),
                     Text(
-                      'Ready to log?',
+                      l10n.homeReadyToLog,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -86,7 +89,7 @@ class MealCaptureCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Manual, preferences, or favorites',
+                      l10n.homeMealCaptureOptions,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -100,7 +103,7 @@ class MealCaptureCard extends StatelessWidget {
                       children: [
                         Expanded(
                           child: _CaptureAction(
-                            label: 'Manual',
+                            label: l10n.homeManualLog,
                             icon: Icons.add,
                             color: AppColors.lime,
                             foregroundColor: AppColors.onLime,
@@ -110,7 +113,7 @@ class MealCaptureCard extends StatelessWidget {
                         ),
                         Expanded(
                           child: _CaptureAction(
-                            label: 'Prefs',
+                            label: l10n.homePrefsShort,
                             icon: Icons.tune_rounded,
                             color: Colors.white.withValues(alpha: 0.08),
                             foregroundColor: AppColors.textMuted,
@@ -120,7 +123,7 @@ class MealCaptureCard extends StatelessWidget {
                         ),
                         Expanded(
                           child: _CaptureAction(
-                            label: 'Favorites',
+                            label: l10n.mealsFavorites,
                             icon: Icons.favorite_border_rounded,
                             color: Colors.white.withValues(alpha: 0.08),
                             foregroundColor: AppColors.orange,

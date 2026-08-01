@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
 Future<bool> showSignOutConfirmationDialog({
@@ -9,18 +10,19 @@ Future<bool> showSignOutConfirmationDialog({
   final result = await showDialog<bool>(
     context: context,
     builder: (context) {
+      final l10n = AppLocalizations.of(context)!;
       return AlertDialog(
         backgroundColor: AppColors.cardDark,
-        title: const Text('Sign out?'),
+        title: Text(l10n.signOutTitle),
         content: Text(
           isAnonymous
-              ? 'You haven\'t linked an email. Signing out may lose your data on this device.'
-              : 'Sign out of ${email ?? 'your account'}?',
+              ? l10n.signOutGuestBody
+              : l10n.signOutAccountBody(email ?? l10n.yourAccount),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
@@ -28,7 +30,7 @@ Future<bool> showSignOutConfirmationDialog({
               backgroundColor: AppColors.orange,
               foregroundColor: AppColors.textPrimary,
             ),
-            child: const Text('Sign out'),
+            child: Text(l10n.signOut),
           ),
         ],
       );

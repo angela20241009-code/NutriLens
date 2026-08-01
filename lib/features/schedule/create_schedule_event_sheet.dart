@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/models/models.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
 class CreateScheduleEventSheet extends StatefulWidget {
@@ -74,7 +75,7 @@ class _CreateScheduleEventSheetState extends State<CreateScheduleEventSheet> {
 
   String? _requiredText(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Required';
+      return AppLocalizations.of(context)!.required;
     }
     return null;
   }
@@ -160,9 +161,11 @@ class _CreateScheduleEventSheetState extends State<CreateScheduleEventSheet> {
         profile.copyWith(scheduleEvents: [...profile.scheduleEvents, event]),
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Event created')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.scheduleEventCreated),
+        ),
+      );
       Navigator.of(context).pop(event);
     } catch (error) {
       if (!mounted) return;
@@ -180,6 +183,7 @@ class _CreateScheduleEventSheetState extends State<CreateScheduleEventSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
     final bottomPadding = MediaQuery.paddingOf(context).bottom;
 
@@ -201,7 +205,7 @@ class _CreateScheduleEventSheetState extends State<CreateScheduleEventSheet> {
             final profileError =
                 !isLoadingProfile &&
                     (snapshot.hasError || snapshot.data == null)
-                ? 'Unable to load your profile. Try again in a moment.'
+                ? l10n.unableToLoadProfileShort
                 : null;
 
             return Container(
@@ -231,9 +235,9 @@ class _CreateScheduleEventSheetState extends State<CreateScheduleEventSheet> {
                       const SizedBox(height: 16),
                       Row(
                         children: [
-                          const Expanded(
+                          Expanded(
                             child: Text(
-                              'Create Schedule Event',
+                              l10n.scheduleCreateEvent,
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
@@ -242,7 +246,7 @@ class _CreateScheduleEventSheetState extends State<CreateScheduleEventSheet> {
                             ),
                           ),
                           IconButton(
-                            tooltip: 'Close',
+                            tooltip: l10n.cancel,
                             visualDensity: VisualDensity.compact,
                             onPressed: () => Navigator.of(context).pop(),
                             icon: const Icon(
@@ -261,15 +265,15 @@ class _CreateScheduleEventSheetState extends State<CreateScheduleEventSheet> {
                       const SizedBox(height: 8),
                       _CompactTextField(
                         icon: Icons.text_fields_rounded,
-                        label: 'Title',
-                        hintText: 'Add title',
+                        label: l10n.scheduleEventTitle,
+                        hintText: l10n.scheduleAddTitle,
                         controller: _titleController,
                         validator: _requiredText,
                       ),
                       const SizedBox(height: 8),
                       _CompactActionRow(
                         icon: Icons.calendar_month_rounded,
-                        label: 'Date',
+                        label: l10n.scheduleDate,
                         value: _formatDate(_selectedDate),
                         trailingIcon: Icons.calendar_today_rounded,
                         onTap: _isSaving ? null : _pickDate,
@@ -277,7 +281,7 @@ class _CreateScheduleEventSheetState extends State<CreateScheduleEventSheet> {
                       const SizedBox(height: 8),
                       _CompactActionRow(
                         icon: Icons.schedule_rounded,
-                        label: 'Time',
+                        label: l10n.scheduleTime,
                         value: _selectedTime.format(context),
                         trailingIcon: Icons.chevron_right_rounded,
                         onTap: _isSaving ? null : _pickTime,
@@ -285,33 +289,35 @@ class _CreateScheduleEventSheetState extends State<CreateScheduleEventSheet> {
                       const SizedBox(height: 8),
                       _CompactTextField(
                         icon: Icons.notes_rounded,
-                        label: 'Subtitle',
-                        hintText: 'Add subtitle',
+                        label: l10n.scheduleSubtitle,
+                        hintText: l10n.scheduleAddSubtitle,
                         controller: _subtitleController,
                       ),
                       const SizedBox(height: 8),
                       _CompactTextField(
                         icon: Icons.location_on_rounded,
-                        label: 'Location',
-                        hintText: 'Add location',
+                        label: l10n.scheduleLocation,
+                        hintText: l10n.scheduleAddLocation,
                         controller: _locationController,
                       ),
                       if (_type == ScheduleEventType.match) ...[
                         const SizedBox(height: 8),
                         _CompactTextField(
                           icon: Icons.emoji_events_rounded,
-                          label: 'Badge',
-                          hintText: 'Add badge',
+                          label: l10n.scheduleBadge,
+                          hintText: l10n.scheduleAddBadge,
                           controller: _badgeController,
                         ),
                       ],
                       const SizedBox(height: 8),
                       _CompactActionRow(
                         icon: Icons.local_fire_department_rounded,
-                        label: 'Fueling hints',
+                        label: l10n.scheduleFuelingHints,
                         value: _fuelingHintControllers.isEmpty
-                            ? 'Add hints'
-                            : '${_fuelingHintControllers.length} hint${_fuelingHintControllers.length == 1 ? '' : 's'}',
+                            ? l10n.scheduleAddHints
+                            : l10n.scheduleHintCount(
+                                _fuelingHintControllers.length,
+                              ),
                         trailingIcon: Icons.add_rounded,
                         onTap: _isSaving ? null : _addFuelingHint,
                       ),
@@ -356,8 +362,8 @@ class _CreateScheduleEventSheetState extends State<CreateScheduleEventSheet> {
                                   color: Colors.black,
                                 ),
                               )
-                            : const Text(
-                                'Save',
+                            : Text(
+                                l10n.save,
                                 style: TextStyle(fontWeight: FontWeight.w800),
                               ),
                       ),
@@ -395,14 +401,15 @@ class _FuelingHintRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Expanded(
           child: _CompactTextField(
             icon: Icons.timer_rounded,
-            label: 'Timing',
-            hintText: '2H before',
+            label: l10n.scheduleTiming,
+            hintText: l10n.scheduleTimingHint,
             controller: controllers.timing,
           ),
         ),
@@ -410,14 +417,14 @@ class _FuelingHintRow extends StatelessWidget {
         Expanded(
           child: _CompactTextField(
             icon: Icons.restaurant_rounded,
-            label: 'Hint',
-            hintText: 'Hydrate',
+            label: l10n.scheduleHint,
+            hintText: l10n.scheduleHydrate,
             controller: controllers.label,
           ),
         ),
         const SizedBox(width: 4),
         IconButton(
-          tooltip: 'Remove hint',
+          tooltip: l10n.scheduleRemoveHint,
           onPressed: onRemove,
           icon: const Icon(Icons.close_rounded),
         ),
@@ -439,9 +446,10 @@ class _EventTypeRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return _CompactShell(
       icon: Icons.event_note_rounded,
-      label: 'Event type',
+      label: l10n.scheduleEventType,
       child: DropdownButtonHideUnderline(
         child: DropdownButton<ScheduleEventType>(
           value: type,
@@ -461,12 +469,15 @@ class _EventTypeRow extends StatelessWidget {
             return ScheduleEventType.values.map((type) {
               return Align(
                 alignment: Alignment.centerRight,
-                child: Text(_labelFor(type)),
+                child: Text(_labelFor(l10n, type)),
               );
             }).toList();
           },
           items: ScheduleEventType.values.map((type) {
-            return DropdownMenuItem(value: type, child: Text(_labelFor(type)));
+            return DropdownMenuItem(
+              value: type,
+              child: Text(_labelFor(l10n, type)),
+            );
           }).toList(),
           onChanged: enabled
               ? (type) {
@@ -480,14 +491,14 @@ class _EventTypeRow extends StatelessWidget {
     );
   }
 
-  String _labelFor(ScheduleEventType type) {
+  String _labelFor(AppLocalizations l10n, ScheduleEventType type) {
     switch (type) {
       case ScheduleEventType.meal:
-        return 'Meal';
+        return l10n.scheduleMeals;
       case ScheduleEventType.training:
-        return 'Training';
+        return l10n.scheduleEventPractice;
       case ScheduleEventType.match:
-        return 'Match';
+        return l10n.scheduleEventGame;
     }
   }
 }

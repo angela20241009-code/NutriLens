@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nutrilens/features/schedule/schedule_view_filter.dart';
+import 'package:nutrilens/l10n/l10n_extensions.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
 class WeekDateSelector extends StatelessWidget {
@@ -81,8 +82,6 @@ class _WeekDayCell extends StatelessWidget {
   final bool hasSleep;
   final VoidCallback onTap;
 
-  static const _weekdayLabels = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -93,7 +92,7 @@ class _WeekDayCell extends StatelessWidget {
         child: Column(
           children: [
             Text(
-              _weekdayLabels[date.weekday - 1],
+              formatLocalizedWeekdayShort(context, date.weekday),
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w700,

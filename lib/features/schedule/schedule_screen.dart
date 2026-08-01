@@ -15,6 +15,7 @@ import 'package:nutrilens/features/schedule/widgets/todays_match_card.dart';
 import 'package:nutrilens/features/schedule/widgets/month_date_selector.dart';
 import 'package:nutrilens/features/schedule/widgets/week_date_selector.dart';
 import 'package:nutrilens/features/sleep/sleep_log_actions.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/services/date_key.dart';
 import 'package:nutrilens/services/meal_plan_serializer.dart';
@@ -195,18 +196,22 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
       final plan = _mealPlan;
       if (plan != null) {
-        final updatedDays = plan.days.map((day) {
-          if (!_isSameDay(day.date, _selectedDate)) {
-            return day;
-          }
+        final updatedDays = plan.days
+            .map((day) {
+              if (!_isSameDay(day.date, _selectedDate)) {
+                return day;
+              }
 
-          final meals = day.meals
-              .map((plannedMeal) {
-                return plannedMeal.slot == meal.slot ? regenerated : plannedMeal;
-              })
-              .toList(growable: false);
-          return MealPlanDay(date: day.date, meals: meals);
-        }).toList(growable: false);
+              final meals = day.meals
+                  .map((plannedMeal) {
+                    return plannedMeal.slot == meal.slot
+                        ? regenerated
+                        : plannedMeal;
+                  })
+                  .toList(growable: false);
+              return MealPlanDay(date: day.date, meals: meals);
+            })
+            .toList(growable: false);
 
         setState(() {
           _mealPlan = MealPlanWeek(
@@ -225,7 +230,13 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('New ${meal.slot.label.toLowerCase()} meal ready')),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(
+              context,
+            )!.scheduleNewMealReady(meal.slot.label.toLowerCase()),
+          ),
+        ),
       );
     } catch (error) {
       if (!mounted) {
@@ -233,7 +244,13 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       }
       setState(() => _regeneratingMealSlot = null);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not generate a new meal: $error')),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(
+              context,
+            )!.scheduleMealGenerationFailed('$error'),
+          ),
+        ),
       );
     }
   }
@@ -384,7 +401,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       context: context,
       profile: profile,
       dateKey: dateKey,
-      title: 'Log sleep',
+      title: AppLocalizations.of(context)!.scheduleLogSleep,
       initialSleepHours: _sleepHours > 0 ? _sleepHours : null,
     );
     if (saved && mounted) {
@@ -398,16 +415,18 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Delete event?'),
-          content: Text('Delete "${event.title}" from your schedule?'),
+          title: Text(AppLocalizations.of(context)!.scheduleDeleteEventTitle),
+          content: Text(
+            AppLocalizations.of(context)!.scheduleDeleteEventBody(event.title),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
+              child: Text(AppLocalizations.of(context)!.cancel),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Delete'),
+              child: Text(AppLocalizations.of(context)!.delete),
             ),
           ],
         );
@@ -442,7 +461,11 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to delete event.')),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.scheduleDeleteEventFailed,
+          ),
+        ),
       );
       return;
     }
@@ -453,11 +476,16 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Event deleted.')),
+      SnackBar(
+        content: Text(AppLocalizations.of(context)!.scheduleEventDeleted),
+      ),
     );
   }
 
-  Future<void> _selectDate(DateTime date, {bool stayInMonthView = false}) async {
+  Future<void> _selectDate(
+    DateTime date, {
+    bool stayInMonthView = false,
+  }) async {
     final nextDate = _dayKey(date);
     final changedDate = !_isSameDay(nextDate, _selectedDate);
 
@@ -552,9 +580,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   selectedDate: _selectedDate,
                   hasEventsOn: (date) =>
                       _eventsFor(scheduleEvents, date).isNotEmpty,
-                  hasLoggedMealsOn: (date) => _mealDateKeysInRange.contains(
-                    dateKeyFor(date, timezone),
-                  ),
+                  hasLoggedMealsOn: (date) =>
+                      _mealDateKeysInRange.contains(dateKeyFor(date, timezone)),
                   hasSleepOn: sleepModeEnabled
                       ? (date) => _sleepDateKeysInRange.contains(
                           dateKeyFor(date, timezone),
@@ -583,9 +610,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   showHeader: false,
                   hasEventsOn: (date) =>
                       _eventsFor(scheduleEvents, date).isNotEmpty,
-                  hasLoggedMealsOn: (date) => _mealDateKeysInRange.contains(
-                    dateKeyFor(date, timezone),
-                  ),
+                  hasLoggedMealsOn: (date) =>
+                      _mealDateKeysInRange.contains(dateKeyFor(date, timezone)),
                   hasSleepOn: sleepModeEnabled
                       ? (date) => _sleepDateKeysInRange.contains(
                           dateKeyFor(date, timezone),
@@ -600,7 +626,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               ] else if (snapshot.hasError) ...[
                 const SizedBox(height: 24),
                 Text(
-                  'Failed to load schedule.',
+                  AppLocalizations.of(context)!.scheduleLoadFailed,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ] else ...[
@@ -639,7 +665,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                     child: OutlinedButton.icon(
                       onPressed: () => _openSleepLogDialog(profile),
                       icon: const Icon(Icons.nightlight_round),
-                      label: const Text('Log sleep for this day'),
+                      label: Text(
+                        AppLocalizations.of(context)!.scheduleLogSleepForDay,
+                      ),
                     ),
                   ),
                 ],
@@ -685,10 +713,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   ) {
     final start = DateTime(date.year, date.month, 1);
     final end = DateTime(date.year, date.month + 1, 0);
-    return (
-      start: dateKeyFor(start, timezone),
-      end: dateKeyFor(end, timezone),
-    );
+    return (start: dateKeyFor(start, timezone), end: dateKeyFor(end, timezone));
   }
 
   List<UserScheduleEvent> _eventsFor(

@@ -288,7 +288,7 @@ void main() {
     expect(find.text('Meal Tracking'), findsNothing);
     expect(find.text('Sleep'), findsNothing);
     expect(find.text('Sleep check-in'), findsNothing);
-    expect(find.text("This week's sleep"), findsNothing);
+    expect(find.text('Weekly sleep'), findsNothing);
 
     final enabledRepository = InMemoryUserRepository();
     final enabledAccount = await enabledRepository.signInAnonymously(
@@ -311,7 +311,7 @@ void main() {
     expect(find.text('Meal Tracking'), findsNothing);
     expect(find.text('Sleep'), findsNothing);
     expect(find.text('Sleep check-in'), findsNothing);
-    expect(find.text("This week's sleep"), findsOneWidget);
+    expect(find.text('Weekly sleep'), findsOneWidget);
     expect(find.text('Log sleep'), findsOneWidget);
   });
 
@@ -619,10 +619,7 @@ void main() {
         child: UserScope(
           repository: repository,
           uid: account.uid,
-          child: MaterialApp(
-            theme: AppTheme.dark,
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
+          child: testMaterialApp(
             home: const Scaffold(body: ScheduleScreen(isActive: true)),
           ),
         ),
@@ -657,8 +654,7 @@ void main() {
     await tester.pumpWidget(
       TastyRecipeScope(
         client: tastyClient,
-        child: MaterialApp(
-          theme: AppTheme.dark,
+        child: testMaterialApp(
           home: const Scaffold(body: MealsScreen()),
         ),
       ),
@@ -695,8 +691,7 @@ void main() {
       UserScope(
         repository: repository,
         uid: account.uid,
-        child: MaterialApp(
-          theme: AppTheme.dark,
+        child: testMaterialApp(
           home: const Scaffold(body: ScheduleScreen()),
         ),
       ),
@@ -744,8 +739,7 @@ void main() {
       UserScope(
         repository: repository,
         uid: account.uid,
-        child: MaterialApp(
-          theme: AppTheme.dark,
+        child: testMaterialApp(
           home: const Scaffold(body: ScheduleScreen()),
         ),
       ),
@@ -857,8 +851,7 @@ void main() {
       UserScope(
         repository: repository,
         uid: account.uid,
-        child: MaterialApp(
-          theme: AppTheme.dark,
+        child: testMaterialApp(
           home: Scaffold(
             body: Builder(
               builder: (context) => FilledButton(
@@ -906,8 +899,7 @@ void main() {
       UserScope(
         repository: repository,
         uid: account.uid,
-        child: MaterialApp(
-          theme: AppTheme.dark,
+        child: testMaterialApp(
           home: const Scaffold(body: ScheduleScreen()),
         ),
       ),
@@ -989,15 +981,14 @@ void main() {
       UserScope(
         repository: repository,
         uid: account.uid,
-        child: MaterialApp(
-          theme: AppTheme.dark,
+        child: testMaterialApp(
           home: const Scaffold(body: ScheduleScreen()),
         ),
       ),
     );
     await tester.pumpAndSettle();
 
-    expect(find.text("Today's Match"), findsOneWidget);
+    expect(find.text("Today's match"), findsOneWidget);
     expect(find.text('Varsity Match vs Rivera'), findsWidgets);
     expect(find.text('Lincoln Courts · 4:00 PM'), findsOneWidget);
     expect(find.text('3H BEFORE Big Carbs'), findsOneWidget);
@@ -1020,7 +1011,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Recovery Stretch'), findsOneWidget);
-    expect(find.text("Today's Match"), findsNothing);
+    expect(find.text("Today's match"), findsNothing);
     expect(find.text('Varsity Match vs Rivera'), findsNothing);
   });
 
@@ -1043,8 +1034,7 @@ void main() {
       UserScope(
         repository: repository,
         uid: account.uid,
-        child: MaterialApp(
-          theme: AppTheme.dark,
+        child: testMaterialApp(
           home: const Scaffold(body: ScheduleScreen()),
         ),
       ),
@@ -1054,7 +1044,7 @@ void main() {
     await tester.tap(find.byIcon(Icons.add_rounded));
     await tester.pumpAndSettle();
 
-    expect(find.text('Create Schedule Event'), findsOneWidget);
+    expect(find.text('Create event'), findsOneWidget);
     expect(find.text('Event type'), findsOneWidget);
 
     await tester.ensureVisible(find.text('Save'));
@@ -1085,8 +1075,7 @@ void main() {
       UserScope(
         repository: repository,
         uid: account.uid,
-        child: MaterialApp(
-          theme: AppTheme.dark,
+        child: testMaterialApp(
           home: const Scaffold(body: ScheduleScreen()),
         ),
       ),
@@ -1150,8 +1139,7 @@ void main() {
       UserScope(
         repository: repository,
         uid: account.uid,
-        child: MaterialApp(
-          theme: AppTheme.dark,
+        child: testMaterialApp(
           home: const Scaffold(body: ScheduleScreen()),
         ),
       ),
@@ -1160,9 +1148,9 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.add_rounded));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Training'));
+    await tester.tap(find.byType(DropdownButton<ScheduleEventType>));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Match').last);
+    await tester.tap(find.text('Game').last);
     await tester.pumpAndSettle();
 
     await tester.enterText(
@@ -1182,7 +1170,7 @@ void main() {
     await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
 
-    expect(find.text("Today's Match"), findsOneWidget);
+    expect(find.text("Today's match"), findsOneWidget);
     expect(find.text('Championship Match'), findsWidgets);
     expect(find.text('REGIONAL FINAL'), findsOneWidget);
     expect(find.text('2H BEFORE Hydrate'), findsOneWidget);
@@ -1201,8 +1189,7 @@ void main() {
     await tester.pumpWidget(
       TastyRecipeScope(
         client: _FailingTastyRecipeClient(),
-        child: MaterialApp(
-          theme: AppTheme.dark,
+        child: testMaterialApp(
           home: const Scaffold(body: MealsScreen()),
         ),
       ),
@@ -1238,8 +1225,7 @@ void main() {
         child: UserScope(
           repository: repository,
           uid: account.uid,
-          child: MaterialApp(
-            theme: AppTheme.dark,
+          child: testMaterialApp(
             home: const Scaffold(body: ScheduleScreen()),
           ),
         ),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
+import 'package:nutrilens/l10n/l10n_extensions.dart';
 import 'package:nutrilens/models/user_profile.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
@@ -9,7 +11,8 @@ class ProgramBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final programName = _programName(profile);
+    final l10n = AppLocalizations.of(context)!;
+    final programName = _programName(l10n, profile);
     final badge = _badge(profile);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -59,23 +62,23 @@ class ProgramBanner extends StatelessWidget {
     );
   }
 
-  String _programName(UserProfile profile) {
+  String _programName(AppLocalizations l10n, UserProfile profile) {
     final teamProgramName = profile.teamProgramName?.trim();
     if (teamProgramName != null && teamProgramName.isNotEmpty) {
       return teamProgramName;
     }
 
     final schoolName = profile.schoolName?.trim();
-    final sportName = profile.primarySportName.trim();
+    final sportName = localizedSportName(l10n, profile.primarySportId);
     if (schoolName != null && schoolName.isNotEmpty && sportName.isNotEmpty) {
-      return '$schoolName $sportName Program';
+      return l10n.homeSchoolSportProgram(schoolName, sportName);
     }
 
     if (sportName.isNotEmpty) {
-      return '$sportName Nutrition Program';
+      return l10n.homeSportNutritionProgram(sportName);
     }
 
-    return 'Personal Nutrition Program';
+    return l10n.homePersonalNutritionProgram;
   }
 
   String? _badge(UserProfile profile) {

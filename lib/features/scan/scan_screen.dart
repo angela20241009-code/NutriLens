@@ -7,6 +7,7 @@ import 'package:nutrilens/features/meals/log_meal_sheet.dart';
 import 'package:nutrilens/features/scan/scan_previous_meals_sheet.dart';
 import 'package:nutrilens/features/scan/scan_result_sheet.dart';
 import 'package:nutrilens/features/scan/widgets/scan_action_tile.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/services/meal_analysis_client.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 import 'package:nutrilens/theme/theme_palette_scope.dart';
@@ -65,7 +66,7 @@ class _ScanScreenState extends State<ScanScreen> {
       if (saved == true) {
         setState(() => _selectedImage = null);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Meal saved to your log')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.scanMealSaved)),
         );
       }
     } on MealAnalysisException catch (error) {
@@ -80,7 +81,11 @@ class _ScanScreenState extends State<ScanScreen> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Unable to analyze meal photo: $error')),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.scanUnableAnalyze('$error'),
+          ),
+        ),
       );
     } finally {
       if (mounted) {
@@ -118,7 +123,11 @@ class _ScanScreenState extends State<ScanScreen> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Unable to pick image: $error')),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.scanUnablePickImage('$error'),
+          ),
+        ),
       );
     } finally {
       if (mounted) {
@@ -128,6 +137,7 @@ class _ScanScreenState extends State<ScanScreen> {
   }
 
   Future<void> _showSourcePicker() async {
+    final l10n = AppLocalizations.of(context)!;
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
       backgroundColor: AppColors.cardDark,
@@ -139,14 +149,14 @@ class _ScanScreenState extends State<ScanScreen> {
             children: [
               ListTile(
                 leading: const Icon(Icons.photo_camera_outlined),
-                title: const Text('Take photo'),
-                subtitle: const Text('Use your camera to scan a meal'),
+                title: Text(l10n.scanTakePhoto),
+                subtitle: Text(l10n.scanTakePhotoSubtitle),
                 onTap: () => Navigator.of(context).pop(ImageSource.camera),
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library_outlined),
-                title: const Text('Photo library'),
-                subtitle: const Text('Choose an existing picture'),
+                title: Text(l10n.scanPhotoLibrary),
+                subtitle: Text(l10n.scanPhotoLibrarySubtitle),
                 onTap: () => Navigator.of(context).pop(ImageSource.gallery),
               ),
               const SizedBox(height: 8),
@@ -165,6 +175,7 @@ class _ScanScreenState extends State<ScanScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final accent = ThemePaletteScope.primary(context);
 
     return SafeArea(
@@ -173,7 +184,7 @@ class _ScanScreenState extends State<ScanScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Scan meal', style: Theme.of(context).textTheme.headlineLarge),
+            Text(l10n.scanMeal, style: Theme.of(context).textTheme.headlineLarge),
             const SizedBox(height: 20),
             Expanded(
               child: GestureDetector(
@@ -198,9 +209,9 @@ class _ScanScreenState extends State<ScanScreen> {
                               color: accent,
                             ),
                             const SizedBox(height: 16),
-                            const Text(
-                              'Point at your food',
-                              style: TextStyle(
+                            Text(
+                              l10n.scanPointAtFood,
+                              style: const TextStyle(
                                 color: AppColors.textPrimary,
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,
@@ -208,7 +219,7 @@ class _ScanScreenState extends State<ScanScreen> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Tap to take a photo or choose from library',
+                              l10n.scanTapToCapture,
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: AppColors.textMuted.withValues(
@@ -248,9 +259,9 @@ class _ScanScreenState extends State<ScanScreen> {
                             children: [
                               CircularProgressIndicator(color: accent),
                               const SizedBox(height: 16),
-                              const Text(
-                                'Analyzing meal...',
-                                style: TextStyle(
+                              Text(
+                                l10n.scanAnalyzing,
+                                style: const TextStyle(
                                   color: AppColors.textPrimary,
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
@@ -268,7 +279,7 @@ class _ScanScreenState extends State<ScanScreen> {
             Row(
               children: [
                 ScanActionTile(
-                  label: 'Photo',
+                  label: l10n.scanPhoto,
                   icon: Icons.add_a_photo_outlined,
                   iconColor: AppColors.lime,
                   enabled: !_isBusy,
@@ -276,7 +287,7 @@ class _ScanScreenState extends State<ScanScreen> {
                 ),
                 const SizedBox(width: 10),
                 ScanActionTile(
-                  label: 'Manual',
+                  label: l10n.scanManual,
                   icon: Icons.edit_outlined,
                   iconColor: AppColors.orange,
                   enabled: !_isBusy,
@@ -284,7 +295,7 @@ class _ScanScreenState extends State<ScanScreen> {
                 ),
                 const SizedBox(width: 10),
                 ScanActionTile(
-                  label: 'Previous',
+                  label: l10n.scanPrevious,
                   icon: Icons.history_rounded,
                   iconColor: AppColors.textPrimary,
                   enabled: !_isBusy,
@@ -292,7 +303,9 @@ class _ScanScreenState extends State<ScanScreen> {
                     final logged = await ScanPreviousMealsSheet.open(context);
                     if (logged == true && mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Meal added to your log')),
+                        SnackBar(
+                          content: Text(l10n.scanMealAdded),
+                        ),
                       );
                     }
                   },

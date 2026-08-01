@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:timezone/timezone.dart' as tz;
 
@@ -84,6 +85,7 @@ class SleepAdvice {
 }
 
 SleepAdvice buildSleepAdvice({
+  required AppLocalizations l10n,
   required UserProfile profile,
   required double sleepHours,
   required int wakeTimeMinutes,
@@ -95,6 +97,7 @@ SleepAdvice buildSleepAdvice({
   final deficitMinutes = targetMinutes - loggedMinutes;
 
   final wakeRecommendation = _recommendedWakeTime(
+    l10n: l10n,
     profile: profile,
     fallbackWakeTimeMinutes: wakeTimeMinutes,
     referenceUtc: referenceUtc,
@@ -105,11 +108,15 @@ SleepAdvice buildSleepAdvice({
 
   if (deficitMinutes <= -30) {
     return SleepAdvice(
-      title: 'Recovery is ahead',
-      shortLine:
-          'You slept ${formatSleepHours(sleepHours)}, above your ${targetHours.toStringAsFixed(1)}h target.',
-      details:
-          'Keep bedtime near ${formatMinutesAsClock(bedtime)} and wake around ${formatMinutesAsClock(wakeRecommendation.wakeTimeMinutes)} to stay consistent.',
+      title: l10n.recoveryAhead,
+      shortLine: l10n.sleepAboveTarget(
+        formatSleepHours(sleepHours),
+        targetHours.toStringAsFixed(1),
+      ),
+      details: l10n.sleepConsistencyAdvice(
+        formatMinutesAsClock(bedtime),
+        formatMinutesAsClock(wakeRecommendation.wakeTimeMinutes),
+      ),
       recommendedBedtimeMinutes: bedtime,
       recommendedWakeTimeMinutes: wakeRecommendation.wakeTimeMinutes,
     );
@@ -117,11 +124,15 @@ SleepAdvice buildSleepAdvice({
 
   if (deficitMinutes <= 30) {
     return SleepAdvice(
-      title: 'On target',
-      shortLine:
-          'You slept ${formatSleepHours(sleepHours)}, matching your ${targetHours.toStringAsFixed(1)}h goal.',
-      details:
-          'Stay on rhythm with bedtime around ${formatMinutesAsClock(bedtime)} and wake around ${formatMinutesAsClock(wakeRecommendation.wakeTimeMinutes)}.',
+      title: l10n.onTarget,
+      shortLine: l10n.sleepMatchesTarget(
+        formatSleepHours(sleepHours),
+        targetHours.toStringAsFixed(1),
+      ),
+      details: l10n.sleepRhythmAdvice(
+        formatMinutesAsClock(bedtime),
+        formatMinutesAsClock(wakeRecommendation.wakeTimeMinutes),
+      ),
       recommendedBedtimeMinutes: bedtime,
       recommendedWakeTimeMinutes: wakeRecommendation.wakeTimeMinutes,
     );
@@ -132,11 +143,16 @@ SleepAdvice buildSleepAdvice({
       ? ''
       : ' ${wakeRecommendation.reason}';
   return SleepAdvice(
-    title: 'Sleep needs a boost',
-    shortLine:
-        'You are about ${deficitHours.toStringAsFixed(1)}h under your ${targetHours.toStringAsFixed(1)}h target.',
-    details:
-        'Tonight, aim for bedtime near ${formatMinutesAsClock(bedtime)} so you can wake at ${formatMinutesAsClock(wakeRecommendation.wakeTimeMinutes)} with better recovery.$eventNote',
+    title: l10n.sleepNeedsBoost,
+    shortLine: l10n.sleepBelowTarget(
+      deficitHours.toStringAsFixed(1),
+      targetHours.toStringAsFixed(1),
+    ),
+    details: l10n.sleepRecoveryAdvice(
+      formatMinutesAsClock(bedtime),
+      formatMinutesAsClock(wakeRecommendation.wakeTimeMinutes),
+      eventNote,
+    ),
     recommendedBedtimeMinutes: bedtime,
     recommendedWakeTimeMinutes: wakeRecommendation.wakeTimeMinutes,
   );
@@ -150,6 +166,7 @@ class _WakeRecommendation {
 }
 
 _WakeRecommendation _recommendedWakeTime({
+  required AppLocalizations l10n,
   required UserProfile profile,
   required int fallbackWakeTimeMinutes,
   required DateTime referenceUtc,
@@ -169,8 +186,10 @@ _WakeRecommendation _recommendedWakeTime({
 
   return _WakeRecommendation(
     wakeTimeMinutes: prepWake,
-    reason:
-        'An earlier wake is suggested before ${nextEvent.title} at ${formatMinutesAsClock(eventMinutes)}.',
+    reason: l10n.earlierWakeRecommendation(
+      nextEvent.title,
+      formatMinutesAsClock(eventMinutes),
+    ),
   );
 }
 

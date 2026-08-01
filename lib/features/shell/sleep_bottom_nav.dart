@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nutrilens/app/app_settings_scope.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/theme/theme_palette_scope.dart';
 
 class SleepBottomNav extends StatelessWidget {
@@ -21,6 +22,7 @@ class SleepBottomNav extends StatelessWidget {
     final labelSize = accessibility ? 13.0 : 12.0;
     final accent = ThemePaletteScope.secondary(context);
     final inactive = ThemePaletteScope.navInactive(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       height: 80 + bottomPadding,
@@ -41,7 +43,7 @@ class SleepBottomNav extends StatelessWidget {
           children: [
             _NavItem(
               icon: Icons.bedtime_rounded,
-              label: 'Sleep',
+              label: l10n.navSleep,
               selected: selectedIndex == 0,
               onTap: () => onTap(0),
               iconSize: iconSize,
@@ -52,7 +54,7 @@ class SleepBottomNav extends StatelessWidget {
             ),
             _NavItem(
               icon: Icons.edit_note_rounded,
-              label: 'Log',
+              label: l10n.navLog,
               selected: selectedIndex == 1,
               onTap: () => onTap(1),
               iconSize: iconSize,
@@ -63,7 +65,7 @@ class SleepBottomNav extends StatelessWidget {
             ),
             _NavItem(
               icon: Icons.person_rounded,
-              label: 'Profile',
+              label: l10n.navProfile,
               selected: selectedIndex == 2,
               onTap: () => onTap(2),
               iconSize: iconSize,

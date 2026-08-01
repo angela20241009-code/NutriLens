@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nutrilens/models/tasty_recipe.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/services/tasty_recipe_client.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
@@ -20,10 +21,7 @@ Future<void> showRecipeDetailSheet({
 }
 
 class _RecipeDetailSheet extends StatefulWidget {
-  const _RecipeDetailSheet({
-    required this.client,
-    required this.recipe,
-  });
+  const _RecipeDetailSheet({required this.client, required this.recipe});
 
   final TastyRecipeClient client;
   final TastyRecipe recipe;
@@ -44,6 +42,7 @@ class _RecipeDetailSheetState extends State<_RecipeDetailSheet> {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    final l10n = AppLocalizations.of(context)!;
 
     return SafeArea(
       child: Padding(
@@ -65,7 +64,7 @@ class _RecipeDetailSheetState extends State<_RecipeDetailSheet> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Unable to load recipe details',
+                      l10n.mealUnableToLoadRecipeDetails,
                       style: Theme.of(context).textTheme.titleMedium,
                       textAlign: TextAlign.center,
                     ),
@@ -84,7 +83,7 @@ class _RecipeDetailSheetState extends State<_RecipeDetailSheet> {
                           );
                         });
                       },
-                      child: const Text('Try again'),
+                      child: Text(l10n.tryAgain),
                     ),
                   ],
                 ),
@@ -100,116 +99,114 @@ class _RecipeDetailSheetState extends State<_RecipeDetailSheet> {
               child: ListView(
                 shrinkWrap: true,
                 children: [
-                    if (recipe.thumbnailUrl != null)
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
-                        child: AspectRatio(
-                          aspectRatio: 16 / 9,
-                          child: Image.network(
-                            recipe.thumbnailUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => Container(
-                              color: AppColors.lime.withValues(alpha: 0.08),
-                              child: const Icon(
-                                Icons.restaurant_rounded,
-                                color: AppColors.lime,
-                                size: 48,
-                              ),
+                  if (recipe.thumbnailUrl != null)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: AspectRatio(
+                        aspectRatio: 16 / 9,
+                        child: Image.network(
+                          recipe.thumbnailUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => Container(
+                            color: AppColors.lime.withValues(alpha: 0.08),
+                            child: const Icon(
+                              Icons.restaurant_rounded,
+                              color: AppColors.lime,
+                              size: 48,
                             ),
                           ),
                         ),
                       ),
+                    ),
+                  const SizedBox(height: 16),
+                  Text(
+                    recipe.name,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 8,
+                    children: [
+                      if (recipe.totalTimeMinutes != null)
+                        _MetaChip(
+                          icon: Icons.schedule_rounded,
+                          label: l10n.mealsMinutes(recipe.totalTimeMinutes!),
+                        ),
+                      if (recipe.numServings != null)
+                        _MetaChip(
+                          icon: Icons.people_outline_rounded,
+                          label: l10n.mealsServings(recipe.numServings!),
+                        ),
+                    ],
+                  ),
+                  if (recipe.description?.trim().isNotEmpty == true) ...[
                     const SizedBox(height: 16),
                     Text(
-                      recipe.name,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                      recipe.description!.trim(),
+                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 8,
-                      children: [
-                        if (recipe.totalTimeMinutes != null)
-                          _MetaChip(
-                            icon: Icons.schedule_rounded,
-                            label: '${recipe.totalTimeMinutes} min',
-                          ),
-                        if (recipe.numServings != null)
-                          _MetaChip(
-                            icon: Icons.people_outline_rounded,
-                            label: '${recipe.numServings} servings',
-                          ),
-                      ],
-                    ),
-                    if (recipe.description?.trim().isNotEmpty == true) ...[
-                      const SizedBox(height: 16),
-                      Text(
-                        recipe.description!.trim(),
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ],
-                    if (detail.ingredients.isNotEmpty) ...[
-                      const SizedBox(height: 24),
-                      Text(
-                        'Ingredients',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 10),
-                      for (final ingredient in detail.ingredients)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('•  '),
-                              Expanded(child: Text(ingredient)),
-                            ],
-                          ),
-                        ),
-                    ],
-                    if (detail.instructions.isNotEmpty) ...[
-                      const SizedBox(height: 24),
-                      Text(
-                        'Instructions',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 10),
-                      for (var i = 0; i < detail.instructions.length; i++)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                width: 24,
-                                height: 24,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: AppColors.lime.withValues(alpha: 0.15),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Text(
-                                  '${i + 1}',
-                                  style: const TextStyle(
-                                    color: AppColors.lime,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(detail.instructions[i]),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
                   ],
-                ),
-              );
+                  if (detail.ingredients.isNotEmpty) ...[
+                    const SizedBox(height: 24),
+                    Text(
+                      l10n.mealsIngredients,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 10),
+                    for (final ingredient in detail.ingredients)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('•  '),
+                            Expanded(child: Text(ingredient)),
+                          ],
+                        ),
+                      ),
+                  ],
+                  if (detail.instructions.isNotEmpty) ...[
+                    const SizedBox(height: 24),
+                    Text(
+                      l10n.mealsInstructions,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 10),
+                    for (var i = 0; i < detail.instructions.length; i++)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 24,
+                              height: 24,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: AppColors.lime.withValues(alpha: 0.15),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Text(
+                                '${i + 1}',
+                                style: const TextStyle(
+                                  color: AppColors.lime,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(child: Text(detail.instructions[i])),
+                          ],
+                        ),
+                      ),
+                  ],
+                ],
+              ),
+            );
           },
         ),
       ),

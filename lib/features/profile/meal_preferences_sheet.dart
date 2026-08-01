@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nutrilens/app/meal_plan_refresh_scope.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/features/profile/meal_preferences_form.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/models/user_profile.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
@@ -53,9 +54,9 @@ class _MealPreferencesSheetState extends State<MealPreferencesSheet> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _profileFuture ??= UserScope.of(context).repository.getProfile(
-      UserScope.of(context).uid,
-    );
+    _profileFuture ??= UserScope.of(
+      context,
+    ).repository.getProfile(UserScope.of(context).uid);
   }
 
   void _applyProfile(UserProfile profile) {
@@ -93,17 +94,19 @@ class _MealPreferencesSheetState extends State<MealPreferencesSheet> {
     try {
       final updated = _profile!.copyWith(dietaryProfile: dietaryProfile);
       await scope.repository.saveProfile(updated);
-      MealPlanRefreshScope.maybeOf(context)?.requestRefresh();
       if (!mounted) {
         return;
       }
+      MealPlanRefreshScope.maybeOf(context)?.requestRefresh();
       Navigator.of(context).pop(true);
     } catch (error) {
       if (!mounted) {
         return;
       }
       setState(() {
-        _error = 'Unable to save preferences: $error';
+        _error = AppLocalizations.of(
+          context,
+        )!.unableToSavePreferences('$error');
         _saving = false;
       });
     }
@@ -120,6 +123,7 @@ class _MealPreferencesSheetState extends State<MealPreferencesSheet> {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    final l10n = AppLocalizations.of(context)!;
 
     return SafeArea(
       top: false,
@@ -150,7 +154,7 @@ class _MealPreferencesSheetState extends State<MealPreferencesSheet> {
             final profileError =
                 !isLoadingProfile &&
                     (snapshot.hasError || snapshot.data == null)
-                ? 'Unable to load your profile.'
+                ? l10n.unableToLoadProfileShort
                 : null;
 
             return SingleChildScrollView(
@@ -170,12 +174,12 @@ class _MealPreferencesSheetState extends State<MealPreferencesSheet> {
                   ),
                   const SizedBox(height: 20),
                   Text(
-                    'Meal preferences',
+                    l10n.authMealPreferences,
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Pick food styles and allergies so we can personalize your meal plan.',
+                    l10n.mealPreferencesDescription,
                     style: TextStyle(
                       color: AppColors.textMuted.withValues(alpha: 0.72),
                     ),
@@ -199,7 +203,8 @@ class _MealPreferencesSheetState extends State<MealPreferencesSheet> {
                     onOthersSelectedChanged: (selected) {
                       setState(() => _othersSelected = selected);
                     },
-                    enabled: !isLoadingProfile && profileError == null && !_saving,
+                    enabled:
+                        !isLoadingProfile && profileError == null && !_saving,
                     useLimeBorders: true,
                   ),
                   if (profileError != null || _error != null) ...[
@@ -229,7 +234,7 @@ class _MealPreferencesSheetState extends State<MealPreferencesSheet> {
                               color: AppColors.onLime,
                             ),
                           )
-                        : const Text('Save & refresh meal plan'),
+                        : Text(l10n.saveAndRefreshMealPlan),
                   ),
                 ],
               ),

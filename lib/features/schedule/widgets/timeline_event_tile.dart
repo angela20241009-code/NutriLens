@@ -47,7 +47,7 @@ class TimelineEventTile extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.only(top: 18),
                   child: Text(
-                    _formatTime(event.startAt),
+                    _formatTime(context, event.startAt),
                     style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -133,12 +133,10 @@ class TimelineEventTile extends StatelessWidget {
     );
   }
 
-  String _formatTime(DateTime time) {
+  String _formatTime(BuildContext context, DateTime time) {
     final local = time.toLocal();
-    final hour = local.hour;
-    final minute = local.minute;
-    final period = hour >= 12 ? 'PM' : 'AM';
-    final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
-    return '$displayHour:${minute.toString().padLeft(2, '0')} $period';
+    return MaterialLocalizations.of(
+      context,
+    ).formatTimeOfDay(TimeOfDay.fromDateTime(local));
   }
 }

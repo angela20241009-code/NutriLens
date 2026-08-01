@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:nutrilens/features/home/home_dashboard_data.dart';
 import 'package:nutrilens/features/sleep/sleep_logging.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
+import 'package:nutrilens/l10n/l10n_extensions.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
 class WeeklySleepSummaryCard extends StatelessWidget {
@@ -15,10 +17,9 @@ class WeeklySleepSummaryCard extends StatelessWidget {
   final double targetHours;
   final VoidCallback onLogSleepTap;
 
-  static const _weekdayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final loggedDays = days.where((day) => day.sleepHours > 0).length;
     final averageHours = loggedDays == 0
         ? 0.0
@@ -50,15 +51,15 @@ class WeeklySleepSummaryCard extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Text(
-                'This week\'s sleep',
+                l10n.homeWeeklySleep,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const Spacer(),
               TextButton(
                 onPressed: onLogSleepTap,
-                child: const Text(
-                  'Log sleep',
-                  style: TextStyle(
+                child: Text(
+                  l10n.logSleep,
+                  style: const TextStyle(
                     color: AppColors.sleepAccent,
                     fontWeight: FontWeight.w700,
                   ),
@@ -69,8 +70,11 @@ class WeeklySleepSummaryCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             loggedDays == 0
-                ? 'No sleep logged yet this week.'
-                : '${formatSleepHours(averageHours)} avg • ${loggedDays} of 7 days logged',
+                ? l10n.homeNoSleepLoggedWeek
+                : l10n.homeSleepWeekAvg(
+                    formatSleepHours(averageHours),
+                    loggedDays,
+                  ),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: AppColors.textMuted,
             ),
@@ -84,7 +88,10 @@ class WeeklySleepSummaryCard extends StatelessWidget {
                 for (var i = 0; i < days.length; i++)
                   Expanded(
                     child: _SleepBar(
-                      label: _weekdayLabels[i],
+                      label: formatLocalizedWeekdayShort(
+                        context,
+                        days[i].date.weekday,
+                      ),
                       sleepHours: days[i].sleepHours,
                       maxHours: maxBarHours,
                       targetHours: targetHours,
@@ -97,11 +104,11 @@ class WeeklySleepSummaryCard extends StatelessWidget {
           const SizedBox(height: 10),
           Row(
             children: [
-              _LegendSwatch(color: AppColors.sleepAccent, label: 'Logged'),
+              _LegendSwatch(color: AppColors.sleepAccent, label: l10n.homeLogged),
               const SizedBox(width: 16),
               _LegendSwatch(
                 color: AppColors.sleepAccent.withValues(alpha: 0.25),
-                label: 'Target ${targetHours.toStringAsFixed(1)}h',
+                label: l10n.homeTargetHours(targetHours.toStringAsFixed(1)),
                 dashed: true,
               ),
             ],

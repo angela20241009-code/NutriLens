@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nutrilens/features/schedule/schedule_view_filter.dart';
+import 'package:nutrilens/l10n/l10n_extensions.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
 class MonthDateSelector extends StatelessWidget {
@@ -24,18 +25,14 @@ class MonthDateSelector extends StatelessWidget {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
-  String _monthName(int month) {
-    const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
-    ];
-    return months[month - 1];
-  }
-
   @override
   Widget build(BuildContext context) {
     final firstDayOfMonth = DateTime(selectedDate.year, selectedDate.month, 1);
-    final lastDayOfMonth = DateTime(selectedDate.year, selectedDate.month + 1, 0);
+    final lastDayOfMonth = DateTime(
+      selectedDate.year,
+      selectedDate.month + 1,
+      0,
+    );
 
     // weekday is 1-7 (Mon-Sun).
     int daysBefore = firstDayOfMonth.weekday - 1;
@@ -53,7 +50,7 @@ class MonthDateSelector extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '${_monthName(selectedDate.month)} ${selectedDate.year}',
+                '${formatLocalizedMonth(context, selectedDate.month)} ${selectedDate.year}',
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
@@ -87,21 +84,27 @@ class MonthDateSelector extends StatelessWidget {
         ],
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
-              .map((day) => Expanded(
-                    child: Center(
-                      child: Text(
-                        day,
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textMuted,
-                          letterSpacing: 1,
+          children:
+              List.generate(
+                    7,
+                    (index) => firstDayOfMonth.add(Duration(days: index)),
+                  )
+                  .map(
+                    (date) => Expanded(
+                      child: Center(
+                        child: Text(
+                          formatLocalizedWeekdayShort(context, date.weekday),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textMuted,
+                            letterSpacing: 1,
+                          ),
                         ),
                       ),
                     ),
-                  ))
-              .toList(),
+                  )
+                  .toList(),
         ),
         const SizedBox(height: 12),
         GridView.builder(
@@ -123,9 +126,7 @@ class MonthDateSelector extends StatelessWidget {
             final hasSleep = hasSleepOn?.call(date) ?? false;
 
             return GestureDetector(
-              key: Key(
-                'calendar_date_${date.year}_${date.month}_${date.day}',
-              ),
+              key: Key('calendar_date_${date.year}_${date.month}_${date.day}'),
               onTap: () => onDateSelected(date),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
@@ -133,12 +134,12 @@ class MonthDateSelector extends StatelessWidget {
                   color: selected
                       ? AppColors.lime
                       : isCurrentMonth
-                          ? AppColors.cardDark
-                          : Colors.transparent,
+                      ? AppColors.cardDark
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
                   border: !selected && isCurrentMonth
-                    ? Border.all(color: AppColors.cardDark, width: 1)
-                    : null,
+                      ? Border.all(color: AppColors.cardDark, width: 1)
+                      : null,
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -151,8 +152,8 @@ class MonthDateSelector extends StatelessWidget {
                         color: selected
                             ? AppColors.onLime
                             : isCurrentMonth
-                                ? AppColors.textPrimary
-                                : AppColors.textMuted.withValues(alpha: 0.5),
+                            ? AppColors.textPrimary
+                            : AppColors.textMuted.withValues(alpha: 0.5),
                       ),
                     ),
                     if (hasEvents || hasLoggedMeals || hasSleep) ...[
@@ -211,10 +212,7 @@ class _CalendarDot extends StatelessWidget {
 }
 
 class _MonthNavButton extends StatelessWidget {
-  const _MonthNavButton({
-    required this.icon,
-    required this.onTap,
-  });
+  const _MonthNavButton({required this.icon, required this.onTap});
 
   final IconData icon;
   final VoidCallback onTap;
@@ -229,11 +227,7 @@ class _MonthNavButton extends StatelessWidget {
           color: AppColors.cardDark,
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(
-          icon,
-          color: AppColors.textPrimary,
-          size: 20,
-        ),
+        child: Icon(icon, color: AppColors.textPrimary, size: 20),
       ),
     );
   }

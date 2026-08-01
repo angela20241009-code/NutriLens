@@ -81,9 +81,10 @@ class _LinkEmailDialogState extends State<_LinkEmailDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
       backgroundColor: AppColors.cardDark,
-      title: const Text('Create account'),
+      title: Text(l10n.createAccount),
       content: Form(
         key: _formKey,
         child: Column(
@@ -92,13 +93,13 @@ class _LinkEmailDialogState extends State<_LinkEmailDialog> {
             TextFormField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(labelText: 'Email'),
+              decoration: InputDecoration(labelText: l10n.email),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Enter an email';
+                  return l10n.authValidationEmailRequired;
                 }
                 if (!value.contains('@')) {
-                  return 'Enter a valid email';
+                  return l10n.authValidationEmailInvalid;
                 }
                 return null;
               },
@@ -107,10 +108,10 @@ class _LinkEmailDialogState extends State<_LinkEmailDialog> {
             TextFormField(
               controller: _passwordController,
               obscureText: true,
-              decoration: const InputDecoration(labelText: 'Password'),
+              decoration: InputDecoration(labelText: l10n.authPassword),
               validator: (value) {
                 if (value == null || value.trim().length < 6) {
-                  return 'Password must be at least 6 characters';
+                  return l10n.authValidationPasswordMin;
                 }
                 return null;
               },
@@ -122,9 +123,9 @@ class _LinkEmailDialogState extends State<_LinkEmailDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
-        FilledButton(onPressed: _submit, child: const Text('Create')),
+        FilledButton(onPressed: _submit, child: Text(l10n.authCreate)),
       ],
     );
   }

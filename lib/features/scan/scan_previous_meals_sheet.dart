@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nutrilens/app/meal_log_refresh_scope.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/features/schedule/schedule_view_filter.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/models/meal.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
@@ -73,7 +74,7 @@ class _ScanPreviousMealsSheetState extends State<ScanPreviousMealsSheet> {
     }
     if (profile == null) {
       setState(() {
-        _error = 'Unable to load your profile.';
+        _error = AppLocalizations.of(context)!.unableToLoadProfileShort;
         _loggingMealId = null;
       });
       return;
@@ -103,7 +104,7 @@ class _ScanPreviousMealsSheetState extends State<ScanPreviousMealsSheet> {
         return;
       }
       setState(() {
-        _error = 'Unable to log meal: $error';
+        _error = AppLocalizations.of(context)!.mealUnableToLog('$error');
         _loggingMealId = null;
       });
     }
@@ -111,6 +112,7 @@ class _ScanPreviousMealsSheetState extends State<ScanPreviousMealsSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final maxSheetHeight = MediaQuery.sizeOf(context).height * 0.75;
 
     return SafeArea(
@@ -123,13 +125,12 @@ class _ScanPreviousMealsSheetState extends State<ScanPreviousMealsSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
             Text(
-              'Previous meals',
+              l10n.scanPreviousMeals,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 8),
             Text(
-              'Tap a meal to log it again. Showing up to '
-              '$maxPreviousMeals recent meals.',
+              l10n.scanPreviousMealsSubtitle(maxPreviousMeals),
               style: TextStyle(
                 color: AppColors.textMuted.withValues(alpha: 0.72),
               ),
@@ -143,10 +144,10 @@ class _ScanPreviousMealsSheetState extends State<ScanPreviousMealsSheet> {
             ],
             const SizedBox(height: 16),
             if (widget.meals.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
                 child: Text(
-                  'No meals logged yet.',
+                  l10n.scanNoMealsLogged,
                   textAlign: TextAlign.center,
                 ),
               )
@@ -167,8 +168,10 @@ class _ScanPreviousMealsSheetState extends State<ScanPreviousMealsSheet> {
                     onTap: () => _quickAddMeal(meal),
                     title: Text(meal.name),
                     subtitle: Text(
-                      '${meal.nutrition.caloriesKcal} kcal · '
-                      '${meal.nutrition.proteinG}g protein',
+                      l10n.scanMealListSubtitle(
+                        '${meal.nutrition.caloriesKcal}',
+                        '${meal.nutrition.proteinG}',
+                      ),
                     ),
                     trailing: isLogging
                         ? const SizedBox.square(

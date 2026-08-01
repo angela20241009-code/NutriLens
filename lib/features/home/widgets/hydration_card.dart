@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
 class HydrationCard extends StatefulWidget {
@@ -51,6 +52,7 @@ class _HydrationCardState extends State<HydrationCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final targetLiters = widget.targetLiters <= 0 ? 1.0 : widget.targetLiters;
     final displayLiters = _sliderValue;
     final remaining = (targetLiters - displayLiters).clamp(
@@ -91,14 +93,14 @@ class _HydrationCardState extends State<HydrationCard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Hydration reminder',
-                      style: TextStyle(fontSize: 13, color: Colors.white70),
+                    Text(
+                      l10n.homeHydrationReminder,
+                      style: const TextStyle(fontSize: 13, color: Colors.white70),
                     ),
                     Text(
                       goalMet
-                          ? 'Great job — goal reached!'
-                          : 'Drink ${_formatLiters(remaining)}L more today',
+                          ? l10n.homeHydrationGoalReached
+                          : l10n.homeHydrationDrinkMore(_formatLiters(remaining)),
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
@@ -107,7 +109,10 @@ class _HydrationCardState extends State<HydrationCard> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${_formatLiters(displayLiters)}L of ${_formatLiters(targetLiters)}L logged',
+                      l10n.homeHydrationLoggedOf(
+                        _formatLiters(displayLiters),
+                        _formatLiters(targetLiters),
+                      ),
                       style: const TextStyle(
                         fontSize: 13,
                         color: Colors.white70,

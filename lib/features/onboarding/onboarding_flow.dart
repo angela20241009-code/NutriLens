@@ -5,29 +5,30 @@ import 'package:nutrilens/features/profile/meal_preferences_form.dart';
 import 'package:nutrilens/features/profile/widgets/profile_text_field.dart';
 import 'package:nutrilens/features/shell/app_shell.dart';
 import 'package:nutrilens/l10n/app_localizations.dart';
+import 'package:nutrilens/l10n/l10n_extensions.dart';
 import 'package:nutrilens/models/daily_targets.dart';
 import 'package:nutrilens/models/nutrition_settings.dart';
 import 'package:nutrilens/models/user_profile.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
-const _sports = <({String id, String name})>[
-  (id: 'tennis', name: 'Tennis'),
-  (id: 'basketball', name: 'Basketball'),
-  (id: 'soccer', name: 'Soccer'),
-  (id: 'american_football', name: 'American Football'),
-  (id: 'baseball', name: 'Baseball'),
-  (id: 'softball', name: 'Softball'),
-  (id: 'volleyball', name: 'Volleyball'),
-  (id: 'swimming', name: 'Swimming'),
-  (id: 'track_and_field', name: 'Track & Field'),
-  (id: 'cross_country', name: 'Cross Country'),
-  (id: 'wrestling', name: 'Wrestling'),
-  (id: 'lacrosse', name: 'Lacrosse'),
-  (id: 'hockey', name: 'Hockey'),
-  (id: 'golf', name: 'Golf'),
-  (id: 'gymnastics', name: 'Gymnastics'),
-  (id: 'cycling', name: 'Cycling'),
-  (id: 'other', name: 'Other'),
+const _sports = <({String id})>[
+  (id: 'tennis'),
+  (id: 'basketball'),
+  (id: 'soccer'),
+  (id: 'american_football'),
+  (id: 'baseball'),
+  (id: 'softball'),
+  (id: 'volleyball'),
+  (id: 'swimming'),
+  (id: 'track_and_field'),
+  (id: 'cross_country'),
+  (id: 'wrestling'),
+  (id: 'lacrosse'),
+  (id: 'hockey'),
+  (id: 'golf'),
+  (id: 'gymnastics'),
+  (id: 'cycling'),
+  (id: 'other'),
 ];
 
 class _SportTargets {
@@ -361,13 +362,13 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     if (_playsSport == null || !_hasSelectedSportProfile) return;
 
     final scope = UserScope.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final uid = scope.uid;
     final now = DateTime.now().toUtc();
     final profileSportId = _playsSport! ? (_selectedSportId ?? '') : '';
     final profileSportName = _playsSport! ? (_selectedSportName ?? '') : '';
-    final targets =
-        _sportTargets[_nutritionSportId] ?? _sportTargets['other']!;
-    final sleepRecommendation = _sleepRecommendation;
+    final targets = _sportTargets[_nutritionSportId] ?? _sportTargets['other']!;
+    final sleepRecommendation = _sleepRecommendation(l10n);
 
     final graduationText = _graduationController.text.trim();
     final graduationYear = graduationText.isEmpty
@@ -398,9 +399,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
             otherStyleText: _otherStyleController.text,
             othersSelected: _othersSelected,
           ),
-          nutritionSettings: NutritionSettings(
-            mealsPerDay: _mealsPerDay,
-          ),
+          nutritionSettings: NutritionSettings(mealsPerDay: _mealsPerDay),
           dailyTargets: DailyTargets(
             caloriesKcal: int.parse(_caloriesController.text.trim()),
             proteinG: int.parse(_proteinController.text.trim()),
@@ -441,31 +440,31 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     foregroundColor: AppColors.onLime,
   );
 
-  _SleepRecommendation get _sleepRecommendation {
+  _SleepRecommendation _sleepRecommendation(AppLocalizations l10n) {
     final reasons = <String>[];
     var moderateSignals = 0;
 
     if (_wakeTiredAnswer == 'Often') {
-      reasons.add('You often wake up tired.');
+      reasons.add(l10n.onboardingSleepReasonWakeTired);
     } else if (_wakeTiredAnswer == 'Sometimes') {
       moderateSignals++;
     }
 
     if (_bedtimeConsistencyAnswer == 'Often') {
-      reasons.add('Your bedtime changes a lot.');
+      reasons.add(l10n.onboardingSleepReasonBedtimeChanges);
     } else if (_bedtimeConsistencyAnswer == 'Sometimes') {
       moderateSignals++;
     }
 
     if (_sleepReminderAnswer == 'Yes') {
-      reasons.add('A reminder could help you wind down.');
+      reasons.add(l10n.onboardingSleepReasonReminder);
     } else if (_sleepReminderAnswer == 'Maybe') {
       moderateSignals++;
     }
 
     final recommended = reasons.isNotEmpty || moderateSignals >= 2;
     if (recommended && reasons.isEmpty) {
-      reasons.add('Sleep Mode can help you build a steadier routine.');
+      reasons.add(l10n.onboardingSleepReasonSteadierRoutine);
     }
 
     return _SleepRecommendation(recommended: recommended, reasons: reasons);
@@ -503,6 +502,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return GestureDetector(
       onTap: _dismissKeyboard,
       behavior: HitTestBehavior.translucent,
@@ -510,201 +511,201 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         backgroundColor: AppColors.background,
         body: SafeArea(
           child: PageView(
-          controller: _pageController,
-          physics: const NeverScrollableScrollPhysics(),
-          onPageChanged: (page) => setState(() => _currentPage = page),
-          children: [
-            _WelcomeStep(
-              onGetStarted: () => _goToPage(1),
-              primaryButtonStyle: _primaryButtonStyle,
-            ),
-            _OnboardingStepShell(
-              currentStep: 2,
-              totalSteps: _totalSteps,
-              showProgress: true,
-              showBack: true,
-              onBack: _goBack,
-              child: _NameStep(
-                formKey: _nameFormKey,
-                nameController: _nameController,
-                onContinue: () {
-                  if (_nameFormKey.currentState!.validate()) {
-                    _goToPage(2);
-                  }
-                },
+            controller: _pageController,
+            physics: const NeverScrollableScrollPhysics(),
+            onPageChanged: (page) => setState(() => _currentPage = page),
+            children: [
+              _WelcomeStep(
+                onGetStarted: () => _goToPage(1),
                 primaryButtonStyle: _primaryButtonStyle,
               ),
-            ),
-            _OnboardingStepShell(
-              currentStep: 3,
-              totalSteps: _totalSteps,
-              showProgress: true,
-              showBack: true,
-              onBack: _goBack,
-              child: _SportStep(
-                formKey: _sportFormKey,
-                playsSport: _playsSport,
-                selectedSportId: _selectedSportId,
-                otherSportController: _otherSportController,
-                onPlaysSportChanged: (playsSport) {
-                  setState(() {
-                    _playsSport = playsSport;
-                    if (!playsSport) {
-                      _selectedSportId = null;
-                      _selectedSportName = null;
-                      _otherSportController.clear();
+              _OnboardingStepShell(
+                currentStep: 2,
+                totalSteps: _totalSteps,
+                showProgress: true,
+                showBack: true,
+                onBack: _goBack,
+                child: _NameStep(
+                  formKey: _nameFormKey,
+                  nameController: _nameController,
+                  onContinue: () {
+                    if (_nameFormKey.currentState!.validate()) {
+                      _goToPage(2);
                     }
-                  });
-                },
-                onSportSelected: (id, name) {
-                  setState(() {
-                    _selectedSportId = id;
-                    if (id == 'other') {
-                      _selectedSportName = null;
-                    } else {
-                      _selectedSportName = name;
-                      _otherSportController.clear();
-                    }
-                  });
-                },
-                onContinue: () {
-                  if (_playsSport == null) {
-                    return;
-                  }
-                  if (!_playsSport!) {
-                    _applySportDefaults('none');
-                    _goToPage(3);
-                    return;
-                  }
-                  if (_selectedSportId == null) {
-                    return;
-                  }
-                  if (_selectedSportId == 'other') {
-                    if (!_sportFormKey.currentState!.validate()) {
+                  },
+                  primaryButtonStyle: _primaryButtonStyle,
+                ),
+              ),
+              _OnboardingStepShell(
+                currentStep: 3,
+                totalSteps: _totalSteps,
+                showProgress: true,
+                showBack: true,
+                onBack: _goBack,
+                child: _SportStep(
+                  formKey: _sportFormKey,
+                  playsSport: _playsSport,
+                  selectedSportId: _selectedSportId,
+                  otherSportController: _otherSportController,
+                  onPlaysSportChanged: (playsSport) {
+                    setState(() {
+                      _playsSport = playsSport;
+                      if (!playsSport) {
+                        _selectedSportId = null;
+                        _selectedSportName = null;
+                        _otherSportController.clear();
+                      }
+                    });
+                  },
+                  onSportSelected: (id, name) {
+                    setState(() {
+                      _selectedSportId = id;
+                      if (id == 'other') {
+                        _selectedSportName = null;
+                      } else {
+                        _selectedSportName = name;
+                        _otherSportController.clear();
+                      }
+                    });
+                  },
+                  onContinue: () {
+                    if (_playsSport == null) {
                       return;
                     }
-                    _selectedSportName = _otherSportController.text.trim();
-                  }
-                  _applySportDefaults(_selectedSportId!);
-                  _goToPage(3);
-                },
-                primaryButtonStyle: _primaryButtonStyle,
-              ),
-            ),
-            _OnboardingStepShell(
-              currentStep: 4,
-              totalSteps: _totalSteps,
-              showProgress: true,
-              showBack: true,
-              onBack: _goBack,
-              child: _SchoolStep(
-                formKey: _schoolFormKey,
-                schoolController: _schoolController,
-                graduationController: _graduationController,
-                onContinue: () {
-                  if (_schoolFormKey.currentState!.validate()) {
-                    _goToPage(4);
-                  }
-                },
-                primaryButtonStyle: _primaryButtonStyle,
-              ),
-            ),
-            _OnboardingStepShell(
-              currentStep: 5,
-              totalSteps: _totalSteps,
-              showProgress: true,
-              showBack: true,
-              onBack: _goBack,
-              child: _MealPreferencesStep(
-                formKey: _mealPrefsFormKey,
-                selectedStyles: _selectedStyles,
-                mealsPerDay: _mealsPerDay,
-                onMealsPerDayChanged: (value) {
-                  setState(() => _mealsPerDay = value);
-                },
-                onStyleToggled: (style) {
-                  setState(() {
-                    if (_selectedStyles.contains(style)) {
-                      _selectedStyles.remove(style);
-                    } else {
-                      _selectedStyles.add(style);
+                    if (!_playsSport!) {
+                      _applySportDefaults('none');
+                      _goToPage(3);
+                      return;
                     }
-                  });
-                },
-                allergensController: _allergensController,
-                restrictionsController: _restrictionsController,
-                otherStyleController: _otherStyleController,
-                othersSelected: _othersSelected,
-                onOthersSelectedChanged: (selected) {
-                  setState(() => _othersSelected = selected);
-                },
-                onContinue: _continueFromMealPrefsStep,
-                primaryButtonStyle: _primaryButtonStyle,
+                    if (_selectedSportId == null) {
+                      return;
+                    }
+                    if (_selectedSportId == 'other') {
+                      if (!_sportFormKey.currentState!.validate()) {
+                        return;
+                      }
+                      _selectedSportName = _otherSportController.text.trim();
+                    }
+                    _applySportDefaults(_selectedSportId!);
+                    _goToPage(3);
+                  },
+                  primaryButtonStyle: _primaryButtonStyle,
+                ),
               ),
-            ),
-            _OnboardingStepShell(
-              currentStep: 6,
-              totalSteps: _totalSteps,
-              showProgress: true,
-              showBack: true,
-              onBack: _goBack,
-              child: _SleepModeStep(
-                wakeTiredAnswer: _wakeTiredAnswer,
-                bedtimeConsistencyAnswer: _bedtimeConsistencyAnswer,
-                sleepReminderAnswer: _sleepReminderAnswer,
-                recommendation: _sleepRecommendation,
-                questionsComplete: _sleepQuestionsComplete,
-                onWakeTiredChanged: (value) {
-                  setState(() => _wakeTiredAnswer = value);
-                },
-                onBedtimeConsistencyChanged: (value) {
-                  setState(() => _bedtimeConsistencyAnswer = value);
-                },
-                onSleepReminderChanged: (value) {
-                  setState(() => _sleepReminderAnswer = value);
-                },
-                onUseSleepMode: () =>
-                    _continueFromSleepStep(enableSleepMode: true),
-                onSkipSleepMode: () =>
-                    _continueFromSleepStep(enableSleepMode: false),
-                primaryButtonStyle: _primaryButtonStyle,
+              _OnboardingStepShell(
+                currentStep: 4,
+                totalSteps: _totalSteps,
+                showProgress: true,
+                showBack: true,
+                onBack: _goBack,
+                child: _SchoolStep(
+                  formKey: _schoolFormKey,
+                  schoolController: _schoolController,
+                  graduationController: _graduationController,
+                  onContinue: () {
+                    if (_schoolFormKey.currentState!.validate()) {
+                      _goToPage(4);
+                    }
+                  },
+                  primaryButtonStyle: _primaryButtonStyle,
+                ),
               ),
-            ),
-            _OnboardingStepShell(
-              currentStep: 7,
-              totalSteps: _totalSteps,
-              showProgress: true,
-              showBack: true,
-              onBack: _goBack,
-              child: _BodyMetricsStep(
-                formKey: _bodyFormKey,
-                heightController: _heightController,
-                weightController: _weightController,
-                onContinue: _continueFromBodyStep,
-                primaryButtonStyle: _primaryButtonStyle,
+              _OnboardingStepShell(
+                currentStep: 5,
+                totalSteps: _totalSteps,
+                showProgress: true,
+                showBack: true,
+                onBack: _goBack,
+                child: _MealPreferencesStep(
+                  formKey: _mealPrefsFormKey,
+                  selectedStyles: _selectedStyles,
+                  mealsPerDay: _mealsPerDay,
+                  onMealsPerDayChanged: (value) {
+                    setState(() => _mealsPerDay = value);
+                  },
+                  onStyleToggled: (style) {
+                    setState(() {
+                      if (_selectedStyles.contains(style)) {
+                        _selectedStyles.remove(style);
+                      } else {
+                        _selectedStyles.add(style);
+                      }
+                    });
+                  },
+                  allergensController: _allergensController,
+                  restrictionsController: _restrictionsController,
+                  otherStyleController: _otherStyleController,
+                  othersSelected: _othersSelected,
+                  onOthersSelectedChanged: (selected) {
+                    setState(() => _othersSelected = selected);
+                  },
+                  onContinue: _continueFromMealPrefsStep,
+                  primaryButtonStyle: _primaryButtonStyle,
+                ),
               ),
-            ),
-            _OnboardingStepShell(
-              currentStep: 8,
-              totalSteps: _totalSteps,
-              showProgress: true,
-              showBack: true,
-              onBack: _goBack,
-              child: _GoalsStep(
-                formKey: _goalsFormKey,
-                hasSport: _playsSport == true,
-                caloriesController: _caloriesController,
-                proteinController: _proteinController,
-                carbsController: _carbsController,
-                fatsController: _fatsController,
-                saving: _saving,
-                onFinish: _finishOnboarding,
-                primaryButtonStyle: _primaryButtonStyle,
+              _OnboardingStepShell(
+                currentStep: 6,
+                totalSteps: _totalSteps,
+                showProgress: true,
+                showBack: true,
+                onBack: _goBack,
+                child: _SleepModeStep(
+                  wakeTiredAnswer: _wakeTiredAnswer,
+                  bedtimeConsistencyAnswer: _bedtimeConsistencyAnswer,
+                  sleepReminderAnswer: _sleepReminderAnswer,
+                  recommendation: _sleepRecommendation(l10n),
+                  questionsComplete: _sleepQuestionsComplete,
+                  onWakeTiredChanged: (value) {
+                    setState(() => _wakeTiredAnswer = value);
+                  },
+                  onBedtimeConsistencyChanged: (value) {
+                    setState(() => _bedtimeConsistencyAnswer = value);
+                  },
+                  onSleepReminderChanged: (value) {
+                    setState(() => _sleepReminderAnswer = value);
+                  },
+                  onUseSleepMode: () =>
+                      _continueFromSleepStep(enableSleepMode: true),
+                  onSkipSleepMode: () =>
+                      _continueFromSleepStep(enableSleepMode: false),
+                  primaryButtonStyle: _primaryButtonStyle,
+                ),
               ),
-            ),
-          ],
+              _OnboardingStepShell(
+                currentStep: 7,
+                totalSteps: _totalSteps,
+                showProgress: true,
+                showBack: true,
+                onBack: _goBack,
+                child: _BodyMetricsStep(
+                  formKey: _bodyFormKey,
+                  heightController: _heightController,
+                  weightController: _weightController,
+                  onContinue: _continueFromBodyStep,
+                  primaryButtonStyle: _primaryButtonStyle,
+                ),
+              ),
+              _OnboardingStepShell(
+                currentStep: 8,
+                totalSteps: _totalSteps,
+                showProgress: true,
+                showBack: true,
+                onBack: _goBack,
+                child: _GoalsStep(
+                  formKey: _goalsFormKey,
+                  hasSport: _playsSport == true,
+                  caloriesController: _caloriesController,
+                  proteinController: _proteinController,
+                  carbsController: _carbsController,
+                  fatsController: _fatsController,
+                  saving: _saving,
+                  onFinish: _finishOnboarding,
+                  primaryButtonStyle: _primaryButtonStyle,
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -734,8 +735,7 @@ class _OnboardingScrollStep extends StatelessWidget {
         children: [
           Expanded(
             child: SingleChildScrollView(
-              keyboardDismissBehavior:
-                  ScrollViewKeyboardDismissBehavior.onDrag,
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               child: content,
             ),
           ),
@@ -811,6 +811,7 @@ class _WelcomeStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -819,13 +820,13 @@ class _WelcomeStep extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'NutriLens',
+            l10n.onboardingWelcomeTitle,
             style: textTheme.headlineLarge,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
           Text(
-            'Fuel smarter. Train harder.',
+            l10n.onboardingWelcomeSubtitle,
             style: textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),
@@ -835,7 +836,7 @@ class _WelcomeStep extends StatelessWidget {
             child: FilledButton(
               onPressed: onGetStarted,
               style: primaryButtonStyle,
-              child: const Text('Get started'),
+              child: Text(l10n.onboardingGetStarted),
             ),
           ),
         ],
@@ -859,20 +860,25 @@ class _NameStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return _OnboardingScrollStep(
       formKey: formKey,
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Your name', style: Theme.of(context).textTheme.headlineMedium),
+          Text(
+            l10n.onboardingYourName,
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
           const SizedBox(height: 24),
           ProfileTextField(
-            label: 'FULL NAME',
+            label: l10n.onboardingFullNameLabel,
             controller: nameController,
             limeBorder: true,
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'Name is required';
+                return l10n.nameRequired;
               }
               return null;
             },
@@ -884,7 +890,7 @@ class _NameStep extends StatelessWidget {
         child: FilledButton(
           onPressed: onContinue,
           style: primaryButtonStyle,
-          child: const Text('Continue'),
+          child: Text(l10n.continueButton),
         ),
       ),
     );
@@ -925,6 +931,7 @@ class _SportStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context)!;
     final otherSelected = selectedSportId == 'other';
     final showSportList = playsSport == true;
 
@@ -933,19 +940,16 @@ class _SportStep extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('About your sport', style: textTheme.headlineMedium),
+          Text(l10n.onboardingAboutSport, style: textTheme.headlineMedium),
           const SizedBox(height: 8),
-          Text(
-            'Do you currently play a sport?',
-            style: textTheme.bodyMedium,
-          ),
+          Text(l10n.onboardingPlaySportQuestion, style: textTheme.bodyMedium),
           const SizedBox(height: 16),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
               ChoiceChip(
-                label: const Text('Yes, I play a sport'),
+                label: Text(l10n.onboardingPlaySportYes),
                 showCheckmark: false,
                 selected: playsSport == true,
                 selectedColor: AppColors.lime,
@@ -964,7 +968,7 @@ class _SportStep extends StatelessWidget {
                 onSelected: (_) => onPlaysSportChanged(true),
               ),
               ChoiceChip(
-                label: const Text('No, not currently'),
+                label: Text(l10n.onboardingPlaySportNo),
                 showCheckmark: false,
                 selected: playsSport == false,
                 selectedColor: AppColors.lime,
@@ -997,13 +1001,13 @@ class _SportStep extends StatelessWidget {
                       if (otherSelected && index == _sports.length) {
                         return ProfileTextField(
                           key: const Key('onboarding_other_sport'),
-                          label: 'YOUR SPORT',
+                          label: l10n.onboardingYourSportLabel,
                           controller: otherSportController,
                           limeBorder: true,
                           validator: (value) {
                             if (!otherSelected) return null;
                             if (value == null || value.trim().isEmpty) {
-                              return 'Enter your sport';
+                              return l10n.onboardingEnterSport;
                             }
                             return null;
                           },
@@ -1019,7 +1023,10 @@ class _SportStep extends StatelessWidget {
                             : AppColors.cardDark,
                         borderRadius: BorderRadius.circular(16),
                         child: InkWell(
-                          onTap: () => onSportSelected(sport.id, sport.name),
+                          onTap: () => onSportSelected(
+                            sport.id,
+                            localizedSportName(l10n, sport.id),
+                          ),
                           borderRadius: BorderRadius.circular(16),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
@@ -1039,7 +1046,7 @@ class _SportStep extends StatelessWidget {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    sport.name,
+                                    localizedSportName(l10n, sport.id),
                                     style: textTheme.titleMedium,
                                   ),
                                 ),
@@ -1059,8 +1066,8 @@ class _SportStep extends StatelessWidget {
                     alignment: Alignment.topCenter,
                     child: Text(
                       playsSport == false
-                          ? "No problem — we'll estimate your nutrition targets from your body metrics."
-                          : 'Choose an option above to continue.',
+                          ? l10n.onboardingNoSportTargets
+                          : l10n.onboardingChooseOption,
                       style: textTheme.bodyMedium?.copyWith(
                         color: AppColors.textMuted,
                         height: 1.35,
@@ -1074,7 +1081,7 @@ class _SportStep extends StatelessWidget {
             child: FilledButton(
               onPressed: _canContinue ? onContinue : null,
               style: primaryButtonStyle,
-              child: const Text('Continue'),
+              child: Text(l10n.continueButton),
             ),
           ),
           const SizedBox(height: 24),
@@ -1101,24 +1108,26 @@ class _SchoolStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return _OnboardingScrollStep(
       formKey: formKey,
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Your school',
+            l10n.onboardingYourSchool,
             style: Theme.of(context).textTheme.headlineMedium,
           ),
           const SizedBox(height: 24),
           ProfileTextField(
-            label: 'SCHOOL NAME (OPTIONAL)',
+            label: l10n.onboardingSchoolNameLabel,
             controller: schoolController,
             limeBorder: true,
           ),
           const SizedBox(height: 20),
           ProfileTextField(
-            label: 'GRADUATION YEAR (OPTIONAL)',
+            label: l10n.onboardingGraduationYearLabel,
             controller: graduationController,
             keyboardType: TextInputType.number,
             limeBorder: true,
@@ -1126,7 +1135,7 @@ class _SchoolStep extends StatelessWidget {
               final trimmed = value?.trim() ?? '';
               if (trimmed.isEmpty) return null;
               if (!RegExp(r'^\d{4}$').hasMatch(trimmed)) {
-                return 'Enter a 4-digit year';
+                return l10n.onboardingEnterFourDigitYear;
               }
               return null;
             },
@@ -1138,7 +1147,7 @@ class _SchoolStep extends StatelessWidget {
         child: FilledButton(
           onPressed: onContinue,
           style: primaryButtonStyle,
-          child: const Text('Continue'),
+          child: Text(l10n.continueButton),
         ),
       ),
     );
@@ -1185,6 +1194,7 @@ class _SleepModeStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context)!;
     final recommended = recommendation.recommended;
 
     final useSleepButton = SizedBox(
@@ -1192,14 +1202,14 @@ class _SleepModeStep extends StatelessWidget {
       child: FilledButton(
         onPressed: questionsComplete ? onUseSleepMode : null,
         style: primaryButtonStyle,
-        child: const Text('Use Sleep Mode'),
+        child: Text(l10n.onboardingUseSleepMode),
       ),
     );
     final skipButton = SizedBox(
       height: 52,
       child: OutlinedButton(
         onPressed: questionsComplete ? onSkipSleepMode : null,
-        child: const Text('Skip for now'),
+        child: Text(l10n.skipForNow),
       ),
     );
 
@@ -1208,40 +1218,44 @@ class _SleepModeStep extends StatelessWidget {
       children: [
         Expanded(
           child: ListView(
-            keyboardDismissBehavior:
-                ScrollViewKeyboardDismissBehavior.onDrag,
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             padding: const EdgeInsets.only(bottom: 8),
             children: [
-              Text('Sleep check', style: textTheme.headlineMedium),
+              Text(l10n.onboardingSleepCheck, style: textTheme.headlineMedium),
               const SizedBox(height: 8),
-              Text(
-                'Three quick questions. Tap a choice to select it — tap again to clear.',
-                style: textTheme.bodyMedium,
-              ),
+              Text(l10n.onboardingSleepCheckIntro, style: textTheme.bodyMedium),
               const SizedBox(height: 24),
               _SleepQuestionCard(
                 step: 1,
-                question: 'Do you wake up tired?',
-                hint: 'Think about a typical school week.',
-                options: const ['Not often', 'Sometimes', 'Often'],
+                question: l10n.sleepQuestionWakeTired,
+                hint: l10n.sleepQuestionWakeTiredHint,
+                options: [
+                  l10n.sleepAnswerNotOften,
+                  l10n.sleepAnswerSometimes,
+                  l10n.sleepAnswerOften,
+                ],
                 selected: wakeTiredAnswer,
                 onSelected: onWakeTiredChanged,
               ),
               const SizedBox(height: 16),
               _SleepQuestionCard(
                 step: 2,
-                question: 'Does your bedtime change a lot?',
-                hint: 'Games, practice, or homework can push sleep later.',
-                options: const ['Not often', 'Sometimes', 'Often'],
+                question: l10n.sleepQuestionBedtimeChanges,
+                hint: l10n.sleepQuestionBedtimeChangesHint,
+                options: [
+                  l10n.sleepAnswerNotOften,
+                  l10n.sleepAnswerSometimes,
+                  l10n.sleepAnswerOften,
+                ],
                 selected: bedtimeConsistencyAnswer,
                 onSelected: onBedtimeConsistencyChanged,
               ),
               const SizedBox(height: 16),
               _SleepQuestionCard(
                 step: 3,
-                question: 'Would a bedtime reminder help?',
-                hint: 'A gentle nudge before your target sleep time.',
-                options: const ['No', 'Maybe', 'Yes'],
+                question: l10n.sleepQuestionReminder,
+                hint: l10n.sleepQuestionReminderHint,
+                options: [l10n.no, l10n.maybe, l10n.yes],
                 selected: sleepReminderAnswer,
                 onSelected: onSleepReminderChanged,
               ),
@@ -1262,13 +1276,13 @@ class _SleepModeStep extends StatelessWidget {
             child: FilledButton(
               onPressed: questionsComplete ? onSkipSleepMode : null,
               style: primaryButtonStyle,
-              child: const Text('Skip for now'),
+              child: Text(l10n.skipForNow),
             ),
           ),
           const SizedBox(height: 12),
           OutlinedButton(
             onPressed: questionsComplete ? onUseSleepMode : null,
-            child: const Text('Use Sleep Mode'),
+            child: Text(l10n.onboardingUseSleepMode),
           ),
         ],
         const SizedBox(height: 24),
@@ -1308,10 +1322,7 @@ class _SleepQuestionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            '$step. $question',
-            style: textTheme.titleMedium,
-          ),
+          Text('$step. $question', style: textTheme.titleMedium),
           if (hint != null) ...[
             const SizedBox(height: 6),
             Text(
@@ -1364,15 +1375,16 @@ class _SleepRecommendationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final recommended = recommendation.recommended;
     final title = recommended
-        ? 'We recommend Sleep Mode'
-        : 'Sleep Mode is optional';
+        ? l10n.onboardingSleepRecommended
+        : l10n.onboardingSleepOptional;
     final message = recommended
         ? (recommendation.reasons.length == 1
               ? recommendation.reasons.first
-              : 'Based on your answers, Sleep Mode could help you recover.')
-        : 'You can turn it on later in Settings if your schedule changes.';
+              : l10n.onboardingSleepRecommendation)
+        : l10n.onboardingSleepOptionalBody;
 
     return Container(
       key: ValueKey(recommended),
@@ -1506,7 +1518,7 @@ class _MealPreferencesStep extends StatelessWidget {
         child: FilledButton(
           onPressed: onContinue,
           style: primaryButtonStyle,
-          child: const Text('Continue'),
+          child: Text(l10n.continueButton),
         ),
       ),
     );
@@ -1531,61 +1543,61 @@ class _BodyMetricsStep extends StatelessWidget {
   static const _maxHeightCm = 300;
   static const _maxWeightKg = 700;
 
-  String? _heightValidator(String? value) {
+  String? _heightValidator(AppLocalizations l10n, String? value) {
     final trimmed = value?.trim() ?? '';
-    if (trimmed.isEmpty) return 'Required';
+    if (trimmed.isEmpty) return l10n.required;
     final parsed = double.tryParse(trimmed);
-    if (parsed == null || parsed <= 0) return 'Enter a positive number';
-    if (parsed > _maxHeightCm) return 'Maximum height is $_maxHeightCm cm';
+    if (parsed == null || parsed <= 0) return l10n.enterPositiveNumber;
+    if (parsed > _maxHeightCm)
+      return l10n.onboardingMaximumHeight(_maxHeightCm);
     return null;
   }
 
-  String? _weightValidator(String? value) {
+  String? _weightValidator(AppLocalizations l10n, String? value) {
     final trimmed = value?.trim() ?? '';
-    if (trimmed.isEmpty) return 'Required';
+    if (trimmed.isEmpty) return l10n.required;
     final parsed = double.tryParse(trimmed);
-    if (parsed == null || parsed <= 0) return 'Enter a positive number';
-    if (parsed > _maxWeightKg) return 'Maximum weight is $_maxWeightKg kg';
+    if (parsed == null || parsed <= 0) return l10n.enterPositiveNumber;
+    if (parsed > _maxWeightKg)
+      return l10n.onboardingMaximumWeight(_maxWeightKg);
     return null;
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return _OnboardingScrollStep(
       formKey: formKey,
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Your body metrics',
+            l10n.onboardingBodyMetrics,
             style: Theme.of(context).textTheme.headlineMedium,
           ),
           const SizedBox(height: 8),
           Text(
-            'We use height and weight to estimate your daily nutrition targets.',
+            l10n.onboardingBodyMetricsHint,
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: 24),
           ProfileTextField(
             key: const Key('onboarding_height_cm'),
-            label: 'HEIGHT (CM)',
+            label: l10n.onboardingHeightLabel,
             controller: heightController,
-            keyboardType: const TextInputType.numberWithOptions(
-              decimal: true,
-            ),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             limeBorder: true,
-            validator: _heightValidator,
+            validator: (value) => _heightValidator(l10n, value),
           ),
           const SizedBox(height: 16),
           ProfileTextField(
             key: const Key('onboarding_weight_kg'),
-            label: 'WEIGHT (KG)',
+            label: l10n.onboardingWeightLabel,
             controller: weightController,
-            keyboardType: const TextInputType.numberWithOptions(
-              decimal: true,
-            ),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             limeBorder: true,
-            validator: _weightValidator,
+            validator: (value) => _weightValidator(l10n, value),
           ),
         ],
       ),
@@ -1594,7 +1606,7 @@ class _BodyMetricsStep extends StatelessWidget {
         child: FilledButton(
           onPressed: onContinue,
           style: primaryButtonStyle,
-          child: const Text('Continue'),
+          child: Text(l10n.continueButton),
         ),
       ),
     );
@@ -1624,63 +1636,65 @@ class _GoalsStep extends StatelessWidget {
   final VoidCallback onFinish;
   final ButtonStyle primaryButtonStyle;
 
-  String? _positiveIntValidator(String? value) {
+  String? _positiveIntValidator(AppLocalizations l10n, String? value) {
     final trimmed = value?.trim() ?? '';
-    if (trimmed.isEmpty) return 'Required';
+    if (trimmed.isEmpty) return l10n.required;
     final parsed = int.tryParse(trimmed);
-    if (parsed == null || parsed <= 0) return 'Enter a positive number';
+    if (parsed == null || parsed <= 0) return l10n.enterPositiveNumber;
     return null;
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return _OnboardingScrollStep(
       formKey: formKey,
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Daily nutrition targets',
+            l10n.onboardingNutritionTargets,
             style: Theme.of(context).textTheme.headlineMedium,
           ),
           const SizedBox(height: 8),
           Text(
             hasSport
-                ? 'We estimated these from your sport, height, and weight. You can adjust.'
-                : 'We estimated these from your height and weight. You can adjust.',
+                ? l10n.onboardingTargetsFromSport
+                : l10n.onboardingTargetsFromMetrics,
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: 24),
           ProfileTextField(
-            label: 'CALORIES (KCAL)',
+            label: l10n.caloriesKcal,
             controller: caloriesController,
             keyboardType: TextInputType.number,
             limeBorder: true,
-            validator: _positiveIntValidator,
+            validator: (value) => _positiveIntValidator(l10n, value),
           ),
           const SizedBox(height: 16),
           ProfileTextField(
-            label: 'PROTEIN (G)',
+            label: l10n.proteinG,
             controller: proteinController,
             keyboardType: TextInputType.number,
             limeBorder: true,
-            validator: _positiveIntValidator,
+            validator: (value) => _positiveIntValidator(l10n, value),
           ),
           const SizedBox(height: 16),
           ProfileTextField(
-            label: 'CARBS (G)',
+            label: l10n.carbsG,
             controller: carbsController,
             keyboardType: TextInputType.number,
             limeBorder: true,
-            validator: _positiveIntValidator,
+            validator: (value) => _positiveIntValidator(l10n, value),
           ),
           const SizedBox(height: 16),
           ProfileTextField(
-            label: 'FATS (G)',
+            label: l10n.fatsG,
             controller: fatsController,
             keyboardType: TextInputType.number,
             limeBorder: true,
-            validator: _positiveIntValidator,
+            validator: (value) => _positiveIntValidator(l10n, value),
           ),
         ],
       ),
@@ -1690,10 +1704,8 @@ class _GoalsStep extends StatelessWidget {
           onPressed: saving ? null : onFinish,
           style: primaryButtonStyle,
           child: saving
-              ? const CircularProgressIndicator(
-                  color: AppColors.onLime,
-                )
-              : const Text('Finish setup'),
+              ? const CircularProgressIndicator(color: AppColors.onLime)
+              : Text(l10n.finishSetup),
         ),
       ),
     );

@@ -81,6 +81,7 @@ class FirestoreUserRepository implements UserRepository {
       email: email,
       password: password,
     );
+    await credential.user?.getIdToken(true);
     return _ensureFirebaseUserAccount(
       user: credential.user!,
       timezone: timezone,
@@ -98,6 +99,7 @@ class FirestoreUserRepository implements UserRepository {
       email: email,
       password: password,
     );
+    await credential.user?.getIdToken(true);
     return _ensureFirebaseUserAccount(
       user: credential.user!,
       timezone: timezone,

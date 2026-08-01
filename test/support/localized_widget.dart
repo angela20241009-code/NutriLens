@@ -35,6 +35,16 @@ Widget wrapLocalized({required Widget child}) {
   );
 }
 
+Widget testMaterialApp({required Widget home}) {
+  return MaterialApp(
+    theme: AppTheme.dark,
+    locale: AppLanguage.english.locale,
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: home,
+  );
+}
+
 Future<void> pumpLocalized(
   WidgetTester tester,
   Widget child,

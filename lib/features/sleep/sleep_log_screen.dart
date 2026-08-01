@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/features/sleep/sleep_logging.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/services/date_key.dart';
 import 'package:nutrilens/theme/app_colors.dart';
@@ -139,8 +140,8 @@ class _SleepLogScreenState extends State<SleepLogScreen> {
   Future<void> _addCustomBedtimeItem() async {
     if (_customBedtimeMinutes.length >= _maxCustomBedtimeItems) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('You can add up to 3 custom bedtime items.'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.customBedtimeLimit),
         ),
       );
       return;
@@ -208,12 +209,17 @@ class _SleepLogScreenState extends State<SleepLogScreen> {
       }
       setState(() => _saving = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Unable to save bedtime items: $error')),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.unableToSaveBedtimeItems('$error'),
+          ),
+        ),
       );
     }
   }
 
   Future<int?> _showBedtimeEditorDialog({int? initialMinutes}) async {
+    final l10n = AppLocalizations.of(context)!;
     var selectedMinutes = _normalizeBedtimeMinutes(initialMinutes ?? 22 * 60);
     final controller = TextEditingController(
       text: formatMinutesAsClock(selectedMinutes),
@@ -250,7 +256,7 @@ class _SleepLogScreenState extends State<SleepLogScreen> {
               final parsed = _parseTimeInput(controller.text);
               if (parsed == null) {
                 setDialogState(() {
-                  errorMessage = 'Enter a valid time like 10:30 PM or 22:30.';
+                  errorMessage = l10n.enterValidTime;
                 });
                 return;
               }
@@ -261,8 +267,8 @@ class _SleepLogScreenState extends State<SleepLogScreen> {
               backgroundColor: AppColors.cardDark,
               title: Text(
                 initialMinutes == null
-                    ? 'Add custom bedtime'
-                    : 'Edit custom bedtime',
+                    ? l10n.addCustomBedtime
+                    : l10n.editCustomBedtime,
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -271,9 +277,9 @@ class _SleepLogScreenState extends State<SleepLogScreen> {
                   TextField(
                     controller: controller,
                     textInputAction: TextInputAction.done,
-                    decoration: const InputDecoration(
-                      labelText: 'Bedtime',
-                      hintText: '10:30 PM or 22:30',
+                    decoration: InputDecoration(
+                      labelText: l10n.bedtime,
+                      hintText: l10n.bedtimeHint,
                     ),
                     onSubmitted: (_) => save(),
                   ),
@@ -281,7 +287,7 @@ class _SleepLogScreenState extends State<SleepLogScreen> {
                   OutlinedButton.icon(
                     onPressed: pickTime,
                     icon: const Icon(Icons.access_time),
-                    label: const Text('Pick time'),
+                    label: Text(l10n.pickTime),
                   ),
                   if (errorMessage != null) ...[
                     const SizedBox(height: 8),
@@ -295,9 +301,9 @@ class _SleepLogScreenState extends State<SleepLogScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancel'),
+                  child: Text(l10n.cancel),
                 ),
-                FilledButton(onPressed: save, child: const Text('Save')),
+                FilledButton(onPressed: save, child: Text(l10n.save)),
               ],
             );
           },
@@ -366,6 +372,7 @@ class _SleepLogScreenState extends State<SleepLogScreen> {
 
       final selectedDay = updatedDays[_selectedDayIndex];
       final advice = buildSleepAdvice(
+        l10n: AppLocalizations.of(context)!,
         profile: profile,
         sleepHours: sleepHours,
         wakeTimeMinutes: profile.usualWakeTimeMinutes ?? 7 * 60,
@@ -380,8 +387,19 @@ class _SleepLogScreenState extends State<SleepLogScreen> {
         SnackBar(
           content: Text(
             indices.length == 1
-                ? 'Saved ${formatSleepHours(sleepHours)} for ${_labelForDateKey(selectedDay.dateKey)}. ${advice.shortLine}'
-                : 'Applied ${formatSleepHours(sleepHours)} to ${targets.length} days. ${advice.shortLine}',
+                ? AppLocalizations.of(context)!.sleepLoggedForDay(
+                    formatSleepHours(sleepHours),
+                    _labelForDateKey(
+                      selectedDay.dateKey,
+                      AppLocalizations.of(context)!,
+                    ),
+                    advice.shortLine,
+                  )
+                : AppLocalizations.of(context)!.sleepAppliedForDays(
+                    formatSleepHours(sleepHours),
+                    targets.length,
+                    advice.shortLine,
+                  ),
           ),
         ),
       );
@@ -391,13 +409,18 @@ class _SleepLogScreenState extends State<SleepLogScreen> {
       }
       setState(() => _saving = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Unable to save sleep schedule: $error')),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.unableToSaveSleepSchedule('$error'),
+          ),
+        ),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -407,7 +430,7 @@ class _SleepLogScreenState extends State<SleepLogScreen> {
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Text(
-            'Unable to load sleep schedule:\n$_error',
+            l10n.unableToLoadSleepSchedule(_error!),
             textAlign: TextAlign.center,
           ),
         ),
@@ -416,13 +439,14 @@ class _SleepLogScreenState extends State<SleepLogScreen> {
 
     final profile = _profile;
     if (profile == null || _calendarDays.isEmpty) {
-      return const Center(child: Text('Sleep schedule unavailable'));
+      return Center(child: Text(l10n.sleepScheduleUnavailable));
     }
 
     final selectedDay = _calendarDays[_selectedDayIndex];
     final wakeTimeMinutes = profile.usualWakeTimeMinutes ?? 7 * 60;
     final selectedSleepHours = _durationMinutes / 60;
     final advice = buildSleepAdvice(
+      l10n: l10n,
       profile: profile,
       sleepHours: selectedSleepHours,
       wakeTimeMinutes: wakeTimeMinutes,
@@ -451,12 +475,12 @@ class _SleepLogScreenState extends State<SleepLogScreen> {
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
           Text(
-            'Sleep schedule',
+            l10n.sleepSchedule,
             style: Theme.of(context).textTheme.headlineLarge,
           ),
           const SizedBox(height: 8),
           Text(
-            'Pick a day, enter hours and minutes, then save one day or apply the same sleep duration for the next week.',
+            l10n.sleepScheduleDescription,
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: 16),
@@ -481,7 +505,7 @@ class _SleepLogScreenState extends State<SleepLogScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _labelForDateKey(selectedDay.dateKey),
+                  _labelForDateKey(selectedDay.dateKey, l10n),
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 10),
@@ -489,7 +513,7 @@ class _SleepLogScreenState extends State<SleepLogScreen> {
                   children: [
                     Expanded(
                       child: _DurationDropDown(
-                        label: 'Hours',
+                        label: l10n.hours,
                         value: hours,
                         options: List.generate(15, (i) => i),
                         onChanged: (value) {
@@ -501,7 +525,7 @@ class _SleepLogScreenState extends State<SleepLogScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _DurationDropDown(
-                        label: 'Minutes',
+                        label: l10n.minutes,
                         value: minutes,
                         options: _minuteOptions,
                         onChanged: (value) {
@@ -523,7 +547,9 @@ class _SleepLogScreenState extends State<SleepLogScreen> {
                     ),
                     Expanded(
                       child: Text(
-                        'Selected duration: ${formatDurationMinutes(_durationMinutes)}',
+                        l10n.selectedDuration(
+                          formatDurationMinutes(_durationMinutes),
+                        ),
                         textAlign: TextAlign.center,
                         style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
@@ -546,7 +572,9 @@ class _SleepLogScreenState extends State<SleepLogScreen> {
                         return ChoiceChip(
                           label: Text(
                             isTarget
-                                ? 'Target ${formatDurationMinutes(minutesOption)}'
+                                ? l10n.targetDuration(
+                                    formatDurationMinutes(minutesOption),
+                                  )
                                 : formatDurationMinutes(minutesOption),
                           ),
                           selected: _durationMinutes == minutesOption,
@@ -563,7 +591,7 @@ class _SleepLogScreenState extends State<SleepLogScreen> {
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  'Preset bedtimes',
+                  l10n.presetBedtimes,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 8),
@@ -594,20 +622,23 @@ class _SleepLogScreenState extends State<SleepLogScreen> {
                   children: [
                     Expanded(
                       child: Text(
-                        'Custom bedtime items (${_customBedtimeMinutes.length}/$_maxCustomBedtimeItems)',
+                        l10n.customBedtimeItems(
+                          _customBedtimeMinutes.length,
+                          _maxCustomBedtimeItems,
+                        ),
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ),
                     TextButton.icon(
                       onPressed: _saving ? null : _addCustomBedtimeItem,
                       icon: const Icon(Icons.add),
-                      label: const Text('Add'),
+                      label: Text(l10n.add),
                     ),
                   ],
                 ),
                 if (_customBedtimeMinutes.isEmpty)
                   Text(
-                    'No custom bedtime items yet. Add up to 3.',
+                    l10n.noCustomBedtimeItems,
                     style: Theme.of(context).textTheme.bodySmall,
                   )
                 else
@@ -642,14 +673,14 @@ class _SleepLogScreenState extends State<SleepLogScreen> {
                                   ? null
                                   : () => _editCustomBedtimeItem(index),
                               icon: const Icon(Icons.edit_outlined),
-                              tooltip: 'Edit time',
+                              tooltip: l10n.editTime,
                             ),
                             IconButton(
                               onPressed: _saving
                                   ? null
                                   : () => _deleteCustomBedtimeItem(index),
                               icon: const Icon(Icons.delete_outline),
-                              tooltip: 'Delete',
+                              tooltip: l10n.delete,
                             ),
                           ],
                         ),
@@ -658,7 +689,9 @@ class _SleepLogScreenState extends State<SleepLogScreen> {
                   ),
                 const SizedBox(height: 8),
                 Text(
-                  'Bedtime items use wake time ${formatMinutesAsClock(wakeTimeMinutes)} to calculate your sleep duration.',
+                  l10n.bedtimeItemsDescription(
+                    formatMinutesAsClock(wakeTimeMinutes),
+                  ),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 12),
@@ -691,7 +724,7 @@ class _SleepLogScreenState extends State<SleepLogScreen> {
                                   strokeWidth: 2,
                                 ),
                               )
-                            : const Text('Save day'),
+                            : Text(l10n.saveDay),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -702,7 +735,7 @@ class _SleepLogScreenState extends State<SleepLogScreen> {
                           backgroundColor: AppColors.sleepAccent,
                           foregroundColor: AppColors.textPrimary,
                         ),
-                        child: const Text('Apply next 7 days'),
+                        child: Text(l10n.applyNextSevenDays),
                       ),
                     ),
                   ],
@@ -834,6 +867,7 @@ class _AutoTrackingStatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -844,14 +878,13 @@ class _AutoTrackingStatusCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Automatic tracking status',
+          Text(
+            l10n.automaticTrackingStatus,
             style: TextStyle(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
           Text(
-            'Clock-only background tracking is not reliable on iOS/Android due background limits. '
-            'Use this planner for manual scheduling and keep health sync as a future auto option.',
+            l10n.automaticTrackingDescription,
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
@@ -873,6 +906,7 @@ class _CalendarStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SizedBox(
       height: 108,
       child: ListView.separated(
@@ -902,7 +936,7 @@ class _CalendarStrip extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    day.isToday ? 'Today' : _weekdayShort(parsed),
+                    day.isToday ? l10n.today : _weekdayShort(parsed, l10n),
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                   Text('${parsed.month}/${parsed.day}'),
@@ -1001,30 +1035,30 @@ List<String> _calendarDateKeys(String timezone, DateTime nowUtc) {
   return keys;
 }
 
-String _labelForDateKey(String dateKey) {
+String _labelForDateKey(String dateKey, AppLocalizations l10n) {
   final parsed = _parseDateKey(dateKey);
   if (parsed == null) {
     return dateKey;
   }
-  return '${_weekdayShort(parsed)}, ${parsed.month}/${parsed.day}/${parsed.year}';
+  return '${_weekdayShort(parsed, l10n)}, ${parsed.month}/${parsed.day}/${parsed.year}';
 }
 
-String _weekdayShort(DateTime date) {
+String _weekdayShort(DateTime date, AppLocalizations l10n) {
   switch (date.weekday) {
     case DateTime.monday:
-      return 'Mon';
+      return l10n.mondayShort;
     case DateTime.tuesday:
-      return 'Tue';
+      return l10n.tuesdayShort;
     case DateTime.wednesday:
-      return 'Wed';
+      return l10n.wednesdayShort;
     case DateTime.thursday:
-      return 'Thu';
+      return l10n.thursdayShort;
     case DateTime.friday:
-      return 'Fri';
+      return l10n.fridayShort;
     case DateTime.saturday:
-      return 'Sat';
+      return l10n.saturdayShort;
     case DateTime.sunday:
-      return 'Sun';
+      return l10n.sundayShort;
     default:
       return '';
   }

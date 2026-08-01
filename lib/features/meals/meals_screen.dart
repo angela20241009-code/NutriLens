@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nutrilens/app/meals_search_scope.dart';
 import 'package:nutrilens/app/tasty_recipe_scope.dart';
 import 'package:nutrilens/features/meals/widgets/recipe_detail_sheet.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/models/tasty_recipe.dart';
 import 'package:nutrilens/services/tasty_recipe_client.dart';
 import 'package:nutrilens/theme/app_colors.dart';
@@ -83,10 +84,9 @@ class _MealsScreenState extends State<MealsScreen> {
     });
 
     try {
-      final result = await _client(context).searchRecipes(
-        query: query,
-        size: 24,
-      );
+      final result = await _client(
+        context,
+      ).searchRecipes(query: query, size: 24);
       if (!mounted) {
         return;
       }
@@ -127,6 +127,7 @@ class _MealsScreenState extends State<MealsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return GestureDetector(
       onTap: _dismissKeyboard,
       behavior: HitTestBehavior.translucent,
@@ -144,14 +145,13 @@ class _MealsScreenState extends State<MealsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Find dishes',
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                        l10n.mealSearchTitle,
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(fontWeight: FontWeight.w800),
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        'Search recipes and view ingredients and steps in the app.',
+                        l10n.mealSearchDescription,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppColors.textMuted.withValues(alpha: 0.75),
                         ),
@@ -163,7 +163,7 @@ class _MealsScreenState extends State<MealsScreen> {
                         onSubmitted: (value) => _search(query: value),
                         textInputAction: TextInputAction.search,
                         decoration: InputDecoration(
-                          hintText: 'Search chicken, pasta, salad...',
+                          hintText: l10n.mealSearchHint,
                           prefixIcon: const Icon(Icons.search_rounded),
                           suffixIcon: _searchController.text.isEmpty
                               ? null
@@ -192,12 +192,12 @@ class _MealsScreenState extends State<MealsScreen> {
                       const SizedBox(height: 18),
                       if (_activeQuery.isNotEmpty)
                         Text(
-                          'Results for "$_activeQuery"',
+                          l10n.mealSearchResultsFor(_activeQuery),
                           style: Theme.of(context).textTheme.titleMedium,
                         )
                       else
                         Text(
-                          'Popular dishes',
+                          l10n.mealPopularDishes,
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                     ],
@@ -218,7 +218,7 @@ class _MealsScreenState extends State<MealsScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Unable to load dishes',
+                          l10n.mealUnableToLoadDishes,
                           style: Theme.of(context).textTheme.titleLarge,
                           textAlign: TextAlign.center,
                         ),
@@ -230,8 +230,9 @@ class _MealsScreenState extends State<MealsScreen> {
                         ),
                         const SizedBox(height: 16),
                         FilledButton(
-                          onPressed: () => _search(query: _searchController.text),
-                          child: const Text('Try again'),
+                          onPressed: () =>
+                              _search(query: _searchController.text),
+                          child: Text(l10n.tryAgain),
                         ),
                       ],
                     ),
@@ -245,8 +246,8 @@ class _MealsScreenState extends State<MealsScreen> {
                       padding: const EdgeInsets.all(24),
                       child: Text(
                         _hasSearched
-                            ? 'No dishes found. Try another search.'
-                            : 'Enter a dish name and tap Search on your keyboard.',
+                            ? l10n.mealNoDishesFound
+                            : l10n.mealEnterDishName,
                         style: Theme.of(context).textTheme.bodyLarge,
                         textAlign: TextAlign.center,
                       ),
@@ -257,22 +258,20 @@ class _MealsScreenState extends State<MealsScreen> {
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                   sliver: SliverGrid(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 14,
-                      crossAxisSpacing: 14,
-                      childAspectRatio: 0.72,
-                    ),
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final recipe = _recipes[index];
-                        return _DishCard(
-                          recipe: recipe,
-                          onTap: () => _openRecipe(recipe),
-                        );
-                      },
-                      childCount: _recipes.length,
-                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 14,
+                          crossAxisSpacing: 14,
+                          childAspectRatio: 0.72,
+                        ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final recipe = _recipes[index];
+                      return _DishCard(
+                        recipe: recipe,
+                        onTap: () => _openRecipe(recipe),
+                      );
+                    }, childCount: _recipes.length),
                   ),
                 ),
             ],
@@ -291,6 +290,7 @@ class _DishCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Material(
       color: AppColors.cardDark,
       borderRadius: BorderRadius.circular(22),
@@ -338,7 +338,7 @@ class _DishCard extends StatelessWidget {
                   if (recipe.totalTimeMinutes != null) ...[
                     const SizedBox(height: 6),
                     Text(
-                      '${recipe.totalTimeMinutes} min',
+                      l10n.mealsMinutes(recipe.totalTimeMinutes!),
                       style: TextStyle(
                         fontSize: 12,
                         color: AppColors.textMuted.withValues(alpha: 0.75),

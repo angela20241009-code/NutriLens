@@ -130,5 +130,1009 @@
   "deleteAccountReauthPassword": "密码",
   "authErrorRequiresRecentLogin": "为保障安全，请确认密码后重试。",
   "failedToInitializeApp": "无法初始化应用：\n{error}",
-  "failedToLoadAccount": "无法加载账户：\n{error}"
+  "failedToLoadAccount": "无法加载账户：\n{error}",
+  "continueButton": "继续",
+  "save": "保存",
+  "delete": "删除",
+  "tryAgain": "重试",
+  "select": "选择",
+  "skipForNow": "暂时跳过",
+  "finishSetup": "完成设置",
+  "yes": "是",
+  "no": "否",
+  "maybe": "也许",
+  "required": "必填",
+  "enterPositiveNumber": "请输入正数",
+  "navHome": "首页",
+  "navMeals": "餐食",
+  "navSchedule": "日程",
+  "navProfile": "个人资料",
+  "navSleep": "睡眠",
+  "navLog": "记录",
+  "modeMealTracking": "餐食追踪",
+  "modeSleep": "睡眠",
+  "goodMorning": "早上好",
+  "goodAfternoon": "下午好",
+  "goodEvening": "晚上好",
+  "sportTennis": "网球",
+  "sportBasketball": "篮球",
+  "sportSoccer": "足球",
+  "sportAmericanFootball": "美式橄榄球",
+  "sportBaseball": "棒球",
+  "sportSoftball": "垒球",
+  "sportVolleyball": "排球",
+  "sportSwimming": "游泳",
+  "sportTrackAndField": "田径",
+  "sportCrossCountry": "越野跑",
+  "sportWrestling": "摔跤",
+  "sportLacrosse": "长曲棍球",
+  "sportHockey": "曲棍球",
+  "sportGolf": "高尔夫",
+  "sportGymnastics": "体操",
+  "sportCycling": "自行车",
+  "sportOther": "其他",
+  "sportNone": "无",
+  "onboardingWelcomeTitle": "NutriLens",
+  "onboardingWelcomeSubtitle": "聪明补给。更强训练。",
+  "onboardingGetStarted": "开始使用",
+  "onboardingYourName": "你的姓名",
+  "onboardingFullNameLabel": "全名",
+  "onboardingAboutSport": "关于你的运动",
+  "onboardingPlaySportQuestion": "你目前参加运动吗？",
+  "onboardingPlaySportYes": "是，我参加运动",
+  "onboardingPlaySportNo": "不，目前没有",
+  "onboardingYourSportLabel": "你的运动",
+  "onboardingEnterSport": "请输入你的运动",
+  "onboardingNoSportTargets": "没问题——我们会根据你的身体指标估算营养目标。",
+  "onboardingChooseOption": "请选择上方选项以继续。",
+  "onboardingYourSchool": "你的学校",
+  "onboardingSchoolNameLabel": "学校名称（可选）",
+  "onboardingGraduationYearLabel": "毕业年份（可选）",
+  "onboardingEnterFourDigitYear": "请输入四位年份",
+  "onboardingSleepCheck": "睡眠检查",
+  "onboardingSleepCheckIntro": "三个快速问题。点击选项以选择；再次点击即可取消选择。",
+  "sleepQuestionWakeTired": "你醒来时会感到疲惫吗？",
+  "sleepQuestionWakeTiredHint": "想想典型的上学周。",
+  "sleepQuestionBedtimeChanges": "你的就寝时间变化很大吗？",
+  "sleepQuestionBedtimeChangesHint": "比赛、训练或作业可能会让你晚睡。",
+  "sleepQuestionReminder": "睡前提醒会有帮助吗？",
+  "sleepQuestionReminderHint": "在目标睡眠时间前给你一个温和提醒。",
+  "sleepAnswerNotOften": "不常",
+  "sleepAnswerSometimes": "有时",
+  "sleepAnswerOften": "经常",
+  "onboardingUseSleepMode": "使用睡眠模式",
+  "onboardingSleepRecommended": "我们建议使用睡眠模式",
+  "onboardingSleepOptional": "睡眠模式为可选项",
+  "onboardingSleepRecommendation": "根据你的回答，睡眠模式可以帮助你恢复。",
+  "onboardingSleepOptionalBody": "如果你的日程改变，可以稍后在设置中开启。",
+  "onboardingBodyMetrics": "你的身体指标",
+  "onboardingBodyMetricsHint": "我们使用身高和体重来估算你的每日营养目标。",
+  "onboardingHeightLabel": "身高（CM）",
+  "onboardingWeightLabel": "体重（KG）",
+  "onboardingMaximumHeight": "最大身高为 {height} 厘米",
+  "@onboardingMaximumHeight": {
+    "placeholders": {
+      "height": {
+        "type": "int"
+      }
+    }
+  },
+  "onboardingMaximumWeight": "最大体重为 {weight} 千克",
+  "@onboardingMaximumWeight": {
+    "placeholders": {
+      "weight": {
+        "type": "int"
+      }
+    }
+  },
+  "onboardingNutritionTargets": "每日营养目标",
+  "onboardingTargetsFromSport": "我们根据你的运动、身高和体重进行了估算。你可以调整。",
+  "onboardingTargetsFromMetrics": "我们根据你的身高和体重进行了估算。你可以调整。",
+  "homeTodayMealPlan": "今日餐食计划",
+  "homeNoMealsPlanned": "今天尚未安排餐食。",
+  "homeMealPlanUnavailable": "餐食计划暂时不可用。",
+  "homeMealPlanRefreshed": "已根据你的偏好更新餐食计划",
+  "homeUnableToSaveHydration": "无法保存饮水量：{error}",
+  "@homeUnableToSaveHydration": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "homeFailedToLoadData": "无法加载首页数据：\n{error}",
+  "@homeFailedToLoadData": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "homeThisWeeksFuel": "本周补给",
+  "homeTodayFuel": "今日补给",
+  "homeHydration": "饮水量",
+  "homeProgramTitle": "你的计划",
+  "homeProgramSubtitle": "保持规律，为训练补足能量。",
+  "homeWeeklySleep": "每周睡眠",
+  "homeLogged": "已记录",
+  "homeTargetHours": "目标 {hours} 小时",
+  "@homeTargetHours": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduleTitle": "日程",
+  "scheduleTimeline": "时间线",
+  "scheduleMeals": "餐食",
+  "scheduleEvents": "活动",
+  "scheduleSleep": "睡眠",
+  "scheduleLogSleep": "记录睡眠",
+  "scheduleLogSleepForDay": "记录当天睡眠",
+  "scheduleNewMealReady": "新的{meal}餐已准备好",
+  "@scheduleNewMealReady": {
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduleMealGenerationFailed": "无法生成新餐食：{error}",
+  "@scheduleMealGenerationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduleDeleteEventTitle": "删除活动？",
+  "scheduleDeleteEventBody": "要从日程中删除“{title}”吗？",
+  "@scheduleDeleteEventBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduleDeleteEventFailed": "无法删除活动。",
+  "scheduleEventDeleted": "活动已删除。",
+  "scheduleNoItems": "当天没有安排。",
+  "scheduleCreateEvent": "创建活动",
+  "scheduleEventCreated": "活动已创建",
+  "scheduleEventType": "活动类型",
+  "scheduleEventTitle": "标题",
+  "scheduleDate": "日期",
+  "scheduleTime": "时间",
+  "scheduleSubtitle": "副标题",
+  "scheduleLocation": "地点",
+  "scheduleBadge": "徽章",
+  "scheduleFuelingHints": "补给提示",
+  "scheduleTiming": "时机",
+  "scheduleHint": "提示",
+  "scheduleFilterAll": "全部",
+  "scheduleFilterMeals": "餐食",
+  "scheduleFilterEvents": "活动",
+  "scheduleFilterSleep": "睡眠",
+  "scheduleEventPractice": "训练",
+  "scheduleEventGame": "比赛",
+  "scheduleEventWorkout": "锻炼",
+  "scheduleEventOther": "其他",
+  "scheduleEventMeal": "餐食",
+  "scheduleEventTraining": "训练",
+  "scheduleEventMatch": "比赛",
+  "mealsTitle": "餐食",
+  "mealsLogMeal": "记录餐食",
+  "mealsMealLogged": "餐食记录成功",
+  "mealsMealName": "餐食名称",
+  "mealsCalories": "卡路里 kcal",
+  "mealsProtein": "蛋白质",
+  "mealsCarbs": "碳水化合物",
+  "mealsFats": "脂肪",
+  "mealsSaveMeal": "保存餐食",
+  "mealsFavorites": "收藏",
+  "mealsFavoriteLogged": "已记录{title}",
+  "@mealsFavoriteLogged": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "mealsRecipeDetails": "食谱详情",
+  "mealsIngredients": "食材",
+  "mealsInstructions": "做法",
+  "mealsMinutes": "{count} 分钟",
+  "@mealsMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mealsServings": "{count} 份",
+  "@mealsServings": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepDashboardTitle": "睡眠日程",
+  "sleepProfileUnavailable": "个人资料不可用",
+  "sleepBedtime": "就寝时间",
+  "sleepWakeTime": "起床时间",
+  "sleepSaveSchedule": "保存睡眠日程",
+  "sleepUnableToSaveSchedule": "无法保存睡眠日程：{error}",
+  "@sleepUnableToSaveSchedule": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTargetSleep": "目标睡眠",
+  "sleepTonightBedtime": "今晚就寝时间",
+  "sleepRecoveryAhead": "恢复在前方",
+  "sleepOnTarget": "达到目标",
+  "sleepNeedsBoost": "睡眠需要加强",
+  "sleepUnableToSaveLog": "无法保存睡眠记录：{error}",
+  "@sleepUnableToSaveLog": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profileTitle": "个人资料",
+  "profileSignOutTitle": "退出登录？",
+  "profileSignOutBody": "确定要退出登录吗？",
+  "profileDeleteAccountTitle": "删除账户？",
+  "profileDeleteGuestBody": "这将永久删除你的访客账户，以及此设备上所有记录的餐食、睡眠和个人资料数据。此操作无法撤销。",
+  "profileDeleteAccountBody": "这将永久删除{email}及所有相关数据。此操作无法撤销。",
+  "@profileDeleteAccountBody": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "profileAccountCreated": "账户创建成功",
+  "profileVerificationSent": "验证邮件已发送——请检查收件箱并确认。",
+  "profilePasswordUpdated": "密码已更新",
+  "profileCreateAccount": "创建账户",
+  "profileLinkEmail": "关联电子邮件",
+  "profileGuestNotice": "创建账户以备份数据，并在所有设备上使用。",
+  "profileSaveRefreshMealPlan": "保存并刷新餐食计划",
+  "profileUnableToUpdateAccessibility": "无法更新无障碍模式：{error}",
+  "@profileUnableToUpdateAccessibility": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profileUnableToUpdateSleepMode": "无法更新睡眠模式：{error}",
+  "@profileUnableToUpdateSleepMode": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profileModeSwitcher": "模式切换器",
+  "profileMinimalTabs": "简洁标签页",
+  "profileMinimalTabsDescription": "带有活动下划线的精简顶部标签页。",
+  "profileClassicPill": "经典胶囊",
+  "profileClassicPillDescription": "原始圆角分段控件。",
+  "profileUnableToUpdateModeSwitcher": "无法更新模式切换器：{error}",
+  "@profileUnableToUpdateModeSwitcher": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@comingSoon": {
+    "placeholders": {
+      "feature": {
+        "type": "String"
+      }
+    }
+  },
+  "profile": "资料",
+  "profileUnavailable": "资料不可用",
+  "unableToLoadProfile": "无法加载资料：{error}",
+  "noNameSet": "未设置姓名",
+  "phone": "电话",
+  "sport": "运动",
+  "height": "身高",
+  "weight": "体重",
+  "trainingDays": "训练日",
+  "sleepTarget": "睡眠目标",
+  "allergens": "过敏原",
+  "restrictions": "限制",
+  "editProfileAndSettings": "编辑资料和设置",
+  "guestCreateAccountTitle": "创建账户",
+  "guestCreateAccountBody": "注册以保存您的资料、营养目标和训练数据。",
+  "guestAccountNotice": "您正在使用无云同步的访客账户。创建账户保存数据前，资料编辑已禁用。",
+  "signOutTitle": "退出登录？",
+  "signOutGuestBody": "您尚未绑定邮箱。退出可能会丢失此设备上的数据。",
+  "signOutAccountBody": "退出 {account}？",
+  "@signOutAccountBody": {
+    "placeholders": {
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "yourAccount": "您的账户",
+  "deleteAccountTitle": "删除账户？",
+  "deleteGuestAccountBody": "这将永久删除您的访客账户及此设备上所有已记录的餐食、睡眠和资料数据，无法撤销。",
+  "deleteAccountBody": "这将永久删除 {account} 及所有相关数据，无法撤销。",
+  "@deleteAccountBody": {
+    "placeholders": {
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "mealPreferencesDescription": "选择饮食风格和过敏信息，以便我们个性化您的餐食计划。",
+  "unableToSavePreferences": "无法保存偏好：{error}",
+  "@unableToSavePreferences": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unableToLoadProfileShort": "无法加载您的资料。",
+  "saveAndRefreshMealPlan": "保存并刷新餐食计划",
+  "accountCreatedSuccessfully": "账户创建成功",
+  "emailVerificationSent": "验证邮件已发送——请查收邮箱确认。",
+  "passwordUpdated": "密码已更新",
+  "unableToUpdateAccessibilityMode": "无法更新无障碍模式：{error}",
+  "@unableToUpdateAccessibilityMode": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unableToUpdateSleepMode": "无法更新睡眠模式：{error}",
+  "@unableToUpdateSleepMode": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "modeSwitcher": "模式切换器",
+  "minimalTabs": "极简标签",
+  "minimalTabsDescription": "顶部细标签，活动项带下划线。",
+  "classicPill": "经典胶囊",
+  "classicPillDescription": "原始圆角分段控件。",
+  "unableToUpdateModeSwitcher": "无法更新模式切换器：{error}",
+  "@unableToUpdateModeSwitcher": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "changeEmail": "更改邮箱",
+  "newEmail": "新邮箱",
+  "currentPassword": "当前密码",
+  "enterPassword": "输入您的密码",
+  "update": "更新",
+  "newPassword": "新密码",
+  "confirmPassword": "确认密码",
+  "passwordMinCharacters": "至少 6 个字符",
+  "passwordsDoNotMatch": "密码不匹配",
+  "sleepGreetingMorning": "早上好",
+  "sleepGreetingAfternoon": "下午好",
+  "sleepGreetingEvening": "晚上好",
+  "athlete": "运动员",
+  "logSleep": "记录睡眠",
+  "sleepSchedule": "睡眠计划",
+  "unableToSaveSleepSchedule": "无法保存睡眠计划：{error}",
+  "@unableToSaveSleepSchedule": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepProfileUnavailableBody": "规划睡眠前需要您的资料。",
+  "wakeTimePlanning": "起床时间规划",
+  "setSleepSchedule": "设置睡眠计划",
+  "wakeTimePlanningDescription": "我们使用您的常用就寝和起床时间来保护训练和比赛日前的恢复。",
+  "setSleepScheduleDescription": "添加常用就寝和起床时间，以便睡眠模式规划恢复并跟踪睡眠统计。",
+  "bedtime": "就寝时间",
+  "wakeTime": "起床时间",
+  "add": "添加",
+  "saveSleepSchedule": "保存睡眠计划",
+  "targetSleep": "目标睡眠",
+  "tonightBedtime": "今晚就寝时间",
+  "earlierWakeSuggested": "建议在 {time} 的 {event} 之前更早起床。",
+  "@earlierWakeSuggested": {
+    "placeholders": {
+      "event": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "customBedtimeLimit": "最多可添加 3 个自定义就寝项目。",
+  "unableToSaveBedtimeItems": "无法保存就寝项目：{error}",
+  "@unableToSaveBedtimeItems": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "enterValidTime": "请输入有效时间，如 10:30 PM 或 22:30。",
+  "addCustomBedtime": "添加自定义就寝时间",
+  "editCustomBedtime": "编辑自定义就寝时间",
+  "bedtimeHint": "10:30 PM 或 22:30",
+  "pickTime": "选择时间",
+  "sleepLoggedForDay": "已为 {day} 保存 {duration}。{advice}",
+  "@sleepLoggedForDay": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "day": {
+        "type": "String"
+      },
+      "advice": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepAppliedForDays": "已将 {duration} 应用于 {count} 天。{advice}",
+  "@sleepAppliedForDays": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "advice": {
+        "type": "String"
+      }
+    }
+  },
+  "unableToLoadSleepSchedule": "无法加载睡眠计划：\n{error}",
+  "@unableToLoadSleepSchedule": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepScheduleUnavailable": "睡眠计划不可用",
+  "sleepScheduleDescription": "选择日期，输入小时和分钟，然后保存单日或将相同睡眠时长应用于接下来一周。",
+  "hours": "小时",
+  "minutes": "分钟",
+  "selectedDuration": "所选时长：{duration}",
+  "@selectedDuration": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "targetDuration": "目标 {duration}",
+  "@targetDuration": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "presetBedtimes": "预设就寝时间",
+  "customBedtimeItems": "自定义就寝项目（{count}/{max}）",
+  "@customBedtimeItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "noCustomBedtimeItems": "尚无自定义就寝项目。最多添加 3 个。",
+  "editTime": "编辑时间",
+  "bedtimeItemsDescription": "就寝项目使用起床时间 {time} 来计算睡眠时长。",
+  "@bedtimeItemsDescription": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "saveDay": "保存当天",
+  "applyNextSevenDays": "应用于未来7天",
+  "automaticTrackingStatus": "自动跟踪状态",
+  "automaticTrackingDescription": "由于后台限制，仅依靠时钟的自动跟踪在 iOS/Android 上并不可靠。请使用此计划工具手动安排，健康同步可作为未来的自动选项。",
+  "today": "今天",
+  "mondayShort": "周一",
+  "tuesdayShort": "周二",
+  "wednesdayShort": "周三",
+  "thursdayShort": "周四",
+  "fridayShort": "周五",
+  "saturdayShort": "周六",
+  "sundayShort": "周日",
+  "sleepDurationInvalid": "请输入有效的小时和分钟（分钟为 0–59）。",
+  "sleepDurationRange": "睡眠时长应在 2 到 16 小时之间。",
+  "sleepTotal": "总计：{duration}",
+  "@sleepTotal": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTargetHours": "目标：{hours} 小时",
+  "@sleepTargetHours": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "saveSleep": "保存睡眠",
+  "sleepCheckInDescription": "您睡了多久？输入小时和分钟，或暂时跳过。",
+  "sleepLogged": "已记录 {duration}。{advice}",
+  "@sleepLogged": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "advice": {
+        "type": "String"
+      }
+    }
+  },
+  "unableToSaveSleepLog": "无法保存睡眠记录：{error}",
+  "@unableToSaveSleepLog": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "recoveryAhead": "恢复领先",
+  "sleepAboveTarget": "您睡了 {slept}，高于 {target} 小时目标。",
+  "@sleepAboveTarget": {
+    "placeholders": {
+      "slept": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepConsistencyAdvice": "保持就寝时间接近 {bedtime}，并在 {wakeTime} 左右起床以保持一致。",
+  "@sleepConsistencyAdvice": {
+    "placeholders": {
+      "bedtime": {
+        "type": "String"
+      },
+      "wakeTime": {
+        "type": "String"
+      }
+    }
+  },
+  "onTarget": "达标",
+  "sleepMatchesTarget": "您睡了 {slept}，达到 {target} 小时目标。",
+  "@sleepMatchesTarget": {
+    "placeholders": {
+      "slept": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepRhythmAdvice": "保持节奏：就寝约 {bedtime}，起床约 {wakeTime}。",
+  "@sleepRhythmAdvice": {
+    "placeholders": {
+      "bedtime": {
+        "type": "String"
+      },
+      "wakeTime": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepBelowTarget": "您比 {target} 小时目标少约 {deficit} 小时。",
+  "@sleepBelowTarget": {
+    "placeholders": {
+      "deficit": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepRecoveryAdvice": "今晚，尽量在 {bedtime} 左右就寝，以便在 {wakeTime} 起床并获得更好恢复。{eventNote}",
+  "@sleepRecoveryAdvice": {
+    "placeholders": {
+      "bedtime": {
+        "type": "String"
+      },
+      "wakeTime": {
+        "type": "String"
+      },
+      "eventNote": {
+        "type": "String"
+      }
+    }
+  },
+  "earlierWakeRecommendation": "建议在 {time} 的 {event} 之前更早起床。",
+  "@earlierWakeRecommendation": {
+    "placeholders": {
+      "event": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@trainingDaysCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@failedToSave": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@unableToLoadSettings": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@unableToUpdateTextSize": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@unableToUpdateTheme": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@unableToUpdateLanguage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@unableToSignOut": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@unableToDeleteAccount": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@failedToInitializeApp": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@failedToLoadAccount": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduleMealPlan": "餐食计划",
+  "scheduleNoMealsPlanned": "此日无计划餐食。",
+  "scheduleMealPlanUnavailable": "餐食计划目前不可用。",
+  "scheduleGenerating": "生成中...",
+  "scheduleNewMeal": "新餐食",
+  "scheduleSleepLogged": "已记录睡眠",
+  "scheduleThisWeek": "本周",
+  "scheduleFullMonth": "整月",
+  "scheduleTodaysMatch": "今日比赛",
+  "scheduleAddTitle": "添加标题",
+  "scheduleAddSubtitle": "添加副标题",
+  "scheduleAddLocation": "添加地点",
+  "scheduleAddBadge": "添加徽章",
+  "scheduleAddHints": "添加提示",
+  "scheduleHintCount": "{count} 条提示",
+  "@scheduleHintCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scheduleTimingHint": "提前 2 小时",
+  "scheduleHydrate": "补水",
+  "scheduleRemoveHint": "移除提示",
+  "scheduleLoadFailed": "无法加载日程。",
+  "scheduleLogSleepEmpty": "此日无睡眠记录。",
+  "scheduleNoEvents": "此日无安排赛事。",
+  "scheduleNoMeals": "此日无已记录餐食。",
+  "scheduleNoEntries": "此日无赛事、餐食或睡眠记录。",
+  "mealSearchTitle": "查找菜品",
+  "mealSearchDescription": "搜索食谱并在应用内查看配料和步骤。",
+  "mealSearchHint": "搜索鸡肉、意面、沙拉...",
+  "mealSearchResultsFor": "“{query}”的搜索结果",
+  "@mealSearchResultsFor": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "mealPopularDishes": "热门菜品",
+  "mealUnableToLoadDishes": "无法加载菜品",
+  "mealNoDishesFound": "未找到菜品，请尝试其他搜索。",
+  "mealEnterDishName": "输入菜名并在键盘上点击搜索。",
+  "mealUnableToLog": "无法记录餐食：{error}",
+  "@mealUnableToLog": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "mealEnterValidNumber": "请输入有效数字",
+  "mealLogFavorite": "记录收藏",
+  "mealUnableToLogFavorite": "无法记录收藏：{error}",
+  "@mealUnableToLogFavorite": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "mealEditBeforeLogging": "记录前编辑",
+  "mealSavedToProfile": "已保存到资料",
+  "mealServingCount": "{count} 份",
+  "@mealServingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mealProtein": "蛋白质",
+  "mealCarbs": "碳水化合物",
+  "mealFats": "脂肪",
+  "mealUnableToLoadRecipeDetails": "无法加载食谱详情",
+  "mealFavoriteBerryYogurtBowl": "浆果酸奶碗",
+  "mealFavoriteSalmonBowl": "三文鱼碗",
+  "mealFavoriteChickenBowl": "鸡肉碗",
+  "homeHydrationReminder": "补水提醒",
+  "homeHydrationGoalReached": "做得好——目标已达成！",
+  "homeHydrationDrinkMore": "今天再喝 {liters} 升",
+  "@homeHydrationDrinkMore": {
+    "placeholders": {
+      "liters": {
+        "type": "String"
+      }
+    }
+  },
+  "homeHydrationLoggedOf": "已记录 {current} 升 / {target} 升",
+  "@homeHydrationLoggedOf": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "homeMealCapture": "餐食记录",
+  "homeReadyToLog": "准备记录了吗？",
+  "homeMealCaptureOptions": "手动、偏好或收藏",
+  "homePrefsShort": "偏好",
+  "homePersonalNutritionProgram": "个人营养计划",
+  "homeSchoolSportProgram": "{school} {sport} 计划",
+  "@homeSchoolSportProgram": {
+    "placeholders": {
+      "school": {
+        "type": "String"
+      },
+      "sport": {
+        "type": "String"
+      }
+    }
+  },
+  "homeSportNutritionProgram": "{sport} 营养计划",
+  "@homeSportNutritionProgram": {
+    "placeholders": {
+      "sport": {
+        "type": "String"
+      }
+    }
+  },
+  "homeNoSleepLoggedWeek": "本周尚无睡眠记录。",
+  "homeSleepWeekAvg": "平均 {avg} • 已记录 {logged}/7 天",
+  "@homeSleepWeekAvg": {
+    "placeholders": {
+      "avg": {
+        "type": "String"
+      },
+      "logged": {
+        "type": "int"
+      }
+    }
+  },
+  "homeFailedLoadWeeklyFuel": "无法加载本周营养数据：\n{error}",
+  "@homeFailedLoadWeeklyFuel": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "homeNoMealsLoggedWeek": "本周尚无餐食记录。",
+  "homeDaysLoggedCount": "已记录 {logged}/7 天",
+  "@homeDaysLoggedCount": {
+    "placeholders": {
+      "logged": {
+        "type": "int"
+      }
+    }
+  },
+  "homeTotal": "总计",
+  "homeWeeklyTarget": "每周目标",
+  "homeDailyAverage": "日均",
+  "homeDailyCalories": "每日卡路里",
+  "homeDailyBreakdown": "每日明细",
+  "homeTodayDateLabel": "今天 • {date}",
+  "@homeTodayDateLabel": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "homeNoMealsLogged": "无餐食记录",
+  "homeCaloriesProgress": "{current} / {target} 千卡",
+  "@homeCaloriesProgress": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "homeMacroSummary": "蛋白质 {protein} 克 • 碳水 {carbs} 克 • 脂肪 {fats} 克",
+  "@homeMacroSummary": {
+    "placeholders": {
+      "protein": {
+        "type": "String"
+      },
+      "carbs": {
+        "type": "String"
+      },
+      "fats": {
+        "type": "String"
+      }
+    }
+  },
+  "homeMealKcalProtein": "{kcal} 千卡 · 蛋白质 {protein} 克",
+  "@homeMealKcalProtein": {
+    "placeholders": {
+      "kcal": {
+        "type": "String"
+      },
+      "protein": {
+        "type": "String"
+      }
+    }
+  },
+  "homeNextSession": "下一场训练",
+  "homeManualLog": "手动",
+  "homeCaloriesOfTarget": "/ {target} 千卡",
+  "@homeCaloriesOfTarget": {
+    "placeholders": {
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "scanMealSaved": "餐食已保存到记录",
+  "scanUnableAnalyze": "无法分析餐食照片：{error}",
+  "@scanUnableAnalyze": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "scanUnablePickImage": "无法选择图片：{error}",
+  "@scanUnablePickImage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "scanTakePhoto": "拍照",
+  "scanTakePhotoSubtitle": "使用相机扫描餐食",
+  "scanPhotoLibrary": "照片库",
+  "scanPhotoLibrarySubtitle": "选择已有图片",
+  "scanMeal": "扫描餐食",
+  "scanPointAtFood": "对准您的食物",
+  "scanTapToCapture": "点击拍照或从图库选择",
+  "scanAnalyzing": "正在分析餐食...",
+  "scanPhoto": "照片",
+  "scanManual": "手动",
+  "scanPrevious": "历史",
+  "scanMealAdded": "餐食已添加到记录",
+  "scanMealAnalysis": "餐食分析",
+  "scanMealAnalysisSubtitle": "保存到记录前请查看 AI 估算结果。",
+  "scanPreviousMeals": "历史餐食",
+  "scanPreviousMealsSubtitle": "点击餐食再次记录。最多显示 {count} 条最近记录。",
+  "@scanPreviousMealsSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scanNoMealsLogged": "尚无餐食记录。",
+  "scanMealListSubtitle": "{kcal} 千卡 · 蛋白质 {protein} 克",
+  "@scanMealListSubtitle": {
+    "placeholders": {
+      "kcal": {
+        "type": "String"
+      },
+      "protein": {
+        "type": "String"
+      }
+    }
+  },
+  "onboardingSleepReasonWakeTired": "您经常醒来感到疲惫。",
+  "onboardingSleepReasonBedtimeChanges": "您的就寝时间变化很大。",
+  "onboardingSleepReasonReminder": "提醒可能有助于您放松入睡。",
+  "onboardingSleepReasonSteadierRoutine": "睡眠模式可帮助您建立更稳定的作息。",
+  "profileEditPhoto": "编辑照片",
+  "mealTypeBreakfast": "早餐",
+  "mealTypeLunch": "午餐",
+  "mealTypeDinner": "晚餐",
+  "mealTypeSnack": "加餐"
 }

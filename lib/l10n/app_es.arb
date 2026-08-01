@@ -130,5 +130,1009 @@
   "deleteAccountReauthPassword": "Contraseña",
   "authErrorRequiresRecentLogin": "Por seguridad, confirma tu contraseña e inténtalo de nuevo.",
   "failedToInitializeApp": "No se pudo inicializar la app:\n{error}",
-  "failedToLoadAccount": "No se pudo cargar la cuenta:\n{error}"
+  "failedToLoadAccount": "No se pudo cargar la cuenta:\n{error}",
+  "continueButton": "Continuar",
+  "save": "Guardar",
+  "delete": "Eliminar",
+  "tryAgain": "Intentar de nuevo",
+  "select": "Seleccionar",
+  "skipForNow": "Omitir por ahora",
+  "finishSetup": "Finalizar configuración",
+  "yes": "Sí",
+  "no": "No",
+  "maybe": "Quizás",
+  "required": "Obligatorio",
+  "enterPositiveNumber": "Ingresa un número positivo",
+  "navHome": "Inicio",
+  "navMeals": "Comidas",
+  "navSchedule": "Horario",
+  "navProfile": "Perfil",
+  "navSleep": "Sueño",
+  "navLog": "Registro",
+  "modeMealTracking": "Seguimiento de comidas",
+  "modeSleep": "Sueño",
+  "goodMorning": "Buenos días",
+  "goodAfternoon": "Buenas tardes",
+  "goodEvening": "Buenas noches",
+  "sportTennis": "Tenis",
+  "sportBasketball": "Baloncesto",
+  "sportSoccer": "Fútbol",
+  "sportAmericanFootball": "Fútbol americano",
+  "sportBaseball": "Béisbol",
+  "sportSoftball": "Sóftbol",
+  "sportVolleyball": "Voleibol",
+  "sportSwimming": "Natación",
+  "sportTrackAndField": "Atletismo",
+  "sportCrossCountry": "Campo a través",
+  "sportWrestling": "Lucha",
+  "sportLacrosse": "Lacrosse",
+  "sportHockey": "Hockey",
+  "sportGolf": "Golf",
+  "sportGymnastics": "Gimnasia",
+  "sportCycling": "Ciclismo",
+  "sportOther": "Otro",
+  "sportNone": "Ninguno",
+  "onboardingWelcomeTitle": "NutriLens",
+  "onboardingWelcomeSubtitle": "Aliméntate mejor. Entrena más fuerte.",
+  "onboardingGetStarted": "Comenzar",
+  "onboardingYourName": "Tu nombre",
+  "onboardingFullNameLabel": "NOMBRE COMPLETO",
+  "onboardingAboutSport": "Sobre tu deporte",
+  "onboardingPlaySportQuestion": "¿Practicas algún deporte actualmente?",
+  "onboardingPlaySportYes": "Sí, practico un deporte",
+  "onboardingPlaySportNo": "No, actualmente no",
+  "onboardingYourSportLabel": "TU DEPORTE",
+  "onboardingEnterSport": "Ingresa tu deporte",
+  "onboardingNoSportTargets": "No hay problema: estimaremos tus objetivos nutricionales según tus medidas corporales.",
+  "onboardingChooseOption": "Elige una opción arriba para continuar.",
+  "onboardingYourSchool": "Tu escuela",
+  "onboardingSchoolNameLabel": "NOMBRE DE LA ESCUELA (OPCIONAL)",
+  "onboardingGraduationYearLabel": "AÑO DE GRADUACIÓN (OPCIONAL)",
+  "onboardingEnterFourDigitYear": "Ingresa un año de 4 dígitos",
+  "onboardingSleepCheck": "Revisión del sueño",
+  "onboardingSleepCheckIntro": "Tres preguntas rápidas. Toca una opción para seleccionarla; tócala de nuevo para quitarla.",
+  "sleepQuestionWakeTired": "¿Te despiertas cansado?",
+  "sleepQuestionWakeTiredHint": "Piensa en una semana escolar típica.",
+  "sleepQuestionBedtimeChanges": "¿Tu hora de dormir cambia mucho?",
+  "sleepQuestionBedtimeChangesHint": "Los partidos, entrenamientos o tareas pueden retrasar el sueño.",
+  "sleepQuestionReminder": "¿Te ayudaría un recordatorio para dormir?",
+  "sleepQuestionReminderHint": "Un suave aviso antes de tu hora objetivo de dormir.",
+  "sleepAnswerNotOften": "No muy a menudo",
+  "sleepAnswerSometimes": "A veces",
+  "sleepAnswerOften": "A menudo",
+  "onboardingUseSleepMode": "Usar modo sueño",
+  "onboardingSleepRecommended": "Recomendamos el modo sueño",
+  "onboardingSleepOptional": "El modo sueño es opcional",
+  "onboardingSleepRecommendation": "Según tus respuestas, el modo sueño podría ayudarte a recuperarte.",
+  "onboardingSleepOptionalBody": "Puedes activarlo más tarde en Configuración si cambia tu horario.",
+  "onboardingBodyMetrics": "Tus medidas corporales",
+  "onboardingBodyMetricsHint": "Usamos la altura y el peso para estimar tus objetivos nutricionales diarios.",
+  "onboardingHeightLabel": "ALTURA (CM)",
+  "onboardingWeightLabel": "PESO (KG)",
+  "onboardingMaximumHeight": "La altura máxima es {height} cm",
+  "@onboardingMaximumHeight": {
+    "placeholders": {
+      "height": {
+        "type": "int"
+      }
+    }
+  },
+  "onboardingMaximumWeight": "El peso máximo es {weight} kg",
+  "@onboardingMaximumWeight": {
+    "placeholders": {
+      "weight": {
+        "type": "int"
+      }
+    }
+  },
+  "onboardingNutritionTargets": "Objetivos nutricionales diarios",
+  "onboardingTargetsFromSport": "Los estimamos según tu deporte, altura y peso. Puedes ajustarlos.",
+  "onboardingTargetsFromMetrics": "Los estimamos según tu altura y peso. Puedes ajustarlos.",
+  "homeTodayMealPlan": "Plan de comidas de hoy",
+  "homeNoMealsPlanned": "Aún no hay comidas planificadas para hoy.",
+  "homeMealPlanUnavailable": "El plan de comidas no está disponible ahora mismo.",
+  "homeMealPlanRefreshed": "Plan de comidas actualizado con tus preferencias",
+  "homeUnableToSaveHydration": "No se pudo guardar la hidratación: {error}",
+  "@homeUnableToSaveHydration": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "homeFailedToLoadData": "No se pudieron cargar los datos de inicio:\n{error}",
+  "@homeFailedToLoadData": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "homeThisWeeksFuel": "Combustible de esta semana",
+  "homeTodayFuel": "Combustible de hoy",
+  "homeHydration": "Hidratación",
+  "homeProgramTitle": "Tu programa",
+  "homeProgramSubtitle": "Mantén la constancia y alimenta tu entrenamiento.",
+  "homeWeeklySleep": "Sueño semanal",
+  "homeLogged": "Registrado",
+  "homeTargetHours": "Objetivo {hours} h",
+  "@homeTargetHours": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduleTitle": "Horario",
+  "scheduleTimeline": "Cronología",
+  "scheduleMeals": "Comidas",
+  "scheduleEvents": "Eventos",
+  "scheduleSleep": "Sueño",
+  "scheduleLogSleep": "Registrar sueño",
+  "scheduleLogSleepForDay": "Registrar sueño de este día",
+  "scheduleNewMealReady": "Nueva comida de {meal} lista",
+  "@scheduleNewMealReady": {
+    "placeholders": {
+      "meal": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduleMealGenerationFailed": "No se pudo generar una nueva comida: {error}",
+  "@scheduleMealGenerationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduleDeleteEventTitle": "¿Eliminar evento?",
+  "scheduleDeleteEventBody": "¿Eliminar \"{title}\" de tu horario?",
+  "@scheduleDeleteEventBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduleDeleteEventFailed": "No se pudo eliminar el evento.",
+  "scheduleEventDeleted": "Evento eliminado.",
+  "scheduleNoItems": "No hay nada programado para este día.",
+  "scheduleCreateEvent": "Crear evento",
+  "scheduleEventCreated": "Evento creado",
+  "scheduleEventType": "Tipo de evento",
+  "scheduleEventTitle": "Título",
+  "scheduleDate": "Fecha",
+  "scheduleTime": "Hora",
+  "scheduleSubtitle": "Subtítulo",
+  "scheduleLocation": "Ubicación",
+  "scheduleBadge": "Insignia",
+  "scheduleFuelingHints": "Consejos de alimentación",
+  "scheduleTiming": "Horario",
+  "scheduleHint": "Consejo",
+  "scheduleFilterAll": "Todo",
+  "scheduleFilterMeals": "Comidas",
+  "scheduleFilterEvents": "Eventos",
+  "scheduleFilterSleep": "Sueño",
+  "scheduleEventPractice": "Entrenamiento",
+  "scheduleEventGame": "Partido",
+  "scheduleEventWorkout": "Ejercicio",
+  "scheduleEventOther": "Otro",
+  "scheduleEventMeal": "Comida",
+  "scheduleEventTraining": "Entrenamiento",
+  "scheduleEventMatch": "Partido",
+  "mealsTitle": "Comidas",
+  "mealsLogMeal": "Registrar comida",
+  "mealsMealLogged": "Comida registrada correctamente",
+  "mealsMealName": "Nombre de la comida",
+  "mealsCalories": "Calorías kcal",
+  "mealsProtein": "Proteína",
+  "mealsCarbs": "Carbohidratos",
+  "mealsFats": "Grasas",
+  "mealsSaveMeal": "Guardar comida",
+  "mealsFavorites": "Favoritos",
+  "mealsFavoriteLogged": "{title} registrada",
+  "@mealsFavoriteLogged": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "mealsRecipeDetails": "Detalles de la receta",
+  "mealsIngredients": "Ingredientes",
+  "mealsInstructions": "Instrucciones",
+  "mealsMinutes": "{count} min",
+  "@mealsMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mealsServings": "{count} porciones",
+  "@mealsServings": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepDashboardTitle": "Horario de sueño",
+  "sleepProfileUnavailable": "Perfil no disponible",
+  "sleepBedtime": "Hora de dormir",
+  "sleepWakeTime": "Hora de despertar",
+  "sleepSaveSchedule": "Guardar horario de sueño",
+  "sleepUnableToSaveSchedule": "No se pudo guardar el horario de sueño: {error}",
+  "@sleepUnableToSaveSchedule": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTargetSleep": "Sueño objetivo",
+  "sleepTonightBedtime": "Hora de dormir esta noche",
+  "sleepRecoveryAhead": "La recuperación está por delante",
+  "sleepOnTarget": "En objetivo",
+  "sleepNeedsBoost": "El sueño necesita un impulso",
+  "sleepUnableToSaveLog": "No se pudo guardar el registro de sueño: {error}",
+  "@sleepUnableToSaveLog": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profileTitle": "Perfil",
+  "profileSignOutTitle": "¿Cerrar sesión?",
+  "profileSignOutBody": "¿Seguro que deseas cerrar sesión?",
+  "profileDeleteAccountTitle": "¿Eliminar cuenta?",
+  "profileDeleteGuestBody": "Esto elimina permanentemente tu cuenta de invitado y todas las comidas, el sueño y los datos de perfil registrados en este dispositivo. No se puede deshacer.",
+  "profileDeleteAccountBody": "Esto elimina permanentemente {email} y todos los datos asociados. No se puede deshacer.",
+  "@profileDeleteAccountBody": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "profileAccountCreated": "Cuenta creada correctamente",
+  "profileVerificationSent": "Verificación enviada; revisa tu bandeja de entrada para confirmar.",
+  "profilePasswordUpdated": "Contraseña actualizada",
+  "profileCreateAccount": "Crear cuenta",
+  "profileLinkEmail": "Vincular correo electrónico",
+  "profileGuestNotice": "Crea una cuenta para respaldar tus datos y usarlos en todos tus dispositivos.",
+  "profileSaveRefreshMealPlan": "Guardar y actualizar plan de comidas",
+  "profileUnableToUpdateAccessibility": "No se pudo actualizar el modo de accesibilidad: {error}",
+  "@profileUnableToUpdateAccessibility": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profileUnableToUpdateSleepMode": "No se pudo actualizar el modo sueño: {error}",
+  "@profileUnableToUpdateSleepMode": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profileModeSwitcher": "Selector de modo",
+  "profileMinimalTabs": "Pestañas mínimas",
+  "profileMinimalTabsDescription": "Pestañas superiores delgadas con subrayado activo.",
+  "profileClassicPill": "Píldora clásica",
+  "profileClassicPillDescription": "Control segmentado redondeado original.",
+  "profileUnableToUpdateModeSwitcher": "No se pudo actualizar el selector de modo: {error}",
+  "@profileUnableToUpdateModeSwitcher": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@comingSoon": {
+    "placeholders": {
+      "feature": {
+        "type": "String"
+      }
+    }
+  },
+  "profile": "Perfil",
+  "profileUnavailable": "Perfil no disponible",
+  "unableToLoadProfile": "No se pudo cargar el perfil: {error}",
+  "noNameSet": "Sin nombre",
+  "phone": "Teléfono",
+  "sport": "Deporte",
+  "height": "Altura",
+  "weight": "Peso",
+  "trainingDays": "Días de entrenamiento",
+  "sleepTarget": "Objetivo de sueño",
+  "allergens": "Alérgenos",
+  "restrictions": "Restricciones",
+  "editProfileAndSettings": "Editar perfil y configuración",
+  "guestCreateAccountTitle": "Crear una cuenta",
+  "guestCreateAccountBody": "Regístrate para guardar tu perfil, objetivos nutricionales y datos de entrenamiento.",
+  "guestAccountNotice": "Estás usando una cuenta de invitado sin sincronización en la nube. La edición del perfil está desactivada hasta que crees una cuenta para guardar tus datos.",
+  "signOutTitle": "¿Cerrar sesión?",
+  "signOutGuestBody": "No has vinculado un correo electrónico. Cerrar sesión puede hacer que pierdas tus datos en este dispositivo.",
+  "signOutAccountBody": "¿Cerrar sesión de {account}?",
+  "@signOutAccountBody": {
+    "placeholders": {
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "yourAccount": "tu cuenta",
+  "deleteAccountTitle": "¿Eliminar cuenta?",
+  "deleteGuestAccountBody": "Esto elimina permanentemente tu cuenta de invitado y todas las comidas, el sueño y los datos de perfil registrados en este dispositivo. No se puede deshacer.",
+  "deleteAccountBody": "Esto elimina permanentemente {account} y todos los datos asociados. No se puede deshacer.",
+  "@deleteAccountBody": {
+    "placeholders": {
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "mealPreferencesDescription": "Elige estilos de comida y alergias para personalizar tu plan de comidas.",
+  "unableToSavePreferences": "No se pudieron guardar las preferencias: {error}",
+  "@unableToSavePreferences": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unableToLoadProfileShort": "No se pudo cargar tu perfil.",
+  "saveAndRefreshMealPlan": "Guardar y actualizar plan de comidas",
+  "accountCreatedSuccessfully": "Cuenta creada correctamente",
+  "emailVerificationSent": "Verificación enviada; revisa tu bandeja de entrada para confirmar.",
+  "passwordUpdated": "Contraseña actualizada",
+  "unableToUpdateAccessibilityMode": "No se pudo actualizar el modo de accesibilidad: {error}",
+  "@unableToUpdateAccessibilityMode": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unableToUpdateSleepMode": "No se pudo actualizar el modo sueño: {error}",
+  "@unableToUpdateSleepMode": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "modeSwitcher": "Selector de modo",
+  "minimalTabs": "Pestañas mínimas",
+  "minimalTabsDescription": "Pestañas superiores delgadas con subrayado activo.",
+  "classicPill": "Píldora clásica",
+  "classicPillDescription": "Control segmentado redondeado original.",
+  "unableToUpdateModeSwitcher": "No se pudo actualizar el selector de modo: {error}",
+  "@unableToUpdateModeSwitcher": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "changeEmail": "Cambiar correo electrónico",
+  "newEmail": "Nuevo correo electrónico",
+  "currentPassword": "Contraseña actual",
+  "enterPassword": "Ingresa tu contraseña",
+  "update": "Actualizar",
+  "newPassword": "Nueva contraseña",
+  "confirmPassword": "Confirmar contraseña",
+  "passwordMinCharacters": "Al menos 6 caracteres",
+  "passwordsDoNotMatch": "Las contraseñas no coinciden",
+  "sleepGreetingMorning": "Buenos días",
+  "sleepGreetingAfternoon": "Buenas tardes",
+  "sleepGreetingEvening": "Buenas noches",
+  "athlete": "Atleta",
+  "logSleep": "Registrar sueño",
+  "sleepSchedule": "Horario de sueño",
+  "unableToSaveSleepSchedule": "No se pudo guardar el horario de sueño: {error}",
+  "@unableToSaveSleepSchedule": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepProfileUnavailableBody": "Necesitamos tu perfil antes de planificar el sueño.",
+  "wakeTimePlanning": "Planificación de hora de despertar",
+  "setSleepSchedule": "Configura tu horario de sueño",
+  "wakeTimePlanningDescription": "Usamos tu hora habitual de dormir y despertar para proteger la recuperación antes de entrenamientos y partidos.",
+  "setSleepScheduleDescription": "Agrega tu hora habitual de dormir y despertar para que el modo sueño planifique la recuperación y registre estadísticas.",
+  "bedtime": "Hora de dormir",
+  "wakeTime": "Hora de despertar",
+  "add": "Agregar",
+  "saveSleepSchedule": "Guardar horario de sueño",
+  "targetSleep": "Sueño objetivo",
+  "tonightBedtime": "Hora de dormir esta noche",
+  "earlierWakeSuggested": "Despertar más temprano sugerido para {event} a las {time}.",
+  "@earlierWakeSuggested": {
+    "placeholders": {
+      "event": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "customBedtimeLimit": "Puedes agregar hasta 3 elementos de hora de dormir personalizados.",
+  "unableToSaveBedtimeItems": "No se pudieron guardar los elementos de hora de dormir: {error}",
+  "@unableToSaveBedtimeItems": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "enterValidTime": "Ingresa una hora válida como 10:30 PM o 22:30.",
+  "addCustomBedtime": "Agregar hora de dormir personalizada",
+  "editCustomBedtime": "Editar hora de dormir personalizada",
+  "bedtimeHint": "10:30 PM o 22:30",
+  "pickTime": "Elegir hora",
+  "sleepLoggedForDay": "Guardado {duration} para {day}. {advice}",
+  "@sleepLoggedForDay": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "day": {
+        "type": "String"
+      },
+      "advice": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepAppliedForDays": "Se aplicó {duration} a {count} días. {advice}",
+  "@sleepAppliedForDays": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "advice": {
+        "type": "String"
+      }
+    }
+  },
+  "unableToLoadSleepSchedule": "No se pudo cargar el horario de sueño:\n{error}",
+  "@unableToLoadSleepSchedule": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepScheduleUnavailable": "Horario de sueño no disponible",
+  "sleepScheduleDescription": "Elige un día, ingresa horas y minutos, luego guarda un día o aplica la misma duración de sueño para la próxima semana.",
+  "hours": "Horas",
+  "minutes": "Minutos",
+  "selectedDuration": "Duración seleccionada: {duration}",
+  "@selectedDuration": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "targetDuration": "Objetivo {duration}",
+  "@targetDuration": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "presetBedtimes": "Horas de dormir predefinidas",
+  "customBedtimeItems": "Elementos de hora de dormir personalizados ({count}/{max})",
+  "@customBedtimeItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "noCustomBedtimeItems": "Aún no hay elementos de hora de dormir personalizados. Agrega hasta 3.",
+  "editTime": "Editar hora",
+  "bedtimeItemsDescription": "Los elementos de hora de dormir usan la hora de despertar {time} para calcular la duración del sueño.",
+  "@bedtimeItemsDescription": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "saveDay": "Guardar día",
+  "applyNextSevenDays": "Aplicar a los próximos 7 días",
+  "automaticTrackingStatus": "Estado del seguimiento automático",
+  "automaticTrackingDescription": "El seguimiento automático solo con reloj no es fiable en iOS/Android por los límites en segundo plano. Usa este planificador para programar manualmente y deja la sincronización de salud como opción automática futura.",
+  "today": "Hoy",
+  "mondayShort": "Lun",
+  "tuesdayShort": "Mar",
+  "wednesdayShort": "Mié",
+  "thursdayShort": "Jue",
+  "fridayShort": "Vie",
+  "saturdayShort": "Sáb",
+  "sundayShort": "Dom",
+  "sleepDurationInvalid": "Ingresa horas y minutos válidos (0–59 para minutos).",
+  "sleepDurationRange": "La duración del sueño debe estar entre 2 y 16 horas.",
+  "sleepTotal": "Total: {duration}",
+  "@sleepTotal": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTargetHours": "Objetivo: {hours} h",
+  "@sleepTargetHours": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "saveSleep": "Guardar sueño",
+  "sleepCheckInDescription": "¿Cuánto dormiste? Ingresa horas y minutos, u omite por ahora.",
+  "sleepLogged": "Registrado {duration}. {advice}",
+  "@sleepLogged": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "advice": {
+        "type": "String"
+      }
+    }
+  },
+  "unableToSaveSleepLog": "No se pudo guardar el registro de sueño: {error}",
+  "@unableToSaveSleepLog": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "recoveryAhead": "La recuperación está por delante",
+  "sleepAboveTarget": "Dormiste {slept}, por encima de tu objetivo de {target} h.",
+  "@sleepAboveTarget": {
+    "placeholders": {
+      "slept": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepConsistencyAdvice": "Mantén la hora de dormir cerca de {bedtime} y despierta alrededor de {wakeTime} para ser constante.",
+  "@sleepConsistencyAdvice": {
+    "placeholders": {
+      "bedtime": {
+        "type": "String"
+      },
+      "wakeTime": {
+        "type": "String"
+      }
+    }
+  },
+  "onTarget": "En objetivo",
+  "sleepMatchesTarget": "Dormiste {slept}, cumpliendo tu objetivo de {target} h.",
+  "@sleepMatchesTarget": {
+    "placeholders": {
+      "slept": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepRhythmAdvice": "Mantén el ritmo con hora de dormir alrededor de {bedtime} y despertar alrededor de {wakeTime}.",
+  "@sleepRhythmAdvice": {
+    "placeholders": {
+      "bedtime": {
+        "type": "String"
+      },
+      "wakeTime": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepBelowTarget": "Estás unas {deficit} h por debajo de tu objetivo de {target} h.",
+  "@sleepBelowTarget": {
+    "placeholders": {
+      "deficit": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepRecoveryAdvice": "Esta noche, intenta dormir cerca de {bedtime} para despertar a las {wakeTime} con mejor recuperación.{eventNote}",
+  "@sleepRecoveryAdvice": {
+    "placeholders": {
+      "bedtime": {
+        "type": "String"
+      },
+      "wakeTime": {
+        "type": "String"
+      },
+      "eventNote": {
+        "type": "String"
+      }
+    }
+  },
+  "earlierWakeRecommendation": "Se sugiere despertar antes para {event} a las {time}.",
+  "@earlierWakeRecommendation": {
+    "placeholders": {
+      "event": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@trainingDaysCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@failedToSave": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@unableToLoadSettings": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@unableToUpdateTextSize": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@unableToUpdateTheme": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@unableToUpdateLanguage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@unableToSignOut": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@unableToDeleteAccount": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@failedToInitializeApp": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@failedToLoadAccount": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduleMealPlan": "Plan de comidas",
+  "scheduleNoMealsPlanned": "No hay comidas planificadas para este día.",
+  "scheduleMealPlanUnavailable": "El plan de comidas no está disponible ahora mismo.",
+  "scheduleGenerating": "Generando...",
+  "scheduleNewMeal": "Nueva comida",
+  "scheduleSleepLogged": "Sueño registrado",
+  "scheduleThisWeek": "Esta semana",
+  "scheduleFullMonth": "Mes completo",
+  "scheduleTodaysMatch": "Partido de hoy",
+  "scheduleAddTitle": "Agregar título",
+  "scheduleAddSubtitle": "Agregar subtítulo",
+  "scheduleAddLocation": "Agregar ubicación",
+  "scheduleAddBadge": "Agregar insignia",
+  "scheduleAddHints": "Agregar consejos",
+  "scheduleHintCount": "{count} consejos",
+  "@scheduleHintCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scheduleTimingHint": "2 h antes",
+  "scheduleHydrate": "Hidratar",
+  "scheduleRemoveHint": "Quitar consejo",
+  "scheduleLoadFailed": "No se pudo cargar el horario.",
+  "scheduleLogSleepEmpty": "No hay sueño registrado para este día.",
+  "scheduleNoEvents": "No hay eventos programados para este día.",
+  "scheduleNoMeals": "No hay comidas registradas para este día.",
+  "scheduleNoEntries": "No hay eventos, comidas ni sueño registrados para este día.",
+  "mealSearchTitle": "Buscar platos",
+  "mealSearchDescription": "Busca recetas y consulta ingredientes e instrucciones en la app.",
+  "mealSearchHint": "Buscar pollo, pasta, ensalada...",
+  "mealSearchResultsFor": "Resultados para \"{query}\"",
+  "@mealSearchResultsFor": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "mealPopularDishes": "Platos populares",
+  "mealUnableToLoadDishes": "No se pudieron cargar los platos",
+  "mealNoDishesFound": "No se encontraron platos. Prueba otra búsqueda.",
+  "mealEnterDishName": "Ingresa el nombre de un plato y pulsa Buscar en tu teclado.",
+  "mealUnableToLog": "No se pudo registrar la comida: {error}",
+  "@mealUnableToLog": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "mealEnterValidNumber": "Ingresa un número válido",
+  "mealLogFavorite": "Registrar favorito",
+  "mealUnableToLogFavorite": "No se pudo registrar el favorito: {error}",
+  "@mealUnableToLogFavorite": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "mealEditBeforeLogging": "Editar antes de registrar",
+  "mealSavedToProfile": "Guardado en el perfil",
+  "mealServingCount": "{count} porción",
+  "@mealServingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mealProtein": "Proteína",
+  "mealCarbs": "Carbohidratos",
+  "mealFats": "Grasas",
+  "mealUnableToLoadRecipeDetails": "No se pudieron cargar los detalles de la receta",
+  "mealFavoriteBerryYogurtBowl": "Tazón de yogur con bayas",
+  "mealFavoriteSalmonBowl": "Tazón de salmón",
+  "mealFavoriteChickenBowl": "Tazón de pollo",
+  "homeHydrationReminder": "Recordatorio de hidratación",
+  "homeHydrationGoalReached": "¡Buen trabajo — objetivo alcanzado!",
+  "homeHydrationDrinkMore": "Bebe {liters} L más hoy",
+  "@homeHydrationDrinkMore": {
+    "placeholders": {
+      "liters": {
+        "type": "String"
+      }
+    }
+  },
+  "homeHydrationLoggedOf": "{current} L de {target} L registrados",
+  "@homeHydrationLoggedOf": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "homeMealCapture": "Registro de comidas",
+  "homeReadyToLog": "¿Listo para registrar?",
+  "homeMealCaptureOptions": "Manual, preferencias o favoritos",
+  "homePrefsShort": "Prefs",
+  "homePersonalNutritionProgram": "Programa de nutrición personal",
+  "homeSchoolSportProgram": "Programa de {school} {sport}",
+  "@homeSchoolSportProgram": {
+    "placeholders": {
+      "school": {
+        "type": "String"
+      },
+      "sport": {
+        "type": "String"
+      }
+    }
+  },
+  "homeSportNutritionProgram": "Programa de nutrición de {sport}",
+  "@homeSportNutritionProgram": {
+    "placeholders": {
+      "sport": {
+        "type": "String"
+      }
+    }
+  },
+  "homeNoSleepLoggedWeek": "Aún no hay sueño registrado esta semana.",
+  "homeSleepWeekAvg": "{avg} prom. • {logged} de 7 días registrados",
+  "@homeSleepWeekAvg": {
+    "placeholders": {
+      "avg": {
+        "type": "String"
+      },
+      "logged": {
+        "type": "int"
+      }
+    }
+  },
+  "homeFailedLoadWeeklyFuel": "No se pudo cargar el combustible semanal:\n{error}",
+  "@homeFailedLoadWeeklyFuel": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "homeNoMealsLoggedWeek": "Aún no hay comidas registradas esta semana.",
+  "homeDaysLoggedCount": "{logged} de 7 días registrados",
+  "@homeDaysLoggedCount": {
+    "placeholders": {
+      "logged": {
+        "type": "int"
+      }
+    }
+  },
+  "homeTotal": "Total",
+  "homeWeeklyTarget": "Objetivo semanal",
+  "homeDailyAverage": "Promedio diario",
+  "homeDailyCalories": "Calorías diarias",
+  "homeDailyBreakdown": "Desglose diario",
+  "homeTodayDateLabel": "Hoy • {date}",
+  "@homeTodayDateLabel": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "homeNoMealsLogged": "Sin comidas registradas",
+  "homeCaloriesProgress": "{current} / {target} kcal",
+  "@homeCaloriesProgress": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "homeMacroSummary": "P {protein} g • C {carbs} g • F {fats} g",
+  "@homeMacroSummary": {
+    "placeholders": {
+      "protein": {
+        "type": "String"
+      },
+      "carbs": {
+        "type": "String"
+      },
+      "fats": {
+        "type": "String"
+      }
+    }
+  },
+  "homeMealKcalProtein": "{kcal} kcal · {protein} g P",
+  "@homeMealKcalProtein": {
+    "placeholders": {
+      "kcal": {
+        "type": "String"
+      },
+      "protein": {
+        "type": "String"
+      }
+    }
+  },
+  "homeNextSession": "PRÓXIMA SESIÓN",
+  "homeManualLog": "Manual",
+  "homeCaloriesOfTarget": "/ {target} kcal",
+  "@homeCaloriesOfTarget": {
+    "placeholders": {
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "scanMealSaved": "Comida guardada en tu registro",
+  "scanUnableAnalyze": "No se pudo analizar la foto de la comida: {error}",
+  "@scanUnableAnalyze": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "scanUnablePickImage": "No se pudo elegir la imagen: {error}",
+  "@scanUnablePickImage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "scanTakePhoto": "Tomar foto",
+  "scanTakePhotoSubtitle": "Usa tu cámara para escanear una comida",
+  "scanPhotoLibrary": "Biblioteca de fotos",
+  "scanPhotoLibrarySubtitle": "Elige una imagen existente",
+  "scanMeal": "Escanear comida",
+  "scanPointAtFood": "Apunta a tu comida",
+  "scanTapToCapture": "Toca para tomar una foto o elegir de la biblioteca",
+  "scanAnalyzing": "Analizando comida...",
+  "scanPhoto": "Foto",
+  "scanManual": "Manual",
+  "scanPrevious": "Anteriores",
+  "scanMealAdded": "Comida agregada a tu registro",
+  "scanMealAnalysis": "Análisis de comida",
+  "scanMealAnalysisSubtitle": "Revisa la estimación de IA antes de guardar en tu registro.",
+  "scanPreviousMeals": "Comidas anteriores",
+  "scanPreviousMealsSubtitle": "Toca una comida para registrarla de nuevo. Mostrando hasta {count} comidas recientes.",
+  "@scanPreviousMealsSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scanNoMealsLogged": "Aún no hay comidas registradas.",
+  "scanMealListSubtitle": "{kcal} kcal · {protein} g proteína",
+  "@scanMealListSubtitle": {
+    "placeholders": {
+      "kcal": {
+        "type": "String"
+      },
+      "protein": {
+        "type": "String"
+      }
+    }
+  },
+  "onboardingSleepReasonWakeTired": "A menudo te despiertas cansado.",
+  "onboardingSleepReasonBedtimeChanges": "Tu hora de dormir cambia mucho.",
+  "onboardingSleepReasonReminder": "Un recordatorio podría ayudarte a relajarte.",
+  "onboardingSleepReasonSteadierRoutine": "El modo sueño puede ayudarte a crear una rutina más estable.",
+  "profileEditPhoto": "Editar foto",
+  "mealTypeBreakfast": "DESAYUNO",
+  "mealTypeLunch": "ALMUERZO",
+  "mealTypeDinner": "CENA",
+  "mealTypeSnack": "MERIENDA"
 }

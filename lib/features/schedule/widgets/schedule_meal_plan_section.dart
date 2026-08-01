@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nutrilens/models/meal_plan.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
 class ScheduleMealPlanSection extends StatelessWidget {
@@ -22,10 +23,14 @@ class ScheduleMealPlanSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Meal plan', style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          l10n.scheduleMealPlan,
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
         const SizedBox(height: 14),
         if (loading)
           const SizedBox(
@@ -42,8 +47,8 @@ class ScheduleMealPlanSection extends StatelessWidget {
             ),
             child: Text(
               error == null
-                  ? 'No meals planned for this day.'
-                  : 'Meal plan is unavailable right now.',
+                  ? l10n.scheduleNoMealsPlanned
+                  : l10n.scheduleMealPlanUnavailable,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
@@ -53,7 +58,9 @@ class ScheduleMealPlanSection extends StatelessWidget {
             children: [
               for (var i = 0; i < meals.length; i++)
                 Padding(
-                  padding: EdgeInsets.only(bottom: i == meals.length - 1 ? 0 : 12),
+                  padding: EdgeInsets.only(
+                    bottom: i == meals.length - 1 ? 0 : 12,
+                  ),
                   child: _PlannedMealTile(
                     meal: meals[i],
                     onTap: onMealTap == null
@@ -88,6 +95,7 @@ class _PlannedMealTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final recipe = meal.recipe;
+    final l10n = AppLocalizations.of(context)!;
 
     return Material(
       color: AppColors.cardDark,
@@ -149,7 +157,7 @@ class _PlannedMealTile extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${recipe.calories.round()} kcal • ${recipe.nutrition.proteinG}g protein',
+                            '${recipe.calories.round()} kcal • ${recipe.nutrition.proteinG}g ${l10n.mealsProtein.toLowerCase()}',
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
                                   color: AppColors.textMuted.withValues(
@@ -191,7 +199,9 @@ class _PlannedMealTile extends StatelessWidget {
                             color: AppColors.lime.withValues(alpha: 0.9),
                           ),
                     label: Text(
-                      isRegenerating ? 'Generating...' : 'New meal',
+                      isRegenerating
+                          ? l10n.scheduleGenerating
+                          : l10n.scheduleNewMeal,
                       style: TextStyle(
                         color: AppColors.lime.withValues(alpha: 0.95),
                         fontWeight: FontWeight.w700,

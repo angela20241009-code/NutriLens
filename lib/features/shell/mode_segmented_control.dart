@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nutrilens/features/shell/app_mode.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
@@ -17,14 +18,18 @@ class ModeSegmentedControl extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return switch (style) {
       SegmentControlStyle.minimalTabs => _MinimalTabsModeControl(
         mode: mode,
         onModeChanged: onModeChanged,
+        l10n: l10n,
       ),
       SegmentControlStyle.classicPill => _ClassicPillModeControl(
         mode: mode,
         onModeChanged: onModeChanged,
+        l10n: l10n,
       ),
     };
   }
@@ -34,10 +39,12 @@ class _MinimalTabsModeControl extends StatelessWidget {
   const _MinimalTabsModeControl({
     required this.mode,
     required this.onModeChanged,
+    required this.l10n,
   });
 
   final AppMode mode;
   final ValueChanged<AppMode> onModeChanged;
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +56,7 @@ class _MinimalTabsModeControl extends StatelessWidget {
             children: [
               Expanded(
                 child: _ModeTab(
-                  label: 'Meal Tracking',
+                  label: l10n.modeMealTracking,
                   selected: mode == AppMode.mealTracking,
                   selectedColor: AppColors.lime,
                   onTap: () => onModeChanged(AppMode.mealTracking),
@@ -57,7 +64,7 @@ class _MinimalTabsModeControl extends StatelessWidget {
               ),
               Expanded(
                 child: _ModeTab(
-                  label: 'Sleep',
+                  label: l10n.modeSleep,
                   selected: mode == AppMode.sleep,
                   selectedColor: AppColors.sleepAccent,
                   onTap: () => onModeChanged(AppMode.sleep),
@@ -104,10 +111,12 @@ class _ClassicPillModeControl extends StatelessWidget {
   const _ClassicPillModeControl({
     required this.mode,
     required this.onModeChanged,
+    required this.l10n,
   });
 
   final AppMode mode;
   final ValueChanged<AppMode> onModeChanged;
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
@@ -123,7 +132,7 @@ class _ClassicPillModeControl extends StatelessWidget {
           children: [
             Expanded(
               child: _ClassicSegment(
-                label: 'Meal Tracking',
+                label: l10n.modeMealTracking,
                 selected: mode == AppMode.mealTracking,
                 selectedColor: AppColors.lime,
                 selectedTextColor: AppColors.onLime,
@@ -132,7 +141,7 @@ class _ClassicPillModeControl extends StatelessWidget {
             ),
             Expanded(
               child: _ClassicSegment(
-                label: 'Sleep',
+                label: l10n.modeSleep,
                 selected: mode == AppMode.sleep,
                 selectedColor: AppColors.sleepAccent,
                 selectedTextColor: AppColors.textPrimary,

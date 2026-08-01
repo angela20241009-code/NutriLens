@@ -1,20 +1,21 @@
 import 'package:nutrilens/theme/app_colors.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 
 const maxPreviousMeals = 10;
 
 enum ScheduleViewFilter { all, events, loggedMeals, sleep }
 
 extension ScheduleViewFilterLabels on ScheduleViewFilter {
-  String get label {
+  String label(AppLocalizations l10n) {
     switch (this) {
       case ScheduleViewFilter.all:
-        return 'All';
+        return l10n.scheduleFilterAll;
       case ScheduleViewFilter.events:
-        return 'Events';
+        return l10n.scheduleFilterEvents;
       case ScheduleViewFilter.loggedMeals:
-        return 'Meals';
+        return l10n.scheduleFilterMeals;
       case ScheduleViewFilter.sleep:
-        return 'Sleep';
+        return l10n.scheduleFilterSleep;
     }
   }
 }

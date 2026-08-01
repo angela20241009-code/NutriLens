@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nutrilens/app/app_settings_scope.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/theme/theme_palette_scope.dart';
 
 class CustomBottomNav extends StatelessWidget {
@@ -26,6 +27,7 @@ class CustomBottomNav extends StatelessWidget {
     final primary = ThemePaletteScope.primary(context);
     final onPrimary = ThemePaletteScope.onPrimary(context);
     final inactive = ThemePaletteScope.navInactive(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return SizedBox(
       height: _navHeight + bottomPadding + 12,
@@ -52,7 +54,7 @@ class CustomBottomNav extends StatelessWidget {
                 children: [
                   _NavItem(
                     icon: Icons.home_rounded,
-                    label: 'Home',
+                    label: l10n.navHome,
                     selected: selectedIndex == 0,
                     onTap: () => onTap(0),
                     iconSize: iconSize,
@@ -63,7 +65,7 @@ class CustomBottomNav extends StatelessWidget {
                   ),
                   _NavItem(
                     icon: Icons.restaurant_rounded,
-                    label: 'Meals',
+                    label: l10n.navMeals,
                     selected: selectedIndex == 1,
                     onTap: () => onTap(1),
                     iconSize: iconSize,
@@ -75,7 +77,7 @@ class CustomBottomNav extends StatelessWidget {
                   SizedBox(width: _fabSize + 16),
                   _NavItem(
                     icon: Icons.calendar_today_rounded,
-                    label: 'Schedule',
+                    label: l10n.navSchedule,
                     selected: selectedIndex == 3,
                     onTap: () => onTap(3),
                     iconSize: iconSize,
@@ -86,7 +88,7 @@ class CustomBottomNav extends StatelessWidget {
                   ),
                   _NavItem(
                     icon: Icons.person_rounded,
-                    label: 'Profile',
+                    label: l10n.navProfile,
                     selected: selectedIndex == 4,
                     onTap: () => onTap(4),
                     iconSize: iconSize,

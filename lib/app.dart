@@ -29,7 +29,7 @@ class NutriLensApp extends StatelessWidget {
             : AppLanguage.english.locale;
 
         return MaterialApp(
-          title: 'NutriLens',
+          onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
           theme: AppTheme.build(palette: palette),
           themeMode: ThemeMode.dark,
           debugShowCheckedModeBanner: false,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/features/sleep/sleep_log_screen.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 import 'package:timezone/timezone.dart' as tz;
 
@@ -69,13 +70,18 @@ class _SleepDashboardScreenState extends State<SleepDashboardScreen> {
       if (!mounted) return;
       setState(() => _savingSchedule = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Unable to save sleep schedule: $error')),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.unableToSaveSleepSchedule('$error'),
+          ),
+        ),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return FutureBuilder<UserProfile?>(
       future: _profileFuture,
       builder: (context, snapshot) {
@@ -87,7 +93,7 @@ class _SleepDashboardScreenState extends State<SleepDashboardScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                _greetingFor(DateTime.now()),
+                _greetingFor(DateTime.now(), l10n),
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 4),
@@ -97,7 +103,7 @@ class _SleepDashboardScreenState extends State<SleepDashboardScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                'Sleep mode',
+                l10n.sleepMode,
                 style: TextStyle(
                   fontSize: 15,
                   color: AppColors.sleepAccent.withValues(alpha: 0.9),
@@ -111,9 +117,9 @@ class _SleepDashboardScreenState extends State<SleepDashboardScreen> {
                   child: Center(child: CircularProgressIndicator()),
                 )
               else if (profile == null)
-                const _SleepInfoCard(
-                  title: 'Profile unavailable',
-                  body: 'We need your profile before planning sleep.',
+                _SleepInfoCard(
+                  title: l10n.profileUnavailable,
+                  body: l10n.sleepProfileUnavailableBody,
                 )
               else ...[
                 _WakeTimePlanningCard(
@@ -152,8 +158,8 @@ class _SleepDashboardScreenState extends State<SleepDashboardScreen> {
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    child: const Text(
-                      'Log sleep',
+                    child: Text(
+                      l10n.logSleep,
                       style: TextStyle(fontWeight: FontWeight.w600),
                     ),
                   ),
@@ -177,18 +183,18 @@ class _SleepDashboardScreenState extends State<SleepDashboardScreen> {
       return displayName.split(RegExp(r'\s+')).first;
     }
 
-    return 'Athlete';
+    return AppLocalizations.of(context)!.athlete;
   }
 
-  String _greetingFor(DateTime now) {
+  String _greetingFor(DateTime now, AppLocalizations l10n) {
     final hour = now.hour;
     if (hour < 12) {
-      return 'Good Morning';
+      return l10n.sleepGreetingMorning;
     }
     if (hour < 17) {
-      return 'Good Afternoon';
+      return l10n.sleepGreetingAfternoon;
     }
-    return 'Good Evening';
+    return l10n.sleepGreetingEvening;
   }
 }
 
@@ -197,9 +203,9 @@ class _SleepSchedulePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: _SleepScheduleAppBar(),
+      appBar: const _SleepScheduleAppBar(),
       body: SafeArea(top: false, child: SleepLogScreen()),
     );
   }
@@ -217,7 +223,7 @@ class _SleepScheduleAppBar extends StatelessWidget
     return AppBar(
       backgroundColor: AppColors.background,
       foregroundColor: AppColors.textPrimary,
-      title: const Text('Sleep Schedule'),
+      title: Text(AppLocalizations.of(context)!.sleepSchedule),
     );
   }
 }
@@ -247,10 +253,11 @@ class _WakeTimePlanningCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final bedtime = draftBedtimeMinutes ?? profile.usualBedtimeMinutes;
     final wakeTime = draftWakeTimeMinutes ?? profile.usualWakeTimeMinutes;
     final canSave = bedtime != null && wakeTime != null && !saving;
-    final plan = _hasSchedule ? _WakePlan.fromProfile(profile) : null;
+    final plan = _hasSchedule ? _WakePlan.fromProfile(profile, l10n) : null;
 
     return Container(
       width: double.infinity,
@@ -278,7 +285,7 @@ class _WakeTimePlanningCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            _hasSchedule ? 'Wake-time planning' : 'Set your sleep schedule',
+            _hasSchedule ? l10n.wakeTimePlanning : l10n.setSleepSchedule,
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
@@ -288,8 +295,8 @@ class _WakeTimePlanningCard extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             _hasSchedule
-                ? 'We use your usual bedtime and wake time to protect recovery before training and match days.'
-                : 'Add your usual bedtime and wake time so Sleep Mode can plan recovery and track sleep statistics.',
+                ? l10n.wakeTimePlanningDescription
+                : l10n.setSleepScheduleDescription,
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(height: 1.5),
@@ -299,16 +306,16 @@ class _WakeTimePlanningCard extends StatelessWidget {
             children: [
               Expanded(
                 child: _TimeValueButton(
-                  label: 'Bedtime',
-                  value: bedtime == null ? 'Add' : _formatMinutes(bedtime),
+                  label: l10n.bedtime,
+                  value: bedtime == null ? l10n.add : _formatMinutes(bedtime),
                   onTap: onPickBedtime,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _TimeValueButton(
-                  label: 'Wake time',
-                  value: wakeTime == null ? 'Add' : _formatMinutes(wakeTime),
+                  label: l10n.wakeTime,
+                  value: wakeTime == null ? l10n.add : _formatMinutes(wakeTime),
                   onTap: onPickWakeTime,
                 ),
               ),
@@ -335,7 +342,7 @@ class _WakeTimePlanningCard extends StatelessWidget {
                         dimension: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Save sleep schedule'),
+                    : Text(l10n.saveSleepSchedule),
               ),
             ),
           ],
@@ -395,6 +402,7 @@ class _WakePlanSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -407,11 +415,11 @@ class _WakePlanSummary extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _PlanMetric(label: 'Target sleep', value: plan.targetSleepLabel),
+          _PlanMetric(label: l10n.targetSleep, value: plan.targetSleepLabel),
           const SizedBox(height: 12),
-          _PlanMetric(label: 'Tonight bedtime', value: plan.bedtimeLabel),
+          _PlanMetric(label: l10n.tonightBedtime, value: plan.bedtimeLabel),
           const SizedBox(height: 12),
-          _PlanMetric(label: 'Wake time', value: plan.wakeTimeLabel),
+          _PlanMetric(label: l10n.wakeTime, value: plan.wakeTimeLabel),
           if (plan.reason != null) ...[
             const SizedBox(height: 12),
             Text(
@@ -494,7 +502,7 @@ class _WakePlan {
   final String wakeTimeLabel;
   final String? reason;
 
-  factory _WakePlan.fromProfile(UserProfile profile) {
+  factory _WakePlan.fromProfile(UserProfile profile, AppLocalizations l10n) {
     final targetMinutes = (profile.dailyTargets.sleepHours * 60).round();
     final defaultWake = profile.usualWakeTimeMinutes!;
     final nextEvent = _nextTrainingOrMatch(profile);
@@ -507,8 +515,10 @@ class _WakePlan {
       final prepWake = (eventMinutes - 120).clamp(0, 24 * 60 - 1);
       if (prepWake < wakeMinutes) {
         wakeMinutes = prepWake;
-        reason =
-            'Earlier wake suggested for ${nextEvent.title} at ${_formatMinutes(eventMinutes)}.';
+        reason = l10n.earlierWakeSuggested(
+          nextEvent.title,
+          _formatMinutes(eventMinutes),
+        );
       }
     }
 

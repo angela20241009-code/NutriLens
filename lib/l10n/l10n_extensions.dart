@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:nutrilens/l10n/app_localizations.dart';
-import 'package:nutrilens/models/app_language.dart';
 import 'package:nutrilens/models/app_text_scale.dart';
 import 'package:nutrilens/models/app_theme_palette.dart';
 
@@ -20,6 +20,57 @@ String localizedMealStyle(AppLocalizations l10n, String style) {
   };
 }
 
+String localizedSportName(AppLocalizations l10n, String sportId) {
+  return switch (sportId) {
+    'tennis' => l10n.sportTennis,
+    'basketball' => l10n.sportBasketball,
+    'soccer' => l10n.sportSoccer,
+    'american_football' => l10n.sportAmericanFootball,
+    'baseball' => l10n.sportBaseball,
+    'softball' => l10n.sportSoftball,
+    'volleyball' => l10n.sportVolleyball,
+    'swimming' => l10n.sportSwimming,
+    'track_and_field' => l10n.sportTrackAndField,
+    'cross_country' => l10n.sportCrossCountry,
+    'wrestling' => l10n.sportWrestling,
+    'lacrosse' => l10n.sportLacrosse,
+    'hockey' => l10n.sportHockey,
+    'golf' => l10n.sportGolf,
+    'gymnastics' => l10n.sportGymnastics,
+    'cycling' => l10n.sportCycling,
+    'other' => l10n.sportOther,
+    'none' => l10n.sportNone,
+    _ => sportId,
+  };
+}
+
+String localizedGreeting(AppLocalizations l10n, int hour) {
+  if (hour < 12) return l10n.goodMorning;
+  if (hour < 18) return l10n.goodAfternoon;
+  return l10n.goodEvening;
+}
+
+String localizedScheduleFilter(AppLocalizations l10n, String filterKey) {
+  return switch (filterKey) {
+    'all' => l10n.scheduleFilterAll,
+    'events' => l10n.scheduleFilterEvents,
+    'loggedMeals' || 'meals' => l10n.scheduleFilterMeals,
+    'sleep' => l10n.scheduleFilterSleep,
+    _ => filterKey,
+  };
+}
+
+String localizedScheduleEventType(AppLocalizations l10n, String type) {
+  return switch (type) {
+    'meal' => l10n.scheduleEventMeal,
+    'training' || 'practice' => l10n.scheduleEventTraining,
+    'match' || 'game' => l10n.scheduleEventMatch,
+    'workout' => l10n.scheduleEventWorkout,
+    'other' => l10n.scheduleEventOther,
+    _ => type,
+  };
+}
+
 String localizedTextScaleLabel(AppLocalizations l10n, AppTextScale scale) {
   return switch (scale) {
     AppTextScale.small => l10n.textScaleSmall,
@@ -29,7 +80,10 @@ String localizedTextScaleLabel(AppLocalizations l10n, AppTextScale scale) {
   };
 }
 
-String localizedTextScaleDescription(AppLocalizations l10n, AppTextScale scale) {
+String localizedTextScaleDescription(
+  AppLocalizations l10n,
+  AppTextScale scale,
+) {
   return switch (scale) {
     AppTextScale.small => l10n.textScaleSmallDesc,
     AppTextScale.medium => l10n.textScaleMediumDesc,
@@ -38,7 +92,10 @@ String localizedTextScaleDescription(AppLocalizations l10n, AppTextScale scale) 
   };
 }
 
-String localizedThemePaletteLabel(AppLocalizations l10n, AppThemePalette palette) {
+String localizedThemePaletteLabel(
+  AppLocalizations l10n,
+  AppThemePalette palette,
+) {
   return switch (palette) {
     AppThemePalette.classic => l10n.themeClassic,
     AppThemePalette.ocean => l10n.themeOcean,
@@ -88,5 +145,29 @@ Map<String, String> localizedActivityOptions(AppLocalizations l10n) {
     'moderate': l10n.activityModerate,
     'high': l10n.activityHigh,
     'very_high': l10n.activityVeryHigh,
+  };
+}
+
+String formatLocalizedMonth(BuildContext context, int month) {
+  assert(month >= DateTime.january && month <= DateTime.december);
+  return DateFormat.MMMM(
+    Localizations.localeOf(context).toString(),
+  ).format(DateTime(2000, month));
+}
+
+String formatLocalizedWeekdayShort(BuildContext context, int weekday) {
+  assert(weekday >= DateTime.monday && weekday <= DateTime.sunday);
+  return DateFormat.E(
+    Localizations.localeOf(context).toString(),
+  ).format(DateTime(2000, 1, 3 + weekday));
+}
+
+String localizedMealType(AppLocalizations l10n, String mealType) {
+  return switch (mealType.toUpperCase()) {
+    'BREAKFAST' => l10n.mealTypeBreakfast,
+    'LUNCH' => l10n.mealTypeLunch,
+    'DINNER' => l10n.mealTypeDinner,
+    'SNACK' => l10n.mealTypeSnack,
+    _ => mealType,
   };
 }

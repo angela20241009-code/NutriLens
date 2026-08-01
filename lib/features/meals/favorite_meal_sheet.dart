@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nutrilens/app/meal_log_refresh_scope.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/models/models.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
 enum FavoriteMealSheetResult { logged, edit }
@@ -26,9 +27,9 @@ class FavoriteMealSheet extends StatefulWidget {
 }
 
 class _FavoriteMealSheetState extends State<FavoriteMealSheet> {
-  static const _starterFavorites = [
+  static List<_FavoriteMeal> _starterFavorites(AppLocalizations l10n) => [
     _FavoriteMeal(
-      name: 'Berry yogurt bowl',
+      name: l10n.mealFavoriteBerryYogurtBowl,
       imagePath: 'assets/images/meal_capture_yogurt.png',
       nutrition: NutritionEntry(
         caloriesKcal: 480,
@@ -38,7 +39,7 @@ class _FavoriteMealSheetState extends State<FavoriteMealSheet> {
       ),
     ),
     _FavoriteMeal(
-      name: 'Salmon bowl',
+      name: l10n.mealFavoriteSalmonBowl,
       imagePath: 'assets/images/meal_capture_salmon.png',
       nutrition: NutritionEntry(
         caloriesKcal: 520,
@@ -48,7 +49,7 @@ class _FavoriteMealSheetState extends State<FavoriteMealSheet> {
       ),
     ),
     _FavoriteMeal(
-      name: 'Chicken bowl',
+      name: l10n.mealFavoriteChickenBowl,
       imagePath: 'assets/images/meal_capture_chicken.png',
       nutrition: NutritionEntry(
         caloriesKcal: 480,
@@ -67,9 +68,10 @@ class _FavoriteMealSheetState extends State<FavoriteMealSheet> {
   String? _error;
 
   List<_FavoriteMeal> get _favorites {
+    final l10n = AppLocalizations.of(context)!;
     final profileFavorites = _profile?.favoriteMeals ?? const [];
     if (profileFavorites.isEmpty) {
-      return _starterFavorites;
+      return _starterFavorites(l10n);
     }
 
     return profileFavorites
@@ -107,6 +109,7 @@ class _FavoriteMealSheetState extends State<FavoriteMealSheet> {
     });
 
     final scope = UserScope.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final favorite = _selectedFavorite;
     final meal = Meal(
       name: favorite.name,
@@ -121,12 +124,15 @@ class _FavoriteMealSheetState extends State<FavoriteMealSheet> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('${favorite.name} logged')));
+      ).showSnackBar(
+        SnackBar(content: Text(l10n.mealsFavoriteLogged(favorite.name))),
+      );
       Navigator.of(context).pop(FavoriteMealSheetResult.logged);
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _error = 'Unable to log favorite: $error';
+        _error =
+            '${AppLocalizations.of(context)!.mealUnableToLogFavorite('$error')}';
         _isSaving = false;
       });
     }
@@ -144,6 +150,7 @@ class _FavoriteMealSheetState extends State<FavoriteMealSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final bottomPadding = MediaQuery.paddingOf(context).bottom;
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
 
@@ -168,7 +175,7 @@ class _FavoriteMealSheetState extends State<FavoriteMealSheet> {
             final profileError =
                 !isLoadingProfile &&
                     (snapshot.hasError || snapshot.data == null)
-                ? 'Unable to load your profile. Try again in a moment.'
+                ? l10n.unableToLoadProfileShort
                 : null;
 
             return SingleChildScrollView(
@@ -190,9 +197,9 @@ class _FavoriteMealSheetState extends State<FavoriteMealSheet> {
                   const SizedBox(height: 20),
                   Row(
                     children: [
-                      const Expanded(
+                      Expanded(
                         child: Text(
-                          'Log favorite',
+                          l10n.mealLogFavorite,
                           style: TextStyle(
                             color: AppColors.fitnessWhite,
                             fontSize: 28,
@@ -276,8 +283,8 @@ class _FavoriteMealSheetState extends State<FavoriteMealSheet> {
                               color: AppColors.fitnessBlack,
                             ),
                           )
-                        : const Text(
-                            'Log favorite',
+                        : Text(
+                            l10n.mealLogFavorite,
                             style: TextStyle(
                               fontSize: 17,
                               fontWeight: FontWeight.w900,
@@ -286,8 +293,8 @@ class _FavoriteMealSheetState extends State<FavoriteMealSheet> {
                   ),
                   TextButton(
                     onPressed: _isSaving ? null : _editBeforeLogging,
-                    child: const Text(
-                      'Edit before logging',
+                    child: Text(
+                      l10n.mealEditBeforeLogging,
                       style: TextStyle(
                         color: AppColors.fitnessWhite,
                         fontSize: 16,
@@ -296,7 +303,7 @@ class _FavoriteMealSheetState extends State<FavoriteMealSheet> {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  const Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
@@ -305,7 +312,7 @@ class _FavoriteMealSheetState extends State<FavoriteMealSheet> {
                       ),
                       SizedBox(width: 8),
                       Text(
-                        'Saved to profile',
+                        l10n.mealSavedToProfile,
                         style: TextStyle(
                           color: AppColors.fitnessPurple,
                           fontSize: 15,
@@ -442,6 +449,7 @@ class _FavoriteDetailsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final nutrition = favorite.nutrition.scaledBy(servings);
 
     return Container(
@@ -483,7 +491,7 @@ class _FavoriteDetailsPanel extends StatelessWidget {
                 child: _NutritionTile(
                   icon: Icons.local_fire_department_outlined,
                   iconColor: AppColors.fitnessWhite,
-                  label: 'kcal',
+                  label: l10n.mealsCalories.split(' ').last,
                   value: '${nutrition.caloriesKcal}',
                 ),
               ),
@@ -492,7 +500,7 @@ class _FavoriteDetailsPanel extends StatelessWidget {
                 child: _NutritionTile(
                   icon: Icons.fitness_center_rounded,
                   iconColor: AppColors.fitnessPurple,
-                  label: 'Protein',
+                  label: l10n.mealProtein,
                   value: '${nutrition.proteinG}g',
                 ),
               ),
@@ -501,7 +509,7 @@ class _FavoriteDetailsPanel extends StatelessWidget {
                 child: _NutritionTile(
                   icon: Icons.eco_outlined,
                   iconColor: AppColors.fitnessGreen,
-                  label: 'Carbs',
+                  label: l10n.mealCarbs,
                   value: '${nutrition.carbsG}g',
                 ),
               ),
@@ -510,7 +518,7 @@ class _FavoriteDetailsPanel extends StatelessWidget {
                 child: _NutritionTile(
                   icon: Icons.water_drop_outlined,
                   iconColor: AppColors.fitnessGreen,
-                  label: 'Fats',
+                  label: l10n.mealFats,
                   value: '${nutrition.fatsG}g',
                 ),
               ),
@@ -535,6 +543,8 @@ class _ServingStepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Container(
       height: 44,
       decoration: BoxDecoration(
@@ -552,7 +562,7 @@ class _ServingStepper extends StatelessWidget {
             disabledColor: AppColors.fitnessWhite.withValues(alpha: 0.28),
           ),
           Text(
-            '$servings serving',
+            l10n.mealServingCount(servings),
             style: const TextStyle(
               color: AppColors.fitnessWhite,
               fontWeight: FontWeight.w800,

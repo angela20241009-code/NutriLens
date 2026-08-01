@@ -5,6 +5,7 @@ import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/features/shell/meal_tracking_shell.dart';
 import 'package:nutrilens/features/sleep/sleep_check_in_dialog.dart';
 import 'package:nutrilens/features/sleep/sleep_logging.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/services/date_key.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
@@ -69,21 +70,18 @@ class _AppShellState extends State<AppShell> {
       return;
     }
 
-    if (!shouldPromptSleepCheckIn(
-      profile: profile,
-      todaySummary: summary,
-    )) {
+    if (!shouldPromptSleepCheckIn(profile: profile, todaySummary: summary)) {
       _sleepCheckInHandledForDateKey = dateKey;
       return;
     }
 
     _sleepCheckInInProgress = true;
+    final l10n = AppLocalizations.of(context)!;
     final result = await SleepCheckInDialog.show(
       context: context,
       profile: profile,
-      title: 'Sleep check-in',
-      description:
-          'How long did you sleep last night? Enter hours and minutes, or skip for now and log manually later.',
+      title: l10n.logSleep,
+      description: l10n.sleepCheckInDescription,
       allowDismiss: true,
     );
     if (!mounted) {
@@ -113,6 +111,7 @@ class _AppShellState extends State<AppShell> {
         return;
       }
       final advice = buildSleepAdvice(
+        l10n: l10n,
         profile: profile,
         sleepHours: result.sleepHours!,
         wakeTimeMinutes: profile.usualWakeTimeMinutes ?? 7 * 60,
@@ -121,7 +120,10 @@ class _AppShellState extends State<AppShell> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Logged ${formatSleepHours(result.sleepHours!)}. ${advice.shortLine}',
+            l10n.sleepLogged(
+              formatSleepHours(result.sleepHours!),
+              advice.shortLine,
+            ),
           ),
         ),
       );
@@ -131,7 +133,7 @@ class _AppShellState extends State<AppShell> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Unable to save sleep log: $error')),
+        SnackBar(content: Text(l10n.unableToSaveSleepLog('$error'))),
       );
     } finally {
       if (mounted) {

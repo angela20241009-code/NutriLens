@@ -4,11 +4,7 @@ import 'package:nutrilens/models/meal.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
 class TimelineMealTile extends StatelessWidget {
-  const TimelineMealTile({
-    super.key,
-    required this.meal,
-    required this.isLast,
-  });
+  const TimelineMealTile({super.key, required this.meal, required this.isLast});
 
   final Meal meal;
   final bool isLast;
@@ -26,7 +22,7 @@ class TimelineMealTile extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.only(top: 18),
               child: Text(
-                _formatTime(meal.loggedAt),
+                _formatTime(context, meal.loggedAt),
                 style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
@@ -119,12 +115,10 @@ class TimelineMealTile extends StatelessWidget {
     );
   }
 
-  String _formatTime(DateTime time) {
+  String _formatTime(BuildContext context, DateTime time) {
     final local = time.toLocal();
-    final hour = local.hour;
-    final minute = local.minute;
-    final period = hour >= 12 ? 'PM' : 'AM';
-    final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
-    return '$displayHour:${minute.toString().padLeft(2, '0')} $period';
+    return MaterialLocalizations.of(
+      context,
+    ).formatTimeOfDay(TimeOfDay.fromDateTime(local));
   }
 }

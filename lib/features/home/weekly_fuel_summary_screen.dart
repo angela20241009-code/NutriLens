@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/features/home/home_dashboard_data.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
+import 'package:nutrilens/l10n/l10n_extensions.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/services/date_key.dart';
 import 'package:nutrilens/services/user_repository.dart';
@@ -64,12 +66,14 @@ class _WeeklyFuelSummaryScreenState extends State<WeeklyFuelSummaryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.textPrimary,
-        title: const Text("This week's fuel"),
+        title: Text(l10n.homeThisWeeksFuel),
       ),
       body: FutureBuilder<({UserProfile profile, List<WeeklyFuelDay> days})>(
         future: _dataFuture,
@@ -83,7 +87,7 @@ class _WeeklyFuelSummaryScreenState extends State<WeeklyFuelSummaryScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Text(
-                  'Failed to load weekly fuel:\n${snapshot.error}',
+                  l10n.homeFailedLoadWeeklyFuel('${snapshot.error}'),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -142,6 +146,8 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
@@ -154,8 +160,8 @@ class _SummaryCard extends StatelessWidget {
         children: [
           Text(
             loggedDays == 0
-                ? 'No meals logged yet this week.'
-                : '$loggedDays of 7 days logged',
+                ? l10n.homeNoMealsLoggedWeek
+                : l10n.homeDaysLoggedCount(loggedDays),
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: AppColors.textMuted,
             ),
@@ -165,25 +171,22 @@ class _SummaryCard extends StatelessWidget {
             children: [
               Expanded(
                 child: _StatTile(
-                  label: 'Total',
+                  label: l10n.homeTotal,
                   value: '$totalCalories',
-                  suffix: ' kcal',
                 ),
               ),
               Expanded(
                 child: _StatTile(
-                  label: 'Weekly target',
+                  label: l10n.homeWeeklyTarget,
                   value: '$weeklyTarget',
-                  suffix: ' kcal',
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
           _StatTile(
-            label: 'Daily average',
+            label: l10n.homeDailyAverage,
             value: loggedDays == 0 ? '0' : '$averageCalories',
-            suffix: ' kcal',
           ),
         ],
       ),
@@ -195,15 +198,15 @@ class _StatTile extends StatelessWidget {
   const _StatTile({
     required this.label,
     required this.value,
-    required this.suffix,
   });
 
   final String label;
   final String value;
-  final String suffix;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -224,7 +227,7 @@ class _StatTile extends StatelessWidget {
             children: [
               TextSpan(text: value),
               TextSpan(
-                text: suffix,
+                text: ' ${l10n.mealsCalories.split(' ').last}',
                 style: const TextStyle(
                   color: AppColors.textMuted,
                   fontSize: 16,
@@ -248,10 +251,9 @@ class _WeeklyCalorieChart extends StatelessWidget {
   final List<WeeklyFuelDay> days;
   final int targetCalories;
 
-  static const _weekdayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final maxCalories = [
       targetCalories,
       ...days.map((day) => day.totals.caloriesKcal),
@@ -268,7 +270,7 @@ class _WeeklyCalorieChart extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Daily calories',
+            l10n.homeDailyCalories,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 22),
@@ -280,7 +282,10 @@ class _WeeklyCalorieChart extends StatelessWidget {
                 for (var i = 0; i < days.length; i++)
                   Expanded(
                     child: _FuelBar(
-                      label: _weekdayLabels[i],
+                      label: formatLocalizedWeekdayShort(
+                        context,
+                        days[i].date.weekday,
+                      ),
                       calories: days[i].totals.caloriesKcal,
                       maxCalories: maxCalories,
                       targetCalories: targetCalories,
@@ -380,6 +385,8 @@ class _DailyBreakdownList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
@@ -391,7 +398,7 @@ class _DailyBreakdownList extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Daily breakdown',
+            l10n.homeDailyBreakdown,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 16),
@@ -413,6 +420,7 @@ class _DayRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final totals = day.totals;
     final dateLabel = MaterialLocalizations.of(context).formatFullDate(day.date);
 
@@ -431,7 +439,7 @@ class _DayRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            day.isToday ? 'Today • $dateLabel' : dateLabel,
+            day.isToday ? l10n.homeTodayDateLabel(dateLabel) : dateLabel,
             style: const TextStyle(
               color: AppColors.textPrimary,
               fontWeight: FontWeight.w700,
@@ -440,8 +448,11 @@ class _DayRow extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             day.hasLoggedMeals
-                ? '${totals.caloriesKcal} / ${targets.caloriesKcal} kcal'
-                : 'No meals logged',
+                ? l10n.homeCaloriesProgress(
+                    '${totals.caloriesKcal}',
+                    '${targets.caloriesKcal}',
+                  )
+                : l10n.homeNoMealsLogged,
             style: const TextStyle(
               color: AppColors.textMuted,
               fontWeight: FontWeight.w600,
@@ -450,7 +461,11 @@ class _DayRow extends StatelessWidget {
           if (day.hasLoggedMeals) ...[
             const SizedBox(height: 6),
             Text(
-              'P ${totals.proteinG}g • C ${totals.carbsG}g • F ${totals.fatsG}g',
+              l10n.homeMacroSummary(
+                '${totals.proteinG}',
+                '${totals.carbsG}',
+                '${totals.fatsG}',
+              ),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: AppColors.textMuted,
               ),

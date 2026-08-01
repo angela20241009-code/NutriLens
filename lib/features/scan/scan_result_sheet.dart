@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nutrilens/app/meal_log_refresh_scope.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/features/profile/widgets/profile_text_field.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/models/meal_analysis_result.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/theme/app_colors.dart';
@@ -116,32 +117,35 @@ class _ScanResultSheetState extends State<ScanResultSheet> {
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _error = 'Unable to save meal: $error';
+        _error = AppLocalizations.of(context)!.mealUnableToLog('$error');
         _isSaving = false;
       });
     }
   }
 
   String? _requiredText(String? value) {
+    final l10n = AppLocalizations.of(context)!;
     if (value == null || value.trim().isEmpty) {
-      return 'Required';
+      return l10n.fieldRequired;
     }
     return null;
   }
 
   String? _requiredNumber(String? value) {
+    final l10n = AppLocalizations.of(context)!;
     if (value == null || value.trim().isEmpty) {
-      return 'Required';
+      return l10n.fieldRequired;
     }
     final parsed = int.tryParse(value);
     if (parsed == null || parsed < 0) {
-      return 'Enter a valid number';
+      return l10n.mealEnterValidNumber;
     }
     return null;
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
 
     return SafeArea(
@@ -162,7 +166,7 @@ class _ScanResultSheetState extends State<ScanResultSheet> {
             final profileError =
                 !isLoadingProfile &&
                     (snapshot.hasError || snapshot.data == null)
-                ? 'Unable to load your profile. Try again in a moment.'
+                ? l10n.unableToLoadProfileShort
                 : null;
 
             return SingleChildScrollView(
@@ -185,26 +189,26 @@ class _ScanResultSheetState extends State<ScanResultSheet> {
                     ),
                     const SizedBox(height: 20),
                     Text(
-                      'Meal analysis',
+                      l10n.scanMealAnalysis,
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Review the AI estimate before saving to your log.',
+                      l10n.scanMealAnalysisSubtitle,
                       style: TextStyle(
                         color: AppColors.textMuted.withValues(alpha: 0.72),
                       ),
                     ),
                     const SizedBox(height: 20),
                     ProfileTextField(
-                      label: 'Meal name',
+                      label: l10n.mealsMealName,
                       controller: _nameController,
                       validator: _requiredText,
                       limeBorder: true,
                     ),
                     const SizedBox(height: 16),
                     ProfileTextField(
-                      label: 'Calories kcal',
+                      label: l10n.mealsCalories,
                       controller: _caloriesController,
                       keyboardType: TextInputType.number,
                       validator: _requiredNumber,
@@ -215,7 +219,7 @@ class _ScanResultSheetState extends State<ScanResultSheet> {
                       children: [
                         Expanded(
                           child: ProfileTextField(
-                            label: 'Protein g',
+                            label: l10n.proteinG,
                             controller: _proteinController,
                             keyboardType: TextInputType.number,
                             validator: _requiredNumber,
@@ -225,7 +229,7 @@ class _ScanResultSheetState extends State<ScanResultSheet> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: ProfileTextField(
-                            label: 'Carbs g',
+                            label: l10n.carbsG,
                             controller: _carbsController,
                             keyboardType: TextInputType.number,
                             validator: _requiredNumber,
@@ -236,7 +240,7 @@ class _ScanResultSheetState extends State<ScanResultSheet> {
                     ),
                     const SizedBox(height: 16),
                     ProfileTextField(
-                      label: 'Fats g',
+                      label: l10n.fatsG,
                       controller: _fatsController,
                       keyboardType: TextInputType.number,
                       validator: _requiredNumber,
@@ -271,7 +275,7 @@ class _ScanResultSheetState extends State<ScanResultSheet> {
                                 color: AppColors.onLime,
                               ),
                             )
-                          : const Text('Save meal'),
+                          : Text(l10n.mealsSaveMeal),
                     ),
                   ],
                 ),

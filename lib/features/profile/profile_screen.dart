@@ -5,6 +5,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/features/profile/account_settings_screen.dart';
 import 'package:nutrilens/features/profile/link_email_dialog.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
+import 'package:nutrilens/l10n/l10n_extensions.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/services/user_repository.dart';
 import 'package:nutrilens/theme/app_colors.dart';
@@ -49,7 +51,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final loadedAccount = await _repository.getAccount(_uid);
       if (mounted) {
         setState(() {
-          _profile = loadedProfile ??
+          _profile =
+              loadedProfile ??
               UserProfile.emptyShell(
                 userId: _uid,
                 now: DateTime.now().toUtc(),
@@ -63,7 +66,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (mounted) {
         setState(() => _loading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Unable to load profile: $error')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.unableToLoadProfile('$error'),
+            ),
+          ),
         );
       }
     }
@@ -83,9 +90,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _openSettings() async {
     await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
-        builder: (_) => const AccountSettingsScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const AccountSettingsScreen()),
     );
     if (mounted) await _loadProfile();
   }
@@ -96,10 +101,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profile'),
+        title: Text(AppLocalizations.of(context)!.profile),
         actions: [
           IconButton(
-            tooltip: 'Settings',
+            tooltip: AppLocalizations.of(context)!.settingsTitle,
             onPressed: _loading ? null : _openSettings,
             icon: const Icon(Icons.settings_outlined),
           ),
@@ -108,31 +113,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _isGuest
-              ? _GuestPrompt(
-                  account: _account,
+          ? _GuestPrompt(
+              account: _account,
+              repository: _repository,
+              busy: _busy,
+              onLinkEmail: () async {
+                if (_account == null) return;
+                setState(() => _busy = true);
+                final updated = await showLinkEmailDialog(
+                  context: context,
                   repository: _repository,
-                  busy: _busy,
-                  onLinkEmail: () async {
-                    if (_account == null) return;
-                    setState(() => _busy = true);
-                    final updated = await showLinkEmailDialog(
-                      context: context,
-                      repository: _repository,
-                      uid: _account!.uid,
-                    );
-                    if (mounted) {
-                      setState(() => _busy = false);
-                      if (updated != null) await _loadProfile();
-                    }
-                  },
-                )
-              : _ProfileContent(
-                  profile: _profile!,
-                  account: _account,
-                  pickedAvatar: _pickedAvatar,
-                  onPickAvatar: _pickAvatar,
-                  onOpenSettings: _openSettings,
-                ),
+                  uid: _account!.uid,
+                );
+                if (mounted) {
+                  setState(() => _busy = false);
+                  if (updated != null) await _loadProfile();
+                }
+              },
+            )
+          : _ProfileContent(
+              profile: _profile!,
+              account: _account,
+              pickedAvatar: _pickedAvatar,
+              onPickAvatar: _pickAvatar,
+              onOpenSettings: _openSettings,
+            ),
     );
   }
 }
@@ -155,6 +160,7 @@ class _GuestPrompt extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -177,13 +183,13 @@ class _GuestPrompt extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Create an account',
+              l10n.guestCreateAccountTitle,
               style: theme.textTheme.headlineMedium,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             Text(
-              'Sign up to save your profile, nutrition goals, and training data.',
+              l10n.guestCreateAccountBody,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: AppColors.textMuted.withValues(alpha: 0.7),
               ),
@@ -207,7 +213,7 @@ class _GuestPrompt extends StatelessWidget {
                           strokeWidth: 2,
                         ),
                       )
-                    : const Text('Create account'),
+                    : Text(l10n.createAccount),
               ),
             ),
           ],
@@ -237,14 +243,17 @@ class _ProfileContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     final imageProvider = pickedAvatar != null
         ? FileImage(File(pickedAvatar!.path)) as ImageProvider
         : (profile.avatarUrl != null && profile.avatarUrl!.isNotEmpty)
-            ? NetworkImage(profile.avatarUrl!)
-            : null;
+        ? NetworkImage(profile.avatarUrl!)
+        : null;
 
-    final initials = profile.displayName.trim().split(' ')
+    final initials = profile.displayName
+        .trim()
+        .split(' ')
         .where((p) => p.isNotEmpty)
         .map((p) => p[0])
         .take(2)
@@ -307,7 +316,7 @@ class _ProfileContent extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            profile.displayName.isEmpty ? 'No name set' : profile.displayName,
+            profile.displayName.isEmpty ? l10n.noNameSet : profile.displayName,
             textAlign: TextAlign.center,
             style: theme.textTheme.headlineMedium,
           ),
@@ -353,26 +362,26 @@ class _ProfileContent extends StatelessWidget {
             children: [
               _StatTile(
                 value: '${profile.dailyTargets.caloriesKcal}',
-                unit: 'kcal',
-                label: 'Calories',
+                unit: l10n.caloriesKcal,
+                label: l10n.caloriesKcal,
               ),
               const SizedBox(width: 8),
               _StatTile(
-                value: '${profile.dailyTargets.proteinG}g',
-                unit: 'Protein',
-                label: 'protein',
+                value: '${profile.dailyTargets.proteinG}',
+                unit: l10n.proteinG,
+                label: l10n.proteinG,
               ),
               const SizedBox(width: 8),
               _StatTile(
-                value: '${profile.dailyTargets.carbsG}g',
-                unit: 'Carbs',
-                label: 'carbs',
+                value: '${profile.dailyTargets.carbsG}',
+                unit: l10n.carbsG,
+                label: l10n.carbsG,
               ),
               const SizedBox(width: 8),
               _StatTile(
-                value: '${profile.dailyTargets.fatsG}g',
-                unit: 'Fats',
-                label: 'fats',
+                value: '${profile.dailyTargets.fatsG}',
+                unit: l10n.fatsG,
+                label: l10n.fatsG,
               ),
             ],
           ),
@@ -380,25 +389,22 @@ class _ProfileContent extends StatelessWidget {
           // ── Personal ─────────────────────────────────────────────────────
           const SizedBox(height: 28),
           _InfoSection(
-            title: 'Personal',
+            title: l10n.sectionPersonal,
             icon: Icons.person_outline_rounded,
             rows: [
+              _InfoRow(label: l10n.email, value: account?.email ?? '—'),
               _InfoRow(
-                label: 'Email',
-                value: account?.email ?? '—',
-              ),
-              _InfoRow(
-                label: 'Phone',
+                label: l10n.phone,
                 value: profile.phoneNumber?.isNotEmpty == true
                     ? profile.phoneNumber!
                     : '—',
               ),
               _InfoRow(
-                label: 'Gender',
-                value: _genderLabel(profile.sex),
+                label: l10n.gender,
+                value: localizedGenderOptions(l10n)[profile.sex] ?? '—',
               ),
               _InfoRow(
-                label: 'Birth year',
+                label: l10n.birthYear,
                 value: profile.birthYear?.toString() ?? '—',
                 isLast: true,
               ),
@@ -408,46 +414,44 @@ class _ProfileContent extends StatelessWidget {
           // ── Athlete ───────────────────────────────────────────────────────
           const SizedBox(height: 16),
           _InfoSection(
-            title: 'Athlete',
+            title: l10n.sectionAthlete,
             icon: Icons.sports_rounded,
             rows: [
               _InfoRow(
-                label: 'Sport',
+                label: l10n.sport,
                 value: profile.primarySportName.isEmpty
                     ? '—'
                     : profile.primarySportName,
               ),
               _InfoRow(
-                label: 'School',
+                label: l10n.school,
                 value: profile.schoolName?.isNotEmpty == true
                     ? profile.schoolName!
                     : '—',
               ),
               _InfoRow(
-                label: 'Graduation year',
+                label: l10n.graduationYear,
                 value: profile.graduationYear?.toString() ?? '—',
               ),
               _InfoRow(
-                label: 'Height',
-                value: profile.heightCm != null
-                    ? '${profile.heightCm} cm'
-                    : '—',
+                label: l10n.height,
+                value: profile.heightCm != null ? '${profile.heightCm}' : '—',
               ),
               _InfoRow(
-                label: 'Weight',
-                value: profile.weightKg != null
-                    ? '${profile.weightKg} kg'
-                    : '—',
+                label: l10n.weight,
+                value: profile.weightKg != null ? '${profile.weightKg}' : '—',
               ),
               _InfoRow(
-                label: 'Training days',
+                label: l10n.trainingDays,
                 value: profile.trainingDaysPerWeek != null
-                    ? '${profile.trainingDaysPerWeek} / week'
+                    ? l10n.trainingDaysCount(profile.trainingDaysPerWeek!)
                     : '—',
               ),
               _InfoRow(
-                label: 'Activity level',
-                value: _activityLabel(profile.activityLevel),
+                label: l10n.activityLevel,
+                value:
+                    localizedActivityOptions(l10n)[profile.activityLevel] ??
+                    '—',
                 isLast: true,
               ),
             ],
@@ -456,32 +460,32 @@ class _ProfileContent extends StatelessWidget {
           // ── Nutrition Goals ───────────────────────────────────────────────
           const SizedBox(height: 16),
           _InfoSection(
-            title: 'Nutrition Goals',
+            title: l10n.sectionNutritionGoals,
             icon: Icons.local_fire_department_rounded,
             rows: [
               _InfoRow(
-                label: 'Calories',
-                value: '${profile.dailyTargets.caloriesKcal} kcal',
+                label: l10n.caloriesKcal,
+                value: '${profile.dailyTargets.caloriesKcal}',
               ),
               _InfoRow(
-                label: 'Protein',
-                value: '${profile.dailyTargets.proteinG} g',
+                label: l10n.proteinG,
+                value: '${profile.dailyTargets.proteinG}',
               ),
               _InfoRow(
-                label: 'Carbs',
-                value: '${profile.dailyTargets.carbsG} g',
+                label: l10n.carbsG,
+                value: '${profile.dailyTargets.carbsG}',
               ),
               _InfoRow(
-                label: 'Fats',
-                value: '${profile.dailyTargets.fatsG} g',
+                label: l10n.fatsG,
+                value: '${profile.dailyTargets.fatsG}',
               ),
               _InfoRow(
-                label: 'Hydration',
-                value: '${profile.dailyTargets.hydrationLiters} L',
+                label: l10n.hydrationL,
+                value: '${profile.dailyTargets.hydrationLiters}',
               ),
               _InfoRow(
-                label: 'Sleep target',
-                value: '${profile.dailyTargets.sleepHours} hrs',
+                label: l10n.sleepTarget,
+                value: '${profile.dailyTargets.sleepHours}',
                 isLast: true,
               ),
             ],
@@ -492,18 +496,18 @@ class _ProfileContent extends StatelessWidget {
               profile.dietaryProfile.restrictions.isNotEmpty) ...[
             const SizedBox(height: 16),
             _InfoSection(
-              title: 'Dietary',
+              title: l10n.sectionDietary,
               icon: Icons.no_food_rounded,
               rows: [
                 if (profile.dietaryProfile.allergens.isNotEmpty)
                   _InfoRow(
-                    label: 'Allergens',
+                    label: l10n.allergens,
                     value: profile.dietaryProfile.allergens.join(', '),
                     isLast: profile.dietaryProfile.restrictions.isEmpty,
                   ),
                 if (profile.dietaryProfile.restrictions.isNotEmpty)
                   _InfoRow(
-                    label: 'Restrictions',
+                    label: l10n.restrictions,
                     value: profile.dietaryProfile.restrictions.join(', '),
                     isLast: true,
                   ),
@@ -516,7 +520,7 @@ class _ProfileContent extends StatelessWidget {
           OutlinedButton.icon(
             onPressed: onOpenSettings,
             icon: const Icon(Icons.edit_outlined, size: 18),
-            label: const Text('Edit profile & settings'),
+            label: Text(l10n.editProfileAndSettings),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.lime,
               side: const BorderSide(color: AppColors.lime),
@@ -530,22 +534,6 @@ class _ProfileContent extends StatelessWidget {
       ),
     );
   }
-
-  static String _genderLabel(String? sex) => switch (sex) {
-        'female' => 'Female',
-        'male' => 'Male',
-        'non_binary' => 'Non-binary',
-        'prefer_not_to_say' => 'Prefer not to say',
-        _ => '—',
-      };
-
-  static String _activityLabel(String? level) => switch (level) {
-        'low' => 'Low',
-        'moderate' => 'Moderate',
-        'high' => 'High',
-        'very_high' => 'Very high',
-        _ => '—',
-      };
 }
 
 // ─── Stat tile ────────────────────────────────────────────────────────────────

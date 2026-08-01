@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nutrilens/features/schedule/schedule_calendar_mode.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
+import 'package:nutrilens/l10n/l10n_extensions.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
 class ScheduleHeader extends StatelessWidget {
@@ -16,27 +18,10 @@ class ScheduleHeader extends StatelessWidget {
   final VoidCallback onCalendarModeToggle;
   final VoidCallback onAddTap;
 
-  String _monthName(int month) {
-    const months = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
-    return months[month - 1];
-  }
-
   @override
   Widget build(BuildContext context) {
-    final monthLabel = _monthName(selectedDate.month);
+    final l10n = AppLocalizations.of(context)!;
+    final monthLabel = formatLocalizedMonth(context, selectedDate.month);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -71,8 +56,8 @@ class ScheduleHeader extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 calendarMode == ScheduleCalendarMode.week
-                    ? 'This week'
-                    : 'Full month',
+                    ? l10n.scheduleThisWeek
+                    : l10n.scheduleFullMonth,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ],

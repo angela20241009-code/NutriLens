@@ -80,7 +80,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     super.didChangeDependencies();
     final userScope = UserScope.of(context);
     final sessionScope = SessionScope.of(context);
-    final scopeChanged = !_hasScopes ||
+    final scopeChanged =
+        !_hasScopes ||
         _repository != userScope.repository ||
         _uid != userScope.uid ||
         _signOutUser != sessionScope.signOut;
@@ -123,7 +124,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       final account = await _repository.getAccount(_uid);
       if (!mounted) return;
 
-      final p = profile ??
+      final p =
+          profile ??
           UserProfile.emptyShell(
             userId: _uid,
             now: DateTime.now().toUtc(),
@@ -202,18 +204,23 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         trainingDaysPerWeek: _trainingDaysValue,
         activityLevel: _activityLevelValue,
         dailyTargets: _profile!.dailyTargets.copyWith(
-          caloriesKcal: int.tryParse(_caloriesController.text.trim()) ??
+          caloriesKcal:
+              int.tryParse(_caloriesController.text.trim()) ??
               _profile!.dailyTargets.caloriesKcal,
-          proteinG: int.tryParse(_proteinController.text.trim()) ??
+          proteinG:
+              int.tryParse(_proteinController.text.trim()) ??
               _profile!.dailyTargets.proteinG,
-          carbsG: int.tryParse(_carbsController.text.trim()) ??
+          carbsG:
+              int.tryParse(_carbsController.text.trim()) ??
               _profile!.dailyTargets.carbsG,
-          fatsG: int.tryParse(_fatsController.text.trim()) ??
+          fatsG:
+              int.tryParse(_fatsController.text.trim()) ??
               _profile!.dailyTargets.fatsG,
           hydrationLiters:
               double.tryParse(_hydrationController.text.trim()) ??
-                  _profile!.dailyTargets.hydrationLiters,
-          sleepHours: double.tryParse(_sleepHoursController.text.trim()) ??
+              _profile!.dailyTargets.hydrationLiters,
+          sleepHours:
+              double.tryParse(_sleepHoursController.text.trim()) ??
               _profile!.dailyTargets.sleepHours,
           source: DailyTargetsSource.manual,
         ),
@@ -245,9 +252,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         setState(() => _saving = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              AppLocalizations.of(context)!.failedToSave('$error'),
-            ),
+            content: Text(AppLocalizations.of(context)!.failedToSave('$error')),
           ),
         );
       }
@@ -271,7 +276,11 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       });
       if (updated != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Account created successfully')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.accountCreatedSuccessfully,
+            ),
+          ),
         );
       }
     }
@@ -288,8 +297,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         _account = _account?.copyWith(email: newEmail);
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Verification sent — check your inbox to confirm.'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.emailVerificationSent),
         ),
       );
     }
@@ -303,7 +312,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     );
     if (success == true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password updated')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.passwordUpdated)),
       );
     }
   }
@@ -372,10 +381,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
           SnackBar(
             content: Text(
               AppLocalizations.of(context)!.unableToDeleteAccount(
-                friendlyAuthErrorMessage(
-                  AppLocalizations.of(context)!,
-                  error,
-                ),
+                friendlyAuthErrorMessage(AppLocalizations.of(context)!, error),
               ),
             ),
           ),
@@ -393,7 +399,13 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Unable to update accessibility mode: $error')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(
+                context,
+              )!.unableToUpdateAccessibilityMode('$error'),
+            ),
+          ),
         );
       }
     }
@@ -406,7 +418,11 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Unable to update Sleep Mode: $error')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.unableToUpdateSleepMode('$error'),
+            ),
+          ),
         );
       }
     }
@@ -429,21 +445,21 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'Mode switcher',
+                    AppLocalizations.of(context)!.modeSwitcher,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),
               ),
               _PickerOption(
-                title: 'Minimal tabs',
-                subtitle: 'Slim top tabs with an active underline.',
+                title: AppLocalizations.of(context)!.minimalTabs,
+                subtitle: AppLocalizations.of(context)!.minimalTabsDescription,
                 selected: current == SegmentControlStyle.minimalTabs,
                 onTap: () =>
                     Navigator.of(context).pop(SegmentControlStyle.minimalTabs),
               ),
               _PickerOption(
-                title: 'Classic pill',
-                subtitle: 'Original rounded segmented control.',
+                title: AppLocalizations.of(context)!.classicPill,
+                subtitle: AppLocalizations.of(context)!.classicPillDescription,
                 selected: current == SegmentControlStyle.classicPill,
                 onTap: () =>
                     Navigator.of(context).pop(SegmentControlStyle.classicPill),
@@ -460,7 +476,13 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Unable to update mode switcher: $error')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(
+                context,
+              )!.unableToUpdateModeSwitcher('$error'),
+            ),
+          ),
         );
       }
     }
@@ -529,9 +551,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.unableToUpdateTextSize('$error')),
-          ),
+          SnackBar(content: Text(l10n.unableToUpdateTextSize('$error'))),
         );
       }
     }
@@ -596,9 +616,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
   void _showComingSoon(String feature) {
     final l10n = AppLocalizations.of(context)!;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.comingSoon(feature))),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.comingSoon(feature))));
   }
 
   // ─── Build ────────────────────────────────────────────────────────────────
@@ -675,10 +695,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       case '/':
       default:
         title = l10n.settingsTitle;
-        body = _SettingsHubPage(
-          host: this,
-          onSectionTap: _openSettingsSection,
-        );
+        body = _SettingsHubPage(host: this, onSectionTap: _openSettingsSection);
     }
 
     return MaterialPageRoute<void>(
@@ -728,8 +745,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     required ValueChanged<T?> onChanged,
     String? hint,
   }) {
-    final T? selectedValue =
-        value != null && items.containsKey(value) ? value : null;
+    final T? selectedValue = value != null && items.containsKey(value)
+        ? value
+        : null;
     OutlineInputBorder limeOutline(double width) {
       return OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
@@ -746,7 +764,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
           key: ValueKey('$label-$selectedValue'),
           value: selectedValue,
           hint: Text(
-            hint ?? 'Select',
+            hint ?? AppLocalizations.of(context)!.select,
             style: TextStyle(
               color: AppColors.textMuted.withValues(alpha: 0.72),
             ),
@@ -756,10 +774,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
           iconEnabledColor: AppColors.lime,
           items: items.entries
               .map(
-                (e) => DropdownMenuItem<T>(
-                  value: e.key,
-                  child: Text(e.value),
-                ),
+                (e) => DropdownMenuItem<T>(value: e.key, child: Text(e.value)),
               )
               .toList(),
           decoration: InputDecoration(
@@ -784,7 +799,6 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     if (int.tryParse(v.trim()) == null) return l10n.enterNumber;
     return null;
   }
-
 }
 
 // ─── Settings navigation shell ────────────────────────────────────────────────
@@ -816,10 +830,7 @@ class _SettingsPageScaffold extends StatelessWidget {
       appBar: AppBar(
         centerTitle: true,
         title: Text(title),
-        leading: BackButton(
-          color: AppColors.lime,
-          onPressed: onBack,
-        ),
+        leading: BackButton(color: AppColors.lime, onPressed: onBack),
       ),
       body: Stack(
         children: [
@@ -869,10 +880,7 @@ class _SettingsPageScaffold extends StatelessWidget {
 }
 
 class _SettingsHubPage extends StatelessWidget {
-  const _SettingsHubPage({
-    required this.host,
-    required this.onSectionTap,
-  });
+  const _SettingsHubPage({required this.host, required this.onSectionTap});
 
   final _AccountSettingsScreenState host;
   final ValueChanged<String> onSectionTap;
@@ -1085,10 +1093,7 @@ class _AthleteSettingsPage extends StatelessWidget {
 
     return _FormCard(
       children: [
-        Text(
-          l10n.primarySport,
-          style: Theme.of(context).textTheme.labelSmall,
-        ),
+        Text(l10n.primarySport, style: Theme.of(context).textTheme.labelSmall),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
@@ -1101,9 +1106,7 @@ class _AthleteSettingsPage extends StatelessWidget {
             host._profile?.primarySportName.isNotEmpty == true
                 ? host._profile!.primarySportName
                 : l10n.noSportSelected,
-            style: TextStyle(
-              color: AppColors.textMuted.withValues(alpha: 0.5),
-            ),
+            style: TextStyle(color: AppColors.textMuted.withValues(alpha: 0.5)),
           ),
         ),
         const SizedBox(height: 16),
@@ -1306,13 +1309,15 @@ class _DisplaySettingsPage extends StatelessWidget {
           onTap: isBusy || appSettings.saving
               ? null
               : () => host._toggleAccessibilityMode(
-                    !appSettings.accessibilityModeEnabled,
-                  ),
+                  !appSettings.accessibilityModeEnabled,
+                ),
         ),
         SettingsRow(
           label: l10n.textSize,
           value: localizedTextScaleLabel(l10n, appSettings.textScale),
-          onTap: isBusy || appSettings.saving ? null : host._showTextScalePicker,
+          onTap: isBusy || appSettings.saving
+              ? null
+              : host._showTextScalePicker,
         ),
         SettingsRow(
           label: l10n.themeColors,
@@ -1346,7 +1351,9 @@ class _AppSettingsPage extends StatelessWidget {
           trailing: Switch(
             value: appSettings.sleepModeEnabled,
             activeThumbColor: AppColors.sleepAccent,
-            onChanged: isBusy || appSettings.saving ? null : host._toggleSleepMode,
+            onChanged: isBusy || appSettings.saving
+                ? null
+                : host._toggleSleepMode,
           ),
           showChevron: false,
           onTap: isBusy || appSettings.saving
@@ -1481,9 +1488,10 @@ class _ChangeEmailDialogState extends State<_ChangeEmailDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
       backgroundColor: AppColors.cardDark,
-      title: const Text('Change email'),
+      title: Text(l10n.changeEmail),
       content: Form(
         key: _formKey,
         child: Column(
@@ -1493,10 +1501,12 @@ class _ChangeEmailDialogState extends State<_ChangeEmailDialog> {
             TextFormField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(labelText: 'New email'),
+              decoration: InputDecoration(labelText: l10n.newEmail),
               validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'Enter an email';
-                if (!v.contains('@')) return 'Enter a valid email';
+                if (v == null || v.trim().isEmpty) {
+                  return l10n.authValidationEmailRequired;
+                }
+                if (!v.contains('@')) return l10n.authValidationEmailInvalid;
                 return null;
               },
             ),
@@ -1504,9 +1514,9 @@ class _ChangeEmailDialogState extends State<_ChangeEmailDialog> {
             TextFormField(
               controller: _passwordController,
               obscureText: true,
-              decoration: const InputDecoration(labelText: 'Current password'),
+              decoration: InputDecoration(labelText: l10n.currentPassword),
               validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'Enter your password';
+                if (v == null || v.trim().isEmpty) return l10n.enterPassword;
                 return null;
               },
               onFieldSubmitted: (_) => _loading ? null : _submit(),
@@ -1524,7 +1534,7 @@ class _ChangeEmailDialogState extends State<_ChangeEmailDialog> {
       actions: [
         TextButton(
           onPressed: _loading ? null : () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
         FilledButton(
           onPressed: _loading ? null : _submit,
@@ -1540,7 +1550,7 @@ class _ChangeEmailDialogState extends State<_ChangeEmailDialog> {
                     strokeWidth: 2,
                   ),
                 )
-              : const Text('Update'),
+              : Text(l10n.update),
         ),
       ],
     );
@@ -1611,9 +1621,10 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
       backgroundColor: AppColors.cardDark,
-      title: const Text('Change password'),
+      title: Text(l10n.changePassword),
       content: Form(
         key: _formKey,
         child: Column(
@@ -1623,9 +1634,9 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
             TextFormField(
               controller: _currentPasswordController,
               obscureText: true,
-              decoration: const InputDecoration(labelText: 'Current password'),
+              decoration: InputDecoration(labelText: l10n.currentPassword),
               validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'Required';
+                if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
                 return null;
               },
             ),
@@ -1633,10 +1644,10 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
             TextFormField(
               controller: _newPasswordController,
               obscureText: true,
-              decoration: const InputDecoration(labelText: 'New password'),
+              decoration: InputDecoration(labelText: l10n.newPassword),
               validator: (v) {
                 if (v == null || v.trim().length < 6) {
-                  return 'At least 6 characters';
+                  return l10n.passwordMinCharacters;
                 }
                 return null;
               },
@@ -1645,10 +1656,10 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
             TextFormField(
               controller: _confirmPasswordController,
               obscureText: true,
-              decoration: const InputDecoration(labelText: 'Confirm password'),
+              decoration: InputDecoration(labelText: l10n.confirmPassword),
               validator: (v) {
                 if (v != _newPasswordController.text) {
-                  return 'Passwords do not match';
+                  return l10n.passwordsDoNotMatch;
                 }
                 return null;
               },
@@ -1667,7 +1678,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
       actions: [
         TextButton(
           onPressed: _loading ? null : () => Navigator.of(context).pop(false),
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
         FilledButton(
           onPressed: _loading ? null : _submit,
@@ -1683,7 +1694,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                     strokeWidth: 2,
                   ),
                 )
-              : const Text('Update'),
+              : Text(l10n.update),
         ),
       ],
     );

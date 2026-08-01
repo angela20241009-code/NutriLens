@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
 class GuestAccountNotice extends StatelessWidget {
@@ -6,14 +7,13 @@ class GuestAccountNotice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.orange.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.orange.withValues(alpha: 0.35),
-        ),
+        border: Border.all(color: AppColors.orange.withValues(alpha: 0.35)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -26,12 +26,11 @@ class GuestAccountNotice extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'You are using a guest account without cloud sync. '
-              'Profile editing is disabled until you create an account to save your data.',
+              l10n.guestAccountNotice,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textPrimary,
-                    height: 1.4,
-                  ),
+                color: AppColors.textPrimary,
+                height: 1.4,
+              ),
             ),
           ),
         ],

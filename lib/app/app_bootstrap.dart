@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:nutrilens/app.dart';
@@ -117,7 +118,52 @@ class _AppBootstrapState extends State<AppBootstrap> {
     if (!mounted) {
       return AppLanguage.english.profileLocale;
     }
-    return AppLocaleScope.of(context).language.profileLocale;
+    return AppLocaleScope.maybeOf(context)?.language.profileLocale ??
+        AppLanguage.english.profileLocale;
+  }
+
+  Future<UserAccount> _establishEmailAccount(
+    UserRepository repository,
+    String email,
+    String password,
+  ) async {
+    try {
+      return await repository.createAccountWithEmail(
+        email: email,
+        password: password,
+        timezone: _defaultTimezone,
+      );
+    } on FirebaseAuthException {
+      rethrow;
+    } catch (error, stackTrace) {
+      // Firebase Auth may already have created the user even if Firestore
+      // bootstrap failed. Recover by signing in with the same credentials.
+      debugPrint(
+        'Create account bootstrap failed, retrying sign-in: $error\n$stackTrace',
+      );
+      return repository.signInWithEmail(
+        email: email,
+        password: password,
+        timezone: _defaultTimezone,
+      );
+    }
+  }
+
+  Future<void> _persistInitialProfileLocale(
+    UserRepository repository,
+    String uid,
+  ) async {
+    try {
+      await _saveInitialProfileLocale(
+        repository,
+        uid,
+        locale: _currentProfileLocale(),
+      );
+    } catch (error, stackTrace) {
+      debugPrint(
+        'Unable to save initial profile locale: $error\n$stackTrace',
+      );
+    }
   }
 
   Future<void> _createAccount(
@@ -125,16 +171,8 @@ class _AppBootstrapState extends State<AppBootstrap> {
     String email,
     String password,
   ) async {
-    final account = await repository.createAccountWithEmail(
-      email: email,
-      password: password,
-      timezone: _defaultTimezone,
-    );
-    await _saveInitialProfileLocale(
-      repository,
-      account.uid,
-      locale: _currentProfileLocale(),
-    );
+    final account = await _establishEmailAccount(repository, email, password);
+    await _persistInitialProfileLocale(repository, account.uid);
     _activateSession(repository, account);
   }
 
@@ -157,11 +195,7 @@ class _AppBootstrapState extends State<AppBootstrap> {
     final account = await repository.signInAnonymously(
       timezone: _defaultTimezone,
     );
-    await _saveInitialProfileLocale(
-      repository,
-      account.uid,
-      locale: _currentProfileLocale(),
-    );
+    await _persistInitialProfileLocale(repository, account.uid);
     _activateSession(repository, account);
   }
 

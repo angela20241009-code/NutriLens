@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nutrilens/models/daily_targets.dart';
 import 'package:nutrilens/models/nutrition_entry.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
 class TodaysFuelCard extends StatelessWidget {
@@ -19,6 +20,7 @@ class TodaysFuelCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final calorieProgress = _progress(
       totals.caloriesKcal,
       targets.caloriesKcal,
@@ -42,19 +44,19 @@ class TodaysFuelCard extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Text(
-                "Today's fuel",
+                l10n.homeTodayFuel,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const Spacer(),
               InkWell(
                 onTap: onViewDetailsTap,
                 borderRadius: BorderRadius.circular(18),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
                   child: Row(
                     children: [
                       Text(
-                        'View details',
+                        l10n.homeThisWeeksFuel,
                         style: TextStyle(
                           color: AppColors.lime,
                           fontSize: 15,
@@ -132,6 +134,8 @@ class _CalorieRing extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return SizedBox(
       width: 156,
       height: 156,
@@ -160,7 +164,7 @@ class _CalorieRing extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                '/ ${_formatNumber(target)} kcal',
+                l10n.homeCaloriesOfTarget(_formatNumber(target)),
                 style: const TextStyle(
                   color: AppColors.textMuted,
                   fontSize: 16,
@@ -189,24 +193,26 @@ class _MacroList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Column(
       children: [
         _MacroRow(
-          label: 'Protein',
+          label: l10n.proteinG,
           current: totals.proteinG,
           target: targets.proteinG,
           color: AppColors.fitnessPurple,
         ),
         const SizedBox(height: 20),
         _MacroRow(
-          label: 'Carbs',
+          label: l10n.carbsG,
           current: totals.carbsG,
           target: targets.carbsG,
           color: AppColors.fitnessGreen,
         ),
         const SizedBox(height: 20),
         _MacroRow(
-          label: 'Fats',
+          label: l10n.fatsG,
           current: totals.fatsG,
           target: targets.fatsG,
           color: AppColors.fitnessWhite,

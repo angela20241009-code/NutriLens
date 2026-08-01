@@ -10,18 +10,19 @@ Future<bool> showDeleteAccountConfirmationDialog({
   final result = await showDialog<bool>(
     context: context,
     builder: (context) {
+      final l10n = AppLocalizations.of(context)!;
       return AlertDialog(
         backgroundColor: AppColors.cardDark,
-        title: const Text('Delete account?'),
+        title: Text(l10n.deleteAccountTitle),
         content: Text(
           isAnonymous
-              ? 'This permanently deletes your guest account and all logged meals, sleep, and profile data on this device. This cannot be undone.'
-              : 'This permanently deletes ${email ?? 'your account'} and all associated data. This cannot be undone.',
+              ? l10n.deleteGuestAccountBody
+              : l10n.deleteAccountBody(email ?? l10n.yourAccount),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
@@ -29,7 +30,7 @@ Future<bool> showDeleteAccountConfirmationDialog({
               backgroundColor: AppColors.orange,
               foregroundColor: AppColors.textPrimary,
             ),
-            child: const Text('Delete account'),
+            child: Text(l10n.deleteAccount),
           ),
         ],
       );
@@ -59,7 +60,8 @@ class _DeleteAccountReauthDialog extends StatefulWidget {
       _DeleteAccountReauthDialogState();
 }
 
-class _DeleteAccountReauthDialogState extends State<_DeleteAccountReauthDialog> {
+class _DeleteAccountReauthDialogState
+    extends State<_DeleteAccountReauthDialog> {
   final _formKey = GlobalKey<FormState>();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
@@ -95,9 +97,9 @@ class _DeleteAccountReauthDialogState extends State<_DeleteAccountReauthDialog> 
               const SizedBox(height: 8),
               Text(
                 widget.email!,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textMuted,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
               ),
             ],
             const SizedBox(height: 16),

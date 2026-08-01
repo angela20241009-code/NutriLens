@@ -3,6 +3,7 @@ import 'package:nutrilens/features/schedule/schedule_view_filter.dart';
 import 'package:nutrilens/features/schedule/widgets/timeline_event_tile.dart';
 import 'package:nutrilens/features/schedule/widgets/timeline_meal_tile.dart';
 import 'package:nutrilens/features/schedule/widgets/timeline_sleep_tile.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/models/meal.dart';
 import 'package:nutrilens/models/schedule_event.dart';
 import 'package:nutrilens/theme/app_colors.dart';
@@ -63,11 +64,15 @@ class ScheduleTimeline extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = _buildItems();
+    final l10n = AppLocalizations.of(context)!;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Timeline', style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          l10n.scheduleTimeline,
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
         const SizedBox(height: 16),
         if (items.isEmpty)
           Container(
@@ -78,7 +83,7 @@ class ScheduleTimeline extends StatelessWidget {
               borderRadius: BorderRadius.circular(24),
             ),
             child: Text(
-              _emptyMessage,
+              _emptyMessage(l10n),
               style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
@@ -107,42 +112,43 @@ class ScheduleTimeline extends StatelessWidget {
     );
   }
 
-  String get _emptyMessage {
+  String _emptyMessage(AppLocalizations l10n) {
     switch (filter) {
       case ScheduleViewFilter.all:
-        return 'No events, meals, or sleep logged for this day.';
+        return l10n.scheduleNoEntries;
       case ScheduleViewFilter.events:
-        return 'No events scheduled for this day.';
+        return l10n.scheduleNoEvents;
       case ScheduleViewFilter.loggedMeals:
-        return 'No logged meals for this day.';
+        return l10n.scheduleNoMeals;
       case ScheduleViewFilter.sleep:
-        return 'No sleep logged for this day.';
+        return l10n.scheduleLogSleepEmpty;
     }
   }
 
   List<_TimelineItem> _buildItems() {
-    final items = <_TimelineItem>[
-      if (filter == ScheduleViewFilter.all ||
-          filter == ScheduleViewFilter.events)
-        ...events.map(_TimelineItem.event),
-      if (filter == ScheduleViewFilter.all ||
-          filter == ScheduleViewFilter.loggedMeals)
-        ...loggedMeals.map(_TimelineItem.meal),
-      if ((filter == ScheduleViewFilter.all ||
-              filter == ScheduleViewFilter.sleep) &&
-          sleepHours > 0)
-        _TimelineItem.sleep(sleepHours),
-    ]..sort((a, b) {
-      if (a.kind == _TimelineItemKind.sleep &&
-          b.kind != _TimelineItemKind.sleep) {
-        return -1;
-      }
-      if (b.kind == _TimelineItemKind.sleep &&
-          a.kind != _TimelineItemKind.sleep) {
-        return 1;
-      }
-      return a.startAt.compareTo(b.startAt);
-    });
+    final items =
+        <_TimelineItem>[
+          if (filter == ScheduleViewFilter.all ||
+              filter == ScheduleViewFilter.events)
+            ...events.map(_TimelineItem.event),
+          if (filter == ScheduleViewFilter.all ||
+              filter == ScheduleViewFilter.loggedMeals)
+            ...loggedMeals.map(_TimelineItem.meal),
+          if ((filter == ScheduleViewFilter.all ||
+                  filter == ScheduleViewFilter.sleep) &&
+              sleepHours > 0)
+            _TimelineItem.sleep(sleepHours),
+        ]..sort((a, b) {
+          if (a.kind == _TimelineItemKind.sleep &&
+              b.kind != _TimelineItemKind.sleep) {
+            return -1;
+          }
+          if (b.kind == _TimelineItemKind.sleep &&
+              a.kind != _TimelineItemKind.sleep) {
+            return 1;
+          }
+          return a.startAt.compareTo(b.startAt);
+        });
 
     return items;
   }

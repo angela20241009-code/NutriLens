@@ -1,8 +1,12 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nutrilens/features/sleep/sleep_logging.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/models/models.dart';
 
 void main() {
+  final l10n = lookupAppLocalizations(const Locale('en'));
+
   test('sleepDurationMinutes handles overnight sleep correctly', () {
     final minutes = sleepDurationMinutes(
       bedtimeMinutes: 22 * 60 + 30,
@@ -63,13 +67,14 @@ void main() {
     ).copyWith(usualWakeTimeMinutes: 7 * 60);
 
     final advice = buildSleepAdvice(
+      l10n: l10n,
       profile: profile,
       sleepHours: 6,
       wakeTimeMinutes: 7 * 60,
       referenceUtc: now,
     );
 
-    expect(advice.title, 'Sleep needs a boost');
+    expect(advice.title, l10n.sleepNeedsBoost);
     expect(advice.shortLine, contains('under your 8.0h target'));
   });
 
@@ -81,13 +86,14 @@ void main() {
     ).copyWith(usualWakeTimeMinutes: 7 * 60);
 
     final advice = buildSleepAdvice(
+      l10n: l10n,
       profile: profile,
       sleepHours: 8,
       wakeTimeMinutes: 7 * 60,
       referenceUtc: now,
     );
 
-    expect(advice.title, 'On target');
+    expect(advice.title, l10n.onTarget);
     expect(advice.shortLine, contains('matching your 8.0h goal'));
   });
 }

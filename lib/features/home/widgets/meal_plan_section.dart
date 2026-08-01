@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nutrilens/features/home/home_dashboard_data.dart';
 import 'package:nutrilens/features/home/widgets/meal_plan_card.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
 class MealPlanSection extends StatelessWidget {
@@ -11,11 +12,13 @@ class MealPlanSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "Today's Meal Plan",
+          l10n.homeTodayMealPlan,
           style: Theme.of(context).textTheme.titleLarge,
         ),
         const SizedBox(height: 14),
@@ -29,8 +32,8 @@ class MealPlanSection extends StatelessWidget {
             ),
             child: Text(
               error == null
-                  ? 'No meals planned for today yet.'
-                  : 'Meal plan is unavailable right now.',
+                  ? l10n.homeNoMealsPlanned
+                  : l10n.homeMealPlanUnavailable,
               style: const TextStyle(
                 fontSize: 14,
                 color: AppColors.textMuted,

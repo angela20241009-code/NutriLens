@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nutrilens/features/home/home_dashboard_data.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
+import 'package:nutrilens/l10n/l10n_extensions.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 import 'package:nutrilens/widgets/pill_badge.dart';
 
@@ -10,6 +12,9 @@ class MealPlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final mealTypeLabel = localizedMealType(l10n, meal.mealType);
+
     return Container(
       width: 168,
       decoration: BoxDecoration(
@@ -26,7 +31,7 @@ class MealPlanCard extends StatelessWidget {
               Positioned(
                 top: 10,
                 left: 10,
-                child: PillBadge(label: meal.mealType),
+                child: PillBadge(label: mealTypeLabel),
               ),
               if (meal.logged)
                 const Positioned(top: 10, right: 10, child: _LoggedCheck()),
@@ -49,7 +54,10 @@ class MealPlanCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${meal.calories} kcal · ${meal.protein}g P',
+                  l10n.homeMealKcalProtein(
+                    '${meal.calories}',
+                    '${meal.protein}',
+                  ),
                   style: const TextStyle(
                     fontSize: 12,
                     color: AppColors.textMuted,

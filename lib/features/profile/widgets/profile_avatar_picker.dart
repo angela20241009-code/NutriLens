@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
 class ProfileAvatarPicker extends StatelessWidget {
@@ -21,6 +22,7 @@ class ProfileAvatarPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final imageProvider = localImage != null
         ? FileImage(localImage!) as ImageProvider
         : (avatarUrl != null && avatarUrl!.isNotEmpty)
@@ -61,9 +63,9 @@ class ProfileAvatarPicker extends StatelessWidget {
         TextButton.icon(
           onPressed: enabled ? onTap : null,
           icon: const Icon(Icons.camera_alt, color: AppColors.lime),
-          label: const Text(
-            'Edit photo',
-            style: TextStyle(color: AppColors.lime),
+          label: Text(
+            l10n.profileEditPhoto,
+            style: const TextStyle(color: AppColors.lime),
           ),
         ),
       ],

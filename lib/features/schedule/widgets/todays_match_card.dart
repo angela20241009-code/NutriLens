@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nutrilens/models/schedule_event.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
+import 'package:nutrilens/l10n/l10n_extensions.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 import 'package:nutrilens/widgets/pill_badge.dart';
 
@@ -10,6 +12,7 @@ class TodaysMatchCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -17,11 +20,11 @@ class TodaysMatchCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              "Today's Match",
+              l10n.scheduleTodaysMatch,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             Text(
-              _formatShortDate(match.startAt),
+              _formatShortDate(context, match.startAt),
               style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
@@ -66,7 +69,7 @@ class TodaysMatchCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        match.badge ?? 'MATCH',
+                        match.badge ?? l10n.scheduleEventGame.toUpperCase(),
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
@@ -96,7 +99,7 @@ class TodaysMatchCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        _formatLocationAndTime(match),
+                        _formatLocationAndTime(context, match),
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
@@ -127,40 +130,24 @@ class TodaysMatchCard extends StatelessWidget {
     );
   }
 
-  String _formatShortDate(DateTime date) {
+  String _formatShortDate(BuildContext context, DateTime date) {
     final local = date.toLocal();
-    const months = [
-      'JAN',
-      'FEB',
-      'MAR',
-      'APR',
-      'MAY',
-      'JUN',
-      'JUL',
-      'AUG',
-      'SEP',
-      'OCT',
-      'NOV',
-      'DEC',
-    ];
-    return '${months[local.month - 1]} ${local.day}, ${local.year}';
+    return '${formatLocalizedMonth(context, local.month)} ${local.day}, ${local.year}';
   }
 
-  String _formatLocationAndTime(UserScheduleEvent match) {
+  String _formatLocationAndTime(BuildContext context, UserScheduleEvent match) {
     final parts = [
       if (match.location != null && match.location!.trim().isNotEmpty)
         match.location!.trim(),
-      _formatTime(match.startAt),
+      _formatTime(context, match.startAt),
     ];
     return parts.join(' · ');
   }
 
-  String _formatTime(DateTime time) {
+  String _formatTime(BuildContext context, DateTime time) {
     final local = time.toLocal();
-    final hour = local.hour;
-    final minute = local.minute;
-    final period = hour >= 12 ? 'PM' : 'AM';
-    final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
-    return '$displayHour:${minute.toString().padLeft(2, '0')} $period';
+    return MaterialLocalizations.of(
+      context,
+    ).formatTimeOfDay(TimeOfDay.fromDateTime(local));
   }
 }

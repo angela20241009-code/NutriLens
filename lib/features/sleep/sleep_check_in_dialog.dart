@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:nutrilens/features/sleep/sleep_logging.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
@@ -99,20 +100,18 @@ class _SleepCheckInDialogState extends State<SleepCheckInDialog> {
     final durationMinutes = _durationMinutes();
     if (durationMinutes == null) {
       setState(() {
-        _error = 'Enter valid hours and minutes (0–59 for minutes).';
+        _error = AppLocalizations.of(context)!.sleepDurationInvalid;
       });
       return;
     }
     if (durationMinutes < 120 || durationMinutes > 960) {
       setState(() {
-        _error = 'Sleep duration should be between 2 and 16 hours.';
+        _error = AppLocalizations.of(context)!.sleepDurationRange;
       });
       return;
     }
 
-    Navigator.of(context).pop(
-      SleepCheckInResult.saved(durationMinutes / 60),
-    );
+    Navigator.of(context).pop(SleepCheckInResult.saved(durationMinutes / 60));
   }
 
   void _skip() {
@@ -121,6 +120,7 @@ class _SleepCheckInDialogState extends State<SleepCheckInDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final targetHours = widget.profile.dailyTargets.sleepHours;
     final durationMinutes = _durationMinutes();
 
@@ -139,7 +139,7 @@ class _SleepCheckInDialogState extends State<SleepCheckInDialog> {
               children: [
                 Expanded(
                   child: _DurationField(
-                    label: 'Hours',
+                    label: l10n.hours,
                     controller: _hoursController,
                     onChanged: (_) => setState(() => _error = null),
                   ),
@@ -147,7 +147,7 @@ class _SleepCheckInDialogState extends State<SleepCheckInDialog> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: _DurationField(
-                    label: 'Minutes',
+                    label: l10n.minutes,
                     controller: _minutesController,
                     onChanged: (_) => setState(() => _error = null),
                   ),
@@ -157,7 +157,7 @@ class _SleepCheckInDialogState extends State<SleepCheckInDialog> {
             if (durationMinutes != null && durationMinutes > 0) ...[
               const SizedBox(height: 14),
               Text(
-                'Total: ${formatDurationMinutes(durationMinutes)}',
+                l10n.sleepTotal(formatDurationMinutes(durationMinutes)),
                 style: const TextStyle(
                   fontWeight: FontWeight.w700,
                   color: AppColors.sleepAccent,
@@ -166,7 +166,7 @@ class _SleepCheckInDialogState extends State<SleepCheckInDialog> {
             ],
             const SizedBox(height: 6),
             Text(
-              'Target: ${targetHours.toStringAsFixed(1)}h',
+              l10n.sleepTargetHours(targetHours.toStringAsFixed(1)),
               style: Theme.of(
                 context,
               ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
@@ -178,17 +178,14 @@ class _SleepCheckInDialogState extends State<SleepCheckInDialog> {
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: _skip,
-            child: const Text('Skip for now'),
-          ),
+          TextButton(onPressed: _skip, child: Text(l10n.skipForNow)),
           FilledButton(
             onPressed: _save,
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.sleepAccent,
               foregroundColor: AppColors.textPrimary,
             ),
-            child: const Text('Save sleep'),
+            child: Text(l10n.saveSleep),
           ),
         ],
       ),

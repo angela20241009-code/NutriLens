@@ -3,6 +3,7 @@ import 'package:nutrilens/app/sleep_log_refresh_scope.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/features/sleep/sleep_check_in_dialog.dart';
 import 'package:nutrilens/features/sleep/sleep_logging.dart';
+import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/models/models.dart';
 
 Future<bool> showSleepLogDialogAndSave({
@@ -18,8 +19,7 @@ Future<bool> showSleepLogDialogAndSave({
     profile: profile,
     title: title,
     description:
-        description ??
-        'How long did you sleep? Enter hours and minutes, or skip for now.',
+        description ?? AppLocalizations.of(context)!.sleepCheckInDescription,
     allowDismiss: true,
     initialSleepHours: initialSleepHours,
   );
@@ -34,8 +34,12 @@ Future<bool> showSleepLogDialogAndSave({
       dateKey,
       sleepHours: result.sleepHours,
     );
+    if (!context.mounted) {
+      return false;
+    }
     SleepLogRefreshScope.maybeOf(context)?.requestRefresh();
     final advice = buildSleepAdvice(
+      l10n: AppLocalizations.of(context)!,
       profile: profile,
       sleepHours: result.sleepHours!,
       wakeTimeMinutes: profile.usualWakeTimeMinutes ?? 7 * 60,
@@ -44,7 +48,10 @@ Future<bool> showSleepLogDialogAndSave({
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Logged ${formatSleepHours(result.sleepHours!)}. ${advice.shortLine}',
+          AppLocalizations.of(context)!.sleepLogged(
+            formatSleepHours(result.sleepHours!),
+            advice.shortLine,
+          ),
         ),
       ),
     );
@@ -54,7 +61,11 @@ Future<bool> showSleepLogDialogAndSave({
       return false;
     }
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Unable to save sleep log: $error')),
+      SnackBar(
+        content: Text(
+          AppLocalizations.of(context)!.unableToSaveSleepLog('$error'),
+        ),
+      ),
     );
     return false;
   }
