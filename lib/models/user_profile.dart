@@ -6,6 +6,7 @@ import 'package:nutrilens/models/firestore_map.dart';
 import 'package:nutrilens/models/health_sync.dart';
 import 'package:nutrilens/models/nutrition_entry.dart';
 import 'package:nutrilens/models/nutrition_settings.dart';
+import 'package:nutrilens/models/notification_settings.dart';
 import 'package:nutrilens/models/schedule_event.dart';
 import 'package:nutrilens/models/segment_control_style.dart';
 import 'package:nutrilens/models/stats_cache.dart';
@@ -85,6 +86,7 @@ class UserProfile {
     this.activeGoalId,
     this.dietaryProfile = const DietaryProfile(),
     this.nutritionSettings = const NutritionSettings(),
+    this.notificationSettings = const NotificationSettings(),
     this.scheduleEvents = const [],
     this.sleepModeEnabled = false,
     this.sleepModeRecommended = false,
@@ -134,6 +136,7 @@ class UserProfile {
   final String? activeGoalId;
   final DietaryProfile dietaryProfile;
   final NutritionSettings nutritionSettings;
+  final NotificationSettings notificationSettings;
   final List<UserScheduleEvent> scheduleEvents;
   final bool sleepModeEnabled;
   final bool sleepModeRecommended;
@@ -197,6 +200,15 @@ class UserProfile {
         map['nutritionSettings'] != null
             ? Map<String, dynamic>.from(map['nutritionSettings'] as Map)
             : null,
+      ),
+      notificationSettings: NotificationSettings.fromMap(
+        map['notificationSettings'] != null
+            ? Map<String, dynamic>.from(map['notificationSettings'] as Map)
+            : null,
+        fallbackMealRemindersEnabled: parseBool(
+          (map['nutritionSettings'] as Map?)?['mealRemindersEnabled'],
+          defaultValue: true,
+        ),
       ),
       scheduleEvents: (map['scheduleEvents'] as List? ?? const [])
           .whereType<Map>()
@@ -269,6 +281,7 @@ class UserProfile {
     'activeGoalId': activeGoalId,
     'dietaryProfile': dietaryProfile.toMap(),
     'nutritionSettings': nutritionSettings.toMap(),
+    'notificationSettings': notificationSettings.toMap(),
     'scheduleEvents': scheduleEvents.map((event) => event.toMap()).toList(),
     'sleepModeEnabled': sleepModeEnabled,
     'sleepModeRecommended': sleepModeRecommended,
@@ -377,6 +390,7 @@ class UserProfile {
     String? activeGoalId,
     DietaryProfile? dietaryProfile,
     NutritionSettings? nutritionSettings,
+    NotificationSettings? notificationSettings,
     List<UserScheduleEvent>? scheduleEvents,
     bool? sleepModeEnabled,
     bool? sleepModeRecommended,
@@ -425,6 +439,7 @@ class UserProfile {
       activeGoalId: activeGoalId ?? this.activeGoalId,
       dietaryProfile: dietaryProfile ?? this.dietaryProfile,
       nutritionSettings: nutritionSettings ?? this.nutritionSettings,
+      notificationSettings: notificationSettings ?? this.notificationSettings,
       scheduleEvents: scheduleEvents ?? this.scheduleEvents,
       sleepModeEnabled: sleepModeEnabled ?? this.sleepModeEnabled,
       sleepModeRecommended: sleepModeRecommended ?? this.sleepModeRecommended,

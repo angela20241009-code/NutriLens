@@ -1134,5 +1134,39 @@
   "mealTypeBreakfast": "BREAKFAST",
   "mealTypeLunch": "LUNCH",
   "mealTypeDinner": "DINNER",
-  "mealTypeSnack": "SNACK"
+  "mealTypeSnack": "SNACK",
+  "notificationRemindersSection": "Reminders",
+  "notificationMealReminders": "Meal times",
+  "notificationBedtimeReminder": "Bedtime",
+  "notificationWakeReminder": "Wake-up time",
+  "notificationSleepTargetSection": "Sleep target",
+  "notificationSleepTargetDescription": "NutriLens analyzes your profile and recent sleep history to recommend a personalized nightly sleep target.",
+  "notificationSleepTargetValue": "{hours} per night",
+  "@notificationSleepTargetValue": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationSleepTargetCurrent": "Current target: {hours}",
+  "@notificationSleepTargetCurrent": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationSleepTargetRefresh": "Refresh sleep target",
+  "notificationSleepTargetApply": "Apply sleep target",
+  "notificationSleepTargetApplied": "Sleep target updated",
+  "notificationPermissionRequired": "Enable notifications in system settings to receive reminders.",
+  "unableToUpdateNotifications": "Unable to update notifications: {error}",
+  "@unableToUpdateNotifications": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
 }

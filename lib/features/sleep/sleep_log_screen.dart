@@ -221,10 +221,6 @@ class _SleepLogScreenState extends State<SleepLogScreen> {
   Future<int?> _showBedtimeEditorDialog({int? initialMinutes}) async {
     final l10n = AppLocalizations.of(context)!;
     var selectedMinutes = _normalizeBedtimeMinutes(initialMinutes ?? 22 * 60);
-    final controller = TextEditingController(
-      text: formatMinutesAsClock(selectedMinutes),
-    );
-    String? errorMessage;
 
     final result = await showDialog<int>(
       context: context,
@@ -242,25 +238,11 @@ class _SleepLogScreenState extends State<SleepLogScreen> {
               if (picked == null) {
                 return;
               }
-              final minutes = _normalizeBedtimeMinutes(
-                picked.hour * 60 + picked.minute,
-              );
               setDialogState(() {
-                selectedMinutes = minutes;
-                controller.text = formatMinutesAsClock(minutes);
-                errorMessage = null;
+                selectedMinutes = _normalizeBedtimeMinutes(
+                  picked.hour * 60 + picked.minute,
+                );
               });
-            }
-
-            void save() {
-              final parsed = _parseTimeInput(controller.text);
-              if (parsed == null) {
-                setDialogState(() {
-                  errorMessage = l10n.enterValidTime;
-                });
-                return;
-              }
-              Navigator.of(context).pop(_normalizeBedtimeMinutes(parsed));
             }
 
             return AlertDialog(
@@ -272,30 +254,62 @@ class _SleepLogScreenState extends State<SleepLogScreen> {
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  TextField(
-                    controller: controller,
-                    textInputAction: TextInputAction.done,
-                    decoration: InputDecoration(
-                      labelText: l10n.bedtime,
-                      hintText: l10n.bedtimeHint,
+                  Material(
+                    color: AppColors.cardDarker,
+                    borderRadius: BorderRadius.circular(16),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      onTap: pickTime,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 20,
+                          horizontal: 16,
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              l10n.bedtime.toUpperCase(),
+                              style: Theme.of(context).textTheme.labelSmall,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              formatMinutesAsClock(selectedMinutes),
+                              style: const TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.access_time,
+                                  size: 18,
+                                  color: AppColors.sleepAccent.withValues(
+                                    alpha: 0.9,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  l10n.pickTime,
+                                  style: TextStyle(
+                                    color: AppColors.sleepAccent.withValues(
+                                      alpha: 0.9,
+                                    ),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                    onSubmitted: (_) => save(),
                   ),
-                  const SizedBox(height: 10),
-                  OutlinedButton.icon(
-                    onPressed: pickTime,
-                    icon: const Icon(Icons.access_time),
-                    label: Text(l10n.pickTime),
-                  ),
-                  if (errorMessage != null) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      errorMessage!,
-                      style: const TextStyle(color: AppColors.orange),
-                    ),
-                  ],
                 ],
               ),
               actions: [
@@ -303,7 +317,11 @@ class _SleepLogScreenState extends State<SleepLogScreen> {
                   onPressed: () => Navigator.of(context).pop(),
                   child: Text(l10n.cancel),
                 ),
-                FilledButton(onPressed: save, child: Text(l10n.save)),
+                FilledButton(
+                  onPressed: () =>
+                      Navigator.of(context).pop(selectedMinutes),
+                  child: Text(l10n.save),
+                ),
               ],
             );
           },
@@ -311,7 +329,6 @@ class _SleepLogScreenState extends State<SleepLogScreen> {
       },
     );
 
-    controller.dispose();
     return result;
   }
 
@@ -793,48 +810,6 @@ class _SleepLogScreenState extends State<SleepLogScreen> {
   int _normalizeBedtimeMinutes(int minutes) {
     final roundedToFive = ((minutes / 5).round()) * 5;
     return normalizeMinutes(roundedToFive);
-  }
-
-  int? _parseTimeInput(String input) {
-    final trimmed = input.trim().toUpperCase();
-    if (trimmed.isEmpty) {
-      return null;
-    }
-
-    final amPmMatch = RegExp(
-      r'^(\d{1,2}):(\d{2})\s*([AP]M)$',
-    ).firstMatch(trimmed);
-    if (amPmMatch != null) {
-      final hourRaw = int.tryParse(amPmMatch.group(1)!);
-      final minuteRaw = int.tryParse(amPmMatch.group(2)!);
-      final period = amPmMatch.group(3)!;
-      if (hourRaw == null || minuteRaw == null) {
-        return null;
-      }
-      if (hourRaw < 1 || hourRaw > 12 || minuteRaw < 0 || minuteRaw > 59) {
-        return null;
-      }
-      var hour = hourRaw % 12;
-      if (period == 'PM') {
-        hour += 12;
-      }
-      return hour * 60 + minuteRaw;
-    }
-
-    final twentyFourMatch = RegExp(r'^(\d{1,2}):(\d{2})$').firstMatch(trimmed);
-    if (twentyFourMatch != null) {
-      final hour = int.tryParse(twentyFourMatch.group(1)!);
-      final minute = int.tryParse(twentyFourMatch.group(2)!);
-      if (hour == null || minute == null) {
-        return null;
-      }
-      if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
-        return null;
-      }
-      return hour * 60 + minute;
-    }
-
-    return null;
   }
 }
 

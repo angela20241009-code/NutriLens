@@ -7,6 +7,7 @@ abstract final class NumericInputFormatters {
   ];
 
   static final decimal = <TextInputFormatter>[
+    FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
     _DecimalInputFormatter(),
   ];
 
@@ -17,10 +18,50 @@ abstract final class NumericInputFormatters {
     if (keyboardType == TextInputType.phone) {
       return digitsOnly;
     }
-    if (keyboardType == TextInputType.number) {
-      return allowDecimal ? decimal : digitsOnly;
+    if (!_isNumericKeyboard(keyboardType, allowDecimal: allowDecimal)) {
+      return null;
     }
-    return null;
+    return _keyboardAllowsDecimal(keyboardType, allowDecimal: allowDecimal)
+        ? decimal
+        : digitsOnly;
+  }
+
+  static bool _isNumericKeyboard(
+    TextInputType keyboardType, {
+    bool allowDecimal = false,
+  }) {
+    if (keyboardType == TextInputType.number ||
+        keyboardType == TextInputType.phone) {
+      return true;
+    }
+    if (allowDecimal) {
+      return true;
+    }
+    return keyboardType == const TextInputType.numberWithOptions() ||
+        keyboardType == const TextInputType.numberWithOptions(signed: true) ||
+        keyboardType ==
+            const TextInputType.numberWithOptions(decimal: true) ||
+        keyboardType ==
+            const TextInputType.numberWithOptions(
+              decimal: true,
+              signed: true,
+            );
+  }
+
+  static bool _keyboardAllowsDecimal(
+    TextInputType keyboardType, {
+    required bool allowDecimal,
+  }) {
+    if (allowDecimal) {
+      return true;
+    }
+    return keyboardType ==
+            const TextInputType.numberWithOptions(decimal: true) ||
+        keyboardType ==
+            const TextInputType.numberWithOptions(
+              decimal: true,
+              signed: true,
+            );
   }
 }
 

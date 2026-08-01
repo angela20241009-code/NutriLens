@@ -7,6 +7,7 @@ import 'package:nutrilens/features/sleep/sleep_check_in_dialog.dart';
 import 'package:nutrilens/features/sleep/sleep_logging.dart';
 import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/services/date_key.dart';
+import 'package:nutrilens/services/notification_scheduler.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
 class AppShell extends StatefulWidget {
@@ -40,7 +41,22 @@ class _AppShellState extends State<AppShell> {
     super.didChangeDependencies();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _requestSleepCheckIn();
+      _syncNotifications();
     });
+  }
+
+  Future<void> _syncNotifications() async {
+    try {
+      final scope = UserScope.of(context);
+      final profile = await scope.repository.getProfile(scope.uid);
+      if (!mounted || profile == null) {
+        return;
+      }
+      await NotificationScheduler.instance.initialize();
+      await NotificationScheduler.instance.syncFromProfile(profile);
+    } catch (error) {
+      debugPrint('Notification sync failed: $error');
+    }
   }
 
   void _openMealsSearch(String query) {

@@ -21,6 +21,7 @@ import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/services/date_key.dart';
 import 'package:nutrilens/services/openai_hydration_target_client.dart';
+import 'package:nutrilens/services/openai_sleep_target_client.dart';
 import 'package:nutrilens/services/openai_meal_plan_client.dart';
 import 'package:nutrilens/services/meal_plan_client.dart';
 import 'package:nutrilens/services/meal_plan_serializer.dart';
@@ -57,6 +58,8 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   int _lastMealPlanRefreshGeneration = 0;
   double? _cachedHydrationTargetLiters;
   String? _cachedHydrationTargetUid;
+  double? _cachedSleepTargetHours;
+  String? _cachedSleepTargetUid;
 
   DateTime get _today =>
       DateUtils.dateOnly(widget._nowProvider?.call() ?? DateTime.now());
@@ -82,6 +85,8 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       if (_cachedHydrationTargetUid != scope.uid) {
         _cachedHydrationTargetLiters = null;
         _cachedHydrationTargetUid = null;
+        _cachedSleepTargetHours = null;
+        _cachedSleepTargetUid = null;
       }
       _dataFuture = _loadData(
         repository: scope.repository,
@@ -158,6 +163,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     );
 
     List<WeeklySleepDay> weeklySleepDays = const [];
+    List<DailySummary> recentSleepSummaries = const [];
     if (profile.sleepModeEnabled) {
       final weekStart = today.subtract(Duration(days: today.weekday - 1));
       final weekEnd = weekStart.add(const Duration(days: 6));
@@ -176,6 +182,17 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
           isToday: DateUtils.isSameDay(date, today),
         );
       }, growable: false);
+
+      final historyStart = today.subtract(const Duration(days: 13));
+      final historySummaries = await repository.getDailySummariesInRange(
+        uid,
+        startDateKey: dateKeyFor(historyStart, profile.timezone),
+        endDateKey: todayKey,
+      );
+      recentSleepSummaries = historySummaries.values
+          .where((summary) => summary.sleepHours > 0)
+          .toList(growable: false)
+        ..sort((a, b) => b.dateKey.compareTo(a.dateKey));
     }
 
     String? mealPlanError;
@@ -212,6 +229,9 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     }
 
     final hydrationTargetLiters = await _resolveHydrationTarget(profile);
+    final sleepTargetHours = profile.sleepModeEnabled
+        ? await _resolveSleepTarget(profile, recentSleepSummaries)
+        : profile.dailyTargets.sleepHours;
 
     return HomeDashboardData(
       profile: profile,
@@ -225,9 +245,26 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       loggedMeals: loggedMeals,
       plannedMeals: plannedMeals,
       hydrationTargetLiters: hydrationTargetLiters,
+      sleepTargetHours: sleepTargetHours,
       mealPlanError: mealPlanError,
       weeklySleepDays: weeklySleepDays,
     );
+  }
+
+  Future<double> _resolveSleepTarget(
+    UserProfile profile,
+    List<DailySummary> recentSleep,
+  ) async {
+    if (_cachedSleepTargetHours != null &&
+        _cachedSleepTargetUid == profile.userId) {
+      return _cachedSleepTargetHours!;
+    }
+
+    final target = await OpenAiSleepTargetClient.fromEnvironment()
+        .fetchDailyTargetHours(profile, recentSleep: recentSleep);
+    _cachedSleepTargetHours = target;
+    _cachedSleepTargetUid = profile.userId;
+    return target;
   }
 
   Future<double> _resolveHydrationTarget(UserProfile profile) async {
@@ -449,7 +486,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
               const SizedBox(height: 16),
               WeeklySleepSummaryCard(
                 days: data.weeklySleepDays,
-                targetHours: profile.dailyTargets.sleepHours,
+                targetHours: data.sleepTargetHours,
                 onLogSleepTap: _openSleepLogDialog,
               ),
             ],

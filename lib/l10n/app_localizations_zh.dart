@@ -1770,4 +1770,50 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get mealTypeSnack => '加餐';
+
+  @override
+  String get notificationRemindersSection => '提醒';
+
+  @override
+  String get notificationMealReminders => '用餐时间';
+
+  @override
+  String get notificationBedtimeReminder => '就寝时间';
+
+  @override
+  String get notificationWakeReminder => '起床时间';
+
+  @override
+  String get notificationSleepTargetSection => '睡眠目标';
+
+  @override
+  String get notificationSleepTargetDescription =>
+      'NutriLens 会根据您的个人资料和近期睡眠记录，推荐个性化的夜间睡眠目标。';
+
+  @override
+  String notificationSleepTargetValue(String hours) {
+    return '每晚 $hours';
+  }
+
+  @override
+  String notificationSleepTargetCurrent(String hours) {
+    return '当前目标：$hours';
+  }
+
+  @override
+  String get notificationSleepTargetRefresh => '刷新睡眠目标';
+
+  @override
+  String get notificationSleepTargetApply => '应用睡眠目标';
+
+  @override
+  String get notificationSleepTargetApplied => '睡眠目标已更新';
+
+  @override
+  String get notificationPermissionRequired => '请在系统设置中启用通知以接收提醒。';
+
+  @override
+  String unableToUpdateNotifications(String error) {
+    return '无法更新通知：$error';
+  }
 }

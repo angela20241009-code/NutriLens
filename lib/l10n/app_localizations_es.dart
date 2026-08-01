@@ -1835,4 +1835,51 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get mealTypeSnack => 'MERIENDA';
+
+  @override
+  String get notificationRemindersSection => 'Recordatorios';
+
+  @override
+  String get notificationMealReminders => 'Horarios de comida';
+
+  @override
+  String get notificationBedtimeReminder => 'Hora de dormir';
+
+  @override
+  String get notificationWakeReminder => 'Hora de despertar';
+
+  @override
+  String get notificationSleepTargetSection => 'Objetivo de sueño';
+
+  @override
+  String get notificationSleepTargetDescription =>
+      'NutriLens analiza tu perfil y tu historial reciente de sueño para recomendar un objetivo de sueño personalizado.';
+
+  @override
+  String notificationSleepTargetValue(String hours) {
+    return '$hours por noche';
+  }
+
+  @override
+  String notificationSleepTargetCurrent(String hours) {
+    return 'Objetivo actual: $hours';
+  }
+
+  @override
+  String get notificationSleepTargetRefresh => 'Actualizar objetivo de sueño';
+
+  @override
+  String get notificationSleepTargetApply => 'Aplicar objetivo de sueño';
+
+  @override
+  String get notificationSleepTargetApplied => 'Objetivo de sueño actualizado';
+
+  @override
+  String get notificationPermissionRequired =>
+      'Activa las notificaciones en la configuración del sistema para recibir recordatorios.';
+
+  @override
+  String unableToUpdateNotifications(String error) {
+    return 'No se pudieron actualizar las notificaciones: $error';
+  }
 }

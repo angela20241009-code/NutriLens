@@ -3303,6 +3303,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'SNACK'**
   String get mealTypeSnack;
+
+  /// No description provided for @notificationRemindersSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
+  String get notificationRemindersSection;
+
+  /// No description provided for @notificationMealReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Meal times'**
+  String get notificationMealReminders;
+
+  /// No description provided for @notificationBedtimeReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Bedtime'**
+  String get notificationBedtimeReminder;
+
+  /// No description provided for @notificationWakeReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Wake-up time'**
+  String get notificationWakeReminder;
+
+  /// No description provided for @notificationSleepTargetSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep target'**
+  String get notificationSleepTargetSection;
+
+  /// No description provided for @notificationSleepTargetDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'NutriLens analyzes your profile and recent sleep history to recommend a personalized nightly sleep target.'**
+  String get notificationSleepTargetDescription;
+
+  /// No description provided for @notificationSleepTargetValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} per night'**
+  String notificationSleepTargetValue(String hours);
+
+  /// No description provided for @notificationSleepTargetCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current target: {hours}'**
+  String notificationSleepTargetCurrent(String hours);
+
+  /// No description provided for @notificationSleepTargetRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh sleep target'**
+  String get notificationSleepTargetRefresh;
+
+  /// No description provided for @notificationSleepTargetApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply sleep target'**
+  String get notificationSleepTargetApply;
+
+  /// No description provided for @notificationSleepTargetApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep target updated'**
+  String get notificationSleepTargetApplied;
+
+  /// No description provided for @notificationPermissionRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable notifications in system settings to receive reminders.'**
+  String get notificationPermissionRequired;
+
+  /// No description provided for @unableToUpdateNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to update notifications: {error}'**
+  String unableToUpdateNotifications(String error);
 }
 
 class _AppLocalizationsDelegate

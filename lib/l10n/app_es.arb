@@ -1134,5 +1134,39 @@
   "mealTypeBreakfast": "DESAYUNO",
   "mealTypeLunch": "ALMUERZO",
   "mealTypeDinner": "CENA",
-  "mealTypeSnack": "MERIENDA"
+  "mealTypeSnack": "MERIENDA",
+  "notificationRemindersSection": "Recordatorios",
+  "notificationMealReminders": "Horarios de comida",
+  "notificationBedtimeReminder": "Hora de dormir",
+  "notificationWakeReminder": "Hora de despertar",
+  "notificationSleepTargetSection": "Objetivo de sueño",
+  "notificationSleepTargetDescription": "NutriLens analiza tu perfil y tu historial reciente de sueño para recomendar un objetivo de sueño personalizado.",
+  "notificationSleepTargetValue": "{hours} por noche",
+  "@notificationSleepTargetValue": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationSleepTargetCurrent": "Objetivo actual: {hours}",
+  "@notificationSleepTargetCurrent": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationSleepTargetRefresh": "Actualizar objetivo de sueño",
+  "notificationSleepTargetApply": "Aplicar objetivo de sueño",
+  "notificationSleepTargetApplied": "Objetivo de sueño actualizado",
+  "notificationPermissionRequired": "Activa las notificaciones en la configuración del sistema para recibir recordatorios.",
+  "unableToUpdateNotifications": "No se pudieron actualizar las notificaciones: {error}",
+  "@unableToUpdateNotifications": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
 }

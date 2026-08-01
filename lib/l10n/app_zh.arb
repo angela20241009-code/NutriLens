@@ -1134,5 +1134,39 @@
   "mealTypeBreakfast": "早餐",
   "mealTypeLunch": "午餐",
   "mealTypeDinner": "晚餐",
-  "mealTypeSnack": "加餐"
+  "mealTypeSnack": "加餐",
+  "notificationRemindersSection": "提醒",
+  "notificationMealReminders": "用餐时间",
+  "notificationBedtimeReminder": "就寝时间",
+  "notificationWakeReminder": "起床时间",
+  "notificationSleepTargetSection": "睡眠目标",
+  "notificationSleepTargetDescription": "NutriLens 会根据您的个人资料和近期睡眠记录，推荐个性化的夜间睡眠目标。",
+  "notificationSleepTargetValue": "每晚 {hours}",
+  "@notificationSleepTargetValue": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationSleepTargetCurrent": "当前目标：{hours}",
+  "@notificationSleepTargetCurrent": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationSleepTargetRefresh": "刷新睡眠目标",
+  "notificationSleepTargetApply": "应用睡眠目标",
+  "notificationSleepTargetApplied": "睡眠目标已更新",
+  "notificationPermissionRequired": "请在系统设置中启用通知以接收提醒。",
+  "unableToUpdateNotifications": "无法更新通知：{error}",
+  "@unableToUpdateNotifications": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
 }

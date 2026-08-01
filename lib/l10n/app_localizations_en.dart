@@ -1814,4 +1814,51 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mealTypeSnack => 'SNACK';
+
+  @override
+  String get notificationRemindersSection => 'Reminders';
+
+  @override
+  String get notificationMealReminders => 'Meal times';
+
+  @override
+  String get notificationBedtimeReminder => 'Bedtime';
+
+  @override
+  String get notificationWakeReminder => 'Wake-up time';
+
+  @override
+  String get notificationSleepTargetSection => 'Sleep target';
+
+  @override
+  String get notificationSleepTargetDescription =>
+      'NutriLens analyzes your profile and recent sleep history to recommend a personalized nightly sleep target.';
+
+  @override
+  String notificationSleepTargetValue(String hours) {
+    return '$hours per night';
+  }
+
+  @override
+  String notificationSleepTargetCurrent(String hours) {
+    return 'Current target: $hours';
+  }
+
+  @override
+  String get notificationSleepTargetRefresh => 'Refresh sleep target';
+
+  @override
+  String get notificationSleepTargetApply => 'Apply sleep target';
+
+  @override
+  String get notificationSleepTargetApplied => 'Sleep target updated';
+
+  @override
+  String get notificationPermissionRequired =>
+      'Enable notifications in system settings to receive reminders.';
+
+  @override
+  String unableToUpdateNotifications(String error) {
+    return 'Unable to update notifications: $error';
+  }
 }

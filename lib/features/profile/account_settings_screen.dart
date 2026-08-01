@@ -7,6 +7,7 @@ import 'package:nutrilens/app/session_scope.dart';
 import 'package:nutrilens/app/user_scope.dart';
 import 'package:nutrilens/features/profile/delete_account_dialog.dart';
 import 'package:nutrilens/features/profile/link_email_dialog.dart';
+import 'package:nutrilens/features/profile/notification_settings_page.dart';
 import 'package:nutrilens/features/profile/sign_out_dialog.dart';
 import 'package:nutrilens/features/profile/meal_preferences_form.dart';
 import 'package:nutrilens/features/profile/widgets/profile_text_field.dart';
@@ -692,6 +693,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       case '/app':
         title = l10n.sectionApp;
         body = _AppSettingsPage(host: this);
+      case '/app/notifications':
+        title = l10n.notifications;
+        body = const NotificationSettingsPage();
       case '/':
       default:
         title = l10n.settingsTitle;
@@ -1362,7 +1366,9 @@ class _AppSettingsPage extends StatelessWidget {
         ),
         SettingsRow(
           label: l10n.notifications,
-          onTap: isBusy ? null : () => host._showComingSoon(l10n.notifications),
+          onTap: isBusy
+              ? null
+              : () => host._openSettingsSection('/app/notifications'),
         ),
         SettingsRow(
           label: l10n.units,

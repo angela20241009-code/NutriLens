@@ -8,6 +8,7 @@ import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/l10n/l10n_extensions.dart';
 import 'package:nutrilens/models/daily_targets.dart';
 import 'package:nutrilens/models/nutrition_settings.dart';
+import 'package:nutrilens/models/notification_settings.dart';
 import 'package:nutrilens/models/user_profile.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
@@ -413,6 +414,10 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           sleepModeEnabled: _sleepModeEnabled,
           sleepModeRecommended: sleepRecommendation.recommended,
           sleepModeRecommendationReasons: sleepRecommendation.reasons,
+          notificationSettings: NotificationSettings(
+            mealRemindersEnabled: true,
+            bedtimeReminderEnabled: _sleepReminderAnswer == l10n.yes,
+          ),
         );
 
     setState(() => _saving = true);
@@ -1587,6 +1592,7 @@ class _BodyMetricsStep extends StatelessWidget {
             label: l10n.onboardingHeightLabel,
             controller: heightController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            allowDecimal: true,
             limeBorder: true,
             validator: (value) => _heightValidator(l10n, value),
           ),
@@ -1596,6 +1602,7 @@ class _BodyMetricsStep extends StatelessWidget {
             label: l10n.onboardingWeightLabel,
             controller: weightController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            allowDecimal: true,
             limeBorder: true,
             validator: (value) => _weightValidator(l10n, value),
           ),
