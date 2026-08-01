@@ -122,7 +122,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     } else {
       _mealsRequested = false;
     }
-    _reloadMealData(force: true);
+    _reloadMealData();
   }
 
   @override
@@ -141,7 +141,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     }
     _lastMealLogRefreshGeneration = notifier.generation;
     _mealsRequested = false;
-    _reloadMealData(force: true);
+    _reloadMealData();
   }
 
   void _handleSleepLogRefreshRequest() {
@@ -152,7 +152,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     }
     _lastSleepLogRefreshGeneration = notifier.generation;
     _mealsRequested = false;
-    _reloadMealData(force: true);
+    _reloadMealData();
   }
 
   void _handleMealPlanRefreshRequest() {
@@ -163,7 +163,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     }
     _lastMealPlanRefreshGeneration = notifier.generation;
     _mealsRequested = false;
-    _reloadMealData(force: true);
+    _reloadMealData(forceMealPlan: true);
   }
 
   Future<void> _regeneratePlannedMeal(MealPlanMeal meal) async {
@@ -223,7 +223,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         });
       } else {
         setState(() => _regeneratingMealSlot = null);
-        await _reloadMealData(force: false);
+        await _reloadMealData();
       }
 
       if (!mounted) {
@@ -255,7 +255,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     }
   }
 
-  Future<void> _reloadMealData({bool force = false}) async {
+  Future<void> _reloadMealData({bool forceMealPlan = false}) async {
     if (_mealDataReloadInProgress) {
       return;
     }
@@ -338,7 +338,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         uid: scope.uid,
         profile: profile,
         startDate: planStart,
-        forceRefresh: force,
+        forceRefresh: forceMealPlan,
       );
       mealPlanError = null;
     } catch (error) {
@@ -373,7 +373,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       if (!mounted || _mealsRequested) {
         return;
       }
-      _reloadMealData(force: true);
+      _reloadMealData();
     });
   }
 
@@ -392,7 +392,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       _profileFuture = scope.repository.getProfile(scope.uid);
       _mealsRequested = false;
     });
-    await _reloadMealData(force: true);
+    await _reloadMealData();
   }
 
   Future<void> _openSleepLogDialog(UserProfile profile) async {
@@ -406,7 +406,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     );
     if (saved && mounted) {
       _mealsRequested = false;
-      await _reloadMealData(force: true);
+      await _reloadMealData();
     }
   }
 
@@ -498,7 +498,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     });
 
     if (changedDate || !_mealsRequested) {
-      await _reloadMealData(force: true);
+      await _reloadMealData();
     }
   }
 
@@ -509,7 +509,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       );
       _mealsRequested = false;
     });
-    await _reloadMealData(force: true);
+    await _reloadMealData();
   }
 
   Future<void> _shiftWeek(int direction) async {
@@ -517,7 +517,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       _selectedDate = _dayKey(_selectedDate.add(Duration(days: 7 * direction)));
       _mealsRequested = false;
     });
-    await _reloadMealData(force: true);
+    await _reloadMealData();
   }
 
   Future<void> _toggleCalendarMode() async {
@@ -527,7 +527,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           : ScheduleCalendarMode.week;
       _mealsRequested = false;
     });
-    await _reloadMealData(force: true);
+    await _reloadMealData();
   }
 
   @override
@@ -630,31 +630,37 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ] else ...[
-                if (_filter != ScheduleViewFilter.loggedMeals &&
+                if ((_filter == ScheduleViewFilter.all ||
+                        _filter == ScheduleViewFilter.events) &&
                     match != null) ...[
                   const SizedBox(height: 24),
                   TodaysMatchCard(match: match),
                 ],
-                const SizedBox(height: 24),
-                ScheduleMealPlanSection(
-                  meals: _plannedMealsForSelectedDate,
-                  error: _mealPlanError,
-                  loading: _mealPlanLoading,
-                  onMealTap: widget.onMealPlanMealTap,
-                  onRegenerateMeal: _regeneratePlannedMeal,
-                  regeneratingSlot: _regeneratingMealSlot,
-                ),
-                const SizedBox(height: 24),
-                ScheduleTimeline(
-                  events: events,
-                  loggedMeals: _loggedMeals,
-                  filter: _filter,
-                  sleepHours: sleepModeEnabled ? _sleepHours : 0,
-                  onEventTap: (event) => _deleteScheduleEvent(event, profile),
-                  onSleepTap: profile == null || !sleepModeEnabled
-                      ? null
-                      : () => _openSleepLogDialog(profile),
-                ),
+                if (_filter == ScheduleViewFilter.all ||
+                    _filter == ScheduleViewFilter.loggedMeals) ...[
+                  const SizedBox(height: 24),
+                  ScheduleMealPlanSection(
+                    meals: _plannedMealsForSelectedDate,
+                    error: _mealPlanError,
+                    loading: _mealPlanLoading,
+                    onMealTap: widget.onMealPlanMealTap,
+                    onRegenerateMeal: _regeneratePlannedMeal,
+                    regeneratingSlot: _regeneratingMealSlot,
+                  ),
+                ],
+                if (_filter != ScheduleViewFilter.loggedMeals) ...[
+                  const SizedBox(height: 24),
+                  ScheduleTimeline(
+                    events: events,
+                    loggedMeals: _loggedMeals,
+                    filter: _filter,
+                    sleepHours: sleepModeEnabled ? _sleepHours : 0,
+                    onEventTap: (event) => _deleteScheduleEvent(event, profile),
+                    onSleepTap: profile == null || !sleepModeEnabled
+                        ? null
+                        : () => _openSleepLogDialog(profile),
+                  ),
+                ],
                 if (sleepModeEnabled &&
                     profile != null &&
                     _filter == ScheduleViewFilter.sleep &&
