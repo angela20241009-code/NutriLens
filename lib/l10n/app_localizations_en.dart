@@ -1745,7 +1745,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanPointAtFood => 'Point at your food';
 
   @override
-  String get scanTapToCapture => 'Tap to take a photo or choose from library';
+  String get scanTapToCapture => 'Tap the shutter to scan your meal';
+
+  @override
+  String get scanCameraUnavailable =>
+      'Camera unavailable. Use Photo to pick from your library.';
 
   @override
   String get scanAnalyzing => 'Analyzing meal...';

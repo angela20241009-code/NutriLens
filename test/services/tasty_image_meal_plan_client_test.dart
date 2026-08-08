@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nutrilens/models/meal_plan.dart';
 import 'package:nutrilens/models/nutrition_entry.dart';
@@ -29,6 +30,7 @@ void main() {
           expect(meal.recipe.imageUrl, isNotEmpty);
           expect(meal.recipe.recipeId, '42');
           expect(meal.recipe.sourceUrl, contains('tasty.co'));
+          expect(meal.recipe.title, isNotEmpty);
         }
       }
     });
@@ -47,7 +49,7 @@ void main() {
       );
 
       const uid = 'uid_test';
-      final today = DateTime(2026, 7, 27);
+      final today = DateUtils.dateOnly(DateTime.now());
       final profile = UserProfile.demoAngela(userId: uid, now: today);
       await repository.saveMealPlanWeek(uid, _sampleWeek(today));
 

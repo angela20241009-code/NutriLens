@@ -228,6 +228,14 @@ class OpenAiMealPlanClient implements MealPlanClient {
     return double.tryParse('$value') ?? 0;
   }
 
+  static const _tastyTitleRules =
+      'Every meal title must be a simple, searchable dish name (2-4 words) that '
+      'would appear as a real recipe on Tasty.co. Use common recipe names only, '
+      'such as "Greek Yogurt Parfait", "Chicken Stir Fry", or "Salmon Rice Bowl". '
+      'Do not use athlete or marketing words (Power, Recovery, Performance, Fuel), '
+      'ampersands, compound descriptions, or made-up dish names. '
+      'Only choose dishes that are likely to exist on Tasty.co.';
+
   static const _weeklySystemPrompt =
       'You are a sports nutrition meal planner. Create realistic athlete-friendly meals '
       'that respect dietary restrictions and daily macro targets.\n\n'
@@ -250,7 +258,8 @@ class OpenAiMealPlanClient implements MealPlanClient {
       '  ]\n'
       '}\n\n'
       'Return exactly 7 day objects. Each day must include the requested number of meals. '
-      'Use non-negative integers for macros. Keep titles concise.';
+      'Use non-negative integers for macros. '
+      '$_tastyTitleRules';
 
   static const _singleMealSystemPrompt =
       'You are a sports nutrition meal planner. Respond with ONLY valid JSON:\n'
@@ -264,7 +273,8 @@ class OpenAiMealPlanClient implements MealPlanClient {
       '    "carbsG": 55,\n'
       '    "fatsG": 15\n'
       '  }\n'
-      '}';
+      '}\n\n'
+      '$_tastyTitleRules';
 
   static String _weeklyUserPrompt(
     UserProfile profile,

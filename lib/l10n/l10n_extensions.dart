@@ -159,7 +159,7 @@ String formatLocalizedWeekdayShort(BuildContext context, int weekday) {
   assert(weekday >= DateTime.monday && weekday <= DateTime.sunday);
   return DateFormat.E(
     Localizations.localeOf(context).toString(),
-  ).format(DateTime(2000, 1, 3 + weekday));
+  ).format(DateTime(2000, 1, 2 + weekday));
 }
 
 String localizedMealType(AppLocalizations l10n, String mealType) {

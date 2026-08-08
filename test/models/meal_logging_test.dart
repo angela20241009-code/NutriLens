@@ -110,6 +110,34 @@ void main() {
 
   // ── 6.3  dateKeyFor / DailySummary ────────────────────────────────────────
 
+  group('calendarDateFor', () {
+    test('returns local calendar date in profile timezone', () {
+      final instant = DateTime.utc(2026, 1, 1, 5, 30);
+      expect(
+        calendarDateFor(instant, 'America/Los_Angeles'),
+        DateTime(2025, 12, 31),
+      );
+    });
+
+    test('unknown timezone falls back to UTC calendar date', () {
+      final instant = DateTime.utc(2026, 6, 6, 23, 30);
+      expect(
+        calendarDateFor(instant, 'Unknown/Zone'),
+        DateTime.utc(2026, 6, 6),
+      );
+    });
+  });
+
+  group('dateKeyForCalendarDate', () {
+    test('uses profile timezone regardless of device-local midnight drift', () {
+      final calendarDate = DateTime(2026, 8, 8);
+      expect(
+        dateKeyForCalendarDateTime(calendarDate, 'America/Los_Angeles'),
+        '2026-08-08',
+      );
+    });
+  });
+
   group('dateKeyFor', () {
     test('summer DST: 2026-06-06T23:30:00Z in America/Los_Angeles → 2026-06-06',
         () {

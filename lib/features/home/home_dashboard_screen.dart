@@ -33,11 +33,13 @@ class HomeDashboardScreen extends StatefulWidget {
   const HomeDashboardScreen({
     super.key,
     DateTime Function()? now,
+    this.isActive = true,
     required this.onProfileTap,
     this.onPreferencesTap,
   }) : _nowProvider = now;
 
   final DateTime Function()? _nowProvider;
+  final bool isActive;
   final VoidCallback onProfileTap;
   final VoidCallback? onPreferencesTap;
 
@@ -45,7 +47,8 @@ class HomeDashboardScreen extends StatefulWidget {
   State<HomeDashboardScreen> createState() => _HomeDashboardScreenState();
 }
 
-class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
+class _HomeDashboardScreenState extends State<HomeDashboardScreen>
+    with WidgetsBindingObserver {
   Future<HomeDashboardData>? _dataFuture;
   HomeDashboardData? _dashboardData;
   UserRepository? _repository;
@@ -60,9 +63,19 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   String? _cachedHydrationTargetUid;
   double? _cachedSleepTargetHours;
   String? _cachedSleepTargetUid;
+  String? _lastLoadedDateKey;
+  bool _wasActive = false;
 
-  DateTime get _today =>
-      DateUtils.dateOnly(widget._nowProvider?.call() ?? DateTime.now());
+  DateTime _now() => widget._nowProvider?.call() ?? DateTime.now();
+
+  DateTime _todayFor(String timezone) => calendarDateFor(_now(), timezone);
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _wasActive = widget.isActive;
+  }
 
   @override
   void didChangeDependencies() {
@@ -95,7 +108,10 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
         tastyClient: tastyClient,
       );
       _trackDashboardFuture(_dataFuture!);
+    } else if (widget.isActive && !_wasActive) {
+      _refreshIfCalendarDayChanged();
     }
+    _wasActive = widget.isActive;
 
     final sleepLogRefresh = SleepLogRefreshScope.maybeOf(context);
     if (_sleepLogRefreshNotifier != sleepLogRefresh) {
@@ -115,7 +131,38 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   }
 
   @override
+  void didUpdateWidget(covariant HomeDashboardScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isActive && !oldWidget.isActive) {
+      _refreshIfCalendarDayChanged();
+    }
+    _wasActive = widget.isActive;
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && widget.isActive) {
+      _refreshIfCalendarDayChanged();
+    }
+  }
+
+  bool _hasCalendarDayChanged() {
+    final timezone = _dashboardData?.profile.timezone;
+    if (timezone == null || _lastLoadedDateKey == null) {
+      return false;
+    }
+    return dateKeyFor(_now(), timezone) != _lastLoadedDateKey;
+  }
+
+  void _refreshIfCalendarDayChanged() {
+    if (_hasCalendarDayChanged()) {
+      _refresh();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _sleepLogRefreshNotifier?.removeListener(_handleSleepLogRefreshRequest);
     _mealPlanRefreshNotifier?.removeListener(_handleMealPlanRefreshRequest);
     super.dispose();
@@ -153,8 +200,8 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       throw StateError('User profile is unavailable.');
     }
 
-    final today = _today;
-    final todayKey = dateKeyFor(today, profile.timezone);
+    final today = _todayFor(profile.timezone);
+    final todayKey = dateKeyFor(_now(), profile.timezone);
     final summary = await repository.getDailySummary(uid, todayKey);
     final loggedMeals = await repository.getMealsForDay(
       uid,
@@ -169,12 +216,12 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       final weekEnd = weekStart.add(const Duration(days: 6));
       final summaries = await repository.getDailySummariesInRange(
         uid,
-        startDateKey: dateKeyFor(weekStart, profile.timezone),
-        endDateKey: dateKeyFor(weekEnd, profile.timezone),
+        startDateKey: dateKeyForCalendarDateTime(weekStart, profile.timezone),
+        endDateKey: dateKeyForCalendarDateTime(weekEnd, profile.timezone),
       );
       weeklySleepDays = List.generate(7, (index) {
         final date = weekStart.add(Duration(days: index));
-        final key = dateKeyFor(date, profile.timezone);
+        final key = dateKeyForCalendarDateTime(date, profile.timezone);
         return WeeklySleepDay(
           date: date,
           dateKey: key,
@@ -186,7 +233,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       final historyStart = today.subtract(const Duration(days: 13));
       final historySummaries = await repository.getDailySummariesInRange(
         uid,
-        startDateKey: dateKeyFor(historyStart, profile.timezone),
+        startDateKey: dateKeyForCalendarDateTime(historyStart, profile.timezone),
         endDateKey: todayKey,
       );
       recentSleepSummaries = historySummaries.values
@@ -286,7 +333,10 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
           if (!mounted) {
             return;
           }
-          setState(() => _dashboardData = data);
+          setState(() {
+            _dashboardData = data;
+            _lastLoadedDateKey = data.summary.dateKey;
+          });
         })
         .catchError((_) {});
   }
@@ -306,7 +356,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     });
 
     try {
-      final todayKey = dateKeyFor(_today, data.profile.timezone);
+      final todayKey = dateKeyFor(_now(), data.profile.timezone);
       await repository.updateDailySummary(
         uid,
         todayKey,
@@ -405,7 +455,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       return;
     }
 
-    final todayKey = dateKeyFor(_today, data.profile.timezone);
+    final todayKey = dateKeyFor(_now(), data.profile.timezone);
     final saved = await showSleepLogDialogAndSave(
       context: context,
       profile: data.profile,
@@ -424,6 +474,14 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   Widget build(BuildContext context) {
     final data = _dashboardData;
     final l10n = AppLocalizations.of(context)!;
+
+    if (widget.isActive && data != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _refreshIfCalendarDayChanged();
+        }
+      });
+    }
 
     if (data == null) {
       return FutureBuilder<HomeDashboardData>(

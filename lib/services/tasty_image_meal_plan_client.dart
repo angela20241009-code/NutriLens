@@ -2,6 +2,7 @@ import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/models/tasty_recipe.dart';
 import 'package:nutrilens/services/meal_plan_client.dart';
 import 'package:nutrilens/services/tasty_recipe_client.dart';
+import 'package:nutrilens/services/tasty_search_query.dart';
 
 /// Adds Tasty recipe matches to generated meal plans.
 class TastyImageMealPlanClient implements MealPlanClient {
@@ -89,6 +90,9 @@ class TastyImageMealPlanClient implements MealPlanClient {
       badgeLabel: meal.badgeLabel,
       recipe: meal.recipe.copyWith(
         recipeId: '${tastyRecipe.id}',
+        title: tastyRecipe.name.trim().isEmpty
+            ? meal.recipe.title
+            : tastyRecipe.name.trim(),
         imageUrl: tastyRecipe.thumbnailUrl,
         sourceName: 'Tasty',
         sourceUrl: _tastyRecipeUrl(tastyRecipe),
@@ -105,15 +109,29 @@ class TastyImageMealPlanClient implements MealPlanClient {
       return _recipeCache[key];
     }
 
-    try {
-      final result = await _tastyClient.searchRecipes(query: title, size: 1);
-      final recipe = result.recipes.isEmpty ? null : result.recipes.first;
-      _recipeCache[key] = recipe;
-      return recipe;
-    } catch (_) {
-      _recipeCache[key] = null;
-      return null;
+    TastyRecipe? bestMatch;
+    for (final query in tastySearchQueriesFor(title)) {
+      try {
+        final result = await _tastyClient.searchRecipes(query: query, size: 5);
+        for (final recipe in result.recipes) {
+          final score = tastyTitleSimilarityScore(title, recipe.name);
+          if (score >= 0.35 &&
+              (bestMatch == null ||
+                  score >
+                      tastyTitleSimilarityScore(title, bestMatch.name))) {
+            bestMatch = recipe;
+          }
+        }
+        if (bestMatch != null) {
+          break;
+        }
+      } catch (_) {
+        continue;
+      }
     }
+
+    _recipeCache[key] = bestMatch;
+    return bestMatch;
   }
 
   static bool _recipeHasTastyMatch(MealPlanRecipe recipe) {

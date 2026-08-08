@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nutrilens/app/app_settings_scope.dart';
 import 'package:nutrilens/app/meal_log_refresh_scope.dart';
 import 'package:nutrilens/app/meal_plan_refresh_scope.dart';
 import 'package:nutrilens/app/meal_plan_scope.dart';
@@ -55,9 +56,11 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   MealLogRefreshNotifier? _mealLogRefreshNotifier;
   SleepLogRefreshNotifier? _sleepLogRefreshNotifier;
   MealPlanRefreshNotifier? _mealPlanRefreshNotifier;
+  AppSettingsController? _appSettings;
   int _lastMealLogRefreshGeneration = 0;
   int _lastSleepLogRefreshGeneration = 0;
   int _lastMealPlanRefreshGeneration = 0;
+  bool _lastSleepModeEnabled = false;
 
   @override
   void initState() {
@@ -90,6 +93,13 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       _mealPlanRefreshNotifier = mealPlanRefresh;
       _lastMealPlanRefreshGeneration = mealPlanRefresh?.generation ?? 0;
       mealPlanRefresh?.addListener(_handleMealPlanRefreshRequest);
+    }
+    final appSettings = AppSettingsScope.maybeOf(context);
+    if (_appSettings != appSettings) {
+      _appSettings?.removeListener(_handleAppSettingsChanged);
+      _appSettings = appSettings;
+      _lastSleepModeEnabled = appSettings?.sleepModeEnabled ?? false;
+      appSettings?.addListener(_handleAppSettingsChanged);
     }
     if (_loadedUid != scope.uid) {
       _loadedUid = scope.uid;
@@ -130,7 +140,29 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     _mealLogRefreshNotifier?.removeListener(_handleMealLogRefreshRequest);
     _sleepLogRefreshNotifier?.removeListener(_handleSleepLogRefreshRequest);
     _mealPlanRefreshNotifier?.removeListener(_handleMealPlanRefreshRequest);
+    _appSettings?.removeListener(_handleAppSettingsChanged);
     super.dispose();
+  }
+
+  void _handleAppSettingsChanged() {
+    if (!mounted) {
+      return;
+    }
+    final enabled = _appSettings?.sleepModeEnabled ?? false;
+    if (enabled == _lastSleepModeEnabled) {
+      return;
+    }
+    _lastSleepModeEnabled = enabled;
+
+    final scope = UserScope.of(context);
+    setState(() {
+      _profileFuture = scope.repository.getProfile(scope.uid);
+      _mealsRequested = false;
+      if (!enabled && _filter == ScheduleViewFilter.sleep) {
+        _filter = ScheduleViewFilter.all;
+      }
+    });
+    _reloadMealData();
   }
 
   void _handleMealLogRefreshRequest() {
@@ -540,7 +572,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           _requestMealReload();
         }
 
-        final sleepModeEnabled = profile?.sleepModeEnabled ?? false;
+        final sleepModeEnabled =
+            AppSettingsScope.maybeOf(context)?.sleepModeEnabled ??
+            profile?.sleepModeEnabled ??
+            false;
         if (!sleepModeEnabled && _filter == ScheduleViewFilter.sleep) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {

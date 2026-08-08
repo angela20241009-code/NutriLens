@@ -1705,7 +1705,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get scanPointAtFood => '对准您的食物';
 
   @override
-  String get scanTapToCapture => '点击拍照或从图库选择';
+  String get scanTapToCapture => '点击快门扫描您的餐食';
+
+  @override
+  String get scanCameraUnavailable => '相机不可用。请使用“照片”从图库中选择。';
 
   @override
   String get scanAnalyzing => '正在分析餐食...';

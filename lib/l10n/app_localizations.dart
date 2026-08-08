@@ -3181,8 +3181,14 @@ abstract class AppLocalizations {
   /// No description provided for @scanTapToCapture.
   ///
   /// In en, this message translates to:
-  /// **'Tap to take a photo or choose from library'**
+  /// **'Tap the shutter to scan your meal'**
   String get scanTapToCapture;
+
+  /// No description provided for @scanCameraUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera unavailable. Use Photo to pick from your library.'**
+  String get scanCameraUnavailable;
 
   /// No description provided for @scanAnalyzing.
   ///
