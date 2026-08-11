@@ -110,6 +110,7 @@ abstract class UserRepository {
     String dateKey, {
     double? hydrationLiters,
     double? sleepHours,
+    int? sleepBedtimeMinutes,
   });
 
   /// Returns the cached weekly meal plan for [uid], if one exists.
@@ -120,6 +121,23 @@ abstract class UserRepository {
 
   /// Permanently deletes the user's auth record and stored app data.
   Future<void> deleteAccount(String uid, {String? password});
+
+  // ── Notification inbox ────────────────────────────────────────────────────
+
+  /// Returns saved notifications for [uid], newest first.
+  Future<List<StoredNotification>> getNotifications(String uid);
+
+  /// Returns the number of unread notifications for [uid].
+  Future<int> getUnreadNotificationCount(String uid);
+
+  /// Saves a notification if [sourceKey] is not already stored.
+  Future<StoredNotification?> saveNotification(StoredNotification notification);
+
+  /// Marks a notification as read.
+  Future<void> markNotificationRead(String uid, String notificationId);
+
+  /// Deletes notifications older than [maxAge].
+  Future<void> pruneNotifications(String uid, {required Duration maxAge});
 
   Future<void> signOut();
 }

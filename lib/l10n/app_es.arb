@@ -689,6 +689,18 @@
   },
   "saveSleep": "Guardar sueño",
   "sleepCheckInDescription": "¿Cuánto dormiste? Ingresa horas y minutos, u omite por ahora.",
+  "sleepWentToBed": "Me dormí",
+  "sleepWentToBedHint": "Toca para indicar a qué hora te dormiste anoche.",
+  "weeklySleepInsightTitle": "Revisión semanal del sueño",
+  "weeklySleepInsightIntro": "Responde 2 preguntas rápidas. Combinaremos tus respuestas con tus datos de sueño para estimar tu horario ideal.",
+  "weeklySleepInsightSubmit": "Obtener mi plan de sueño",
+  "weeklySleepInsightResultTitle": "Tu horario de sueño ideal",
+  "weeklySleepInsightRecommendedHours": "Meta nocturna: {hours} h",
+  "weeklySleepInsightRecommendedBedtime": "Hora de dormir: {time}",
+  "weeklySleepInsightRecommendedWake": "Hora de despertar: {time}",
+  "weeklySleepInsightApply": "Aplicar a mi horario",
+  "weeklySleepInsightApplied": "Horario de sueño actualizado",
+  "weeklySleepInsightFailed": "No se pudo analizar el sueño: {error}",
   "sleepLogged": "Registrado {duration}. {advice}",
   "@sleepLogged": {
     "placeholders": {
@@ -1137,7 +1149,10 @@
   "mealTypeDinner": "CENA",
   "mealTypeSnack": "MERIENDA",
   "notificationRemindersSection": "Recordatorios",
-  "notificationMealReminders": "Horarios de comida",
+  "notificationEventReminders": "Eventos",
+  "notificationHydrationReminders": "Hidratación",
+  "notificationSleepReminders": "Sueño",
+  "notificationMealReminders": "Comidas",
   "notificationBedtimeReminder": "Hora de dormir",
   "notificationWakeReminder": "Hora de despertar",
   "notificationSleepTargetSection": "Objetivo de sueño",
@@ -1164,6 +1179,33 @@
   "notificationPermissionRequired": "Activa las notificaciones en la configuración del sistema para recibir recordatorios.",
   "unableToUpdateNotifications": "No se pudieron actualizar las notificaciones: {error}",
   "@unableToUpdateNotifications": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "inAppNotificationMealTitle": "Hora de recargar energía",
+  "inAppNotificationMealBody": "Registra tu comida para mantenerte en tu plan nutricional.",
+  "inAppNotificationMealAction": "Registrar comida",
+  "inAppNotificationHydrationTitle": "Mantente hidratado",
+  "inAppNotificationHydrationBody": "Tómate un momento para beber agua y registrar tu hidratación.",
+  "inAppNotificationHydrationAction": "Abrir inicio",
+  "inAppNotificationEventTitle": "Próximo evento",
+  "inAppNotificationEventBody": "Tienes algo en tu agenda pronto.",
+  "inAppNotificationEventAction": "Abrir agenda",
+  "inAppNotificationBedtimeTitle": "Prepárate para dormir",
+  "inAppNotificationBedtimeBody": "Se acerca tu hora de dormir. Empieza a relajarte para recuperarte mejor.",
+  "inAppNotificationBedtimeAction": "Abrir registro de sueño",
+  "inAppNotificationWakeTitle": "Buenos días",
+  "inAppNotificationWakeBody": "Es hora de despertar y registrar cómo dormiste.",
+  "inAppNotificationWakeAction": "Registrar sueño",
+  "notificationReminderSettings": "Notificaciones",
+  "notificationInboxSection": "Notificaciones recientes",
+  "notificationsEmptyTitle": "Aún no hay notificaciones",
+  "notificationsEmptyBody": "Los recordatorios de eventos, hidratación, sueño y comidas aparecerán aquí durante 7 días.",
+  "notificationsLoadFailed": "No se pudieron cargar las notificaciones: {error}",
+  "@notificationsLoadFailed": {
     "placeholders": {
       "error": {
         "type": "String"

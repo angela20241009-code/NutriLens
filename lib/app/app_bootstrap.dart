@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:nutrilens/app.dart';
 import 'package:nutrilens/app/app_locale_scope.dart';
 import 'package:nutrilens/app/app_settings_scope.dart';
+import 'package:nutrilens/app/in_app_notification_scope.dart';
 import 'package:nutrilens/app/meal_analysis_scope.dart';
 import 'package:nutrilens/app/meal_log_refresh_scope.dart';
 import 'package:nutrilens/app/sleep_log_refresh_scope.dart';
@@ -23,6 +24,7 @@ import 'package:nutrilens/services/openai_meal_analysis_client.dart';
 import 'package:nutrilens/services/openai_meal_plan_client.dart';
 import 'package:nutrilens/services/persisted_meal_plan_client.dart';
 import 'package:nutrilens/services/tasty_image_meal_plan_client.dart';
+import 'package:nutrilens/services/resilient_tasty_recipe_client.dart';
 import 'package:nutrilens/services/tasty_recipe_client.dart';
 import 'package:nutrilens/services/user_repository.dart';
 import 'package:nutrilens/theme/app_theme.dart';
@@ -43,16 +45,18 @@ class _AppBootstrapState extends State<AppBootstrap> {
   late final MealPlanRefreshNotifier _mealPlanRefreshNotifier;
   late final MealLogRefreshNotifier _mealLogRefreshNotifier;
   late final SleepLogRefreshNotifier _sleepLogRefreshNotifier;
+  late final InAppNotificationController _inAppNotificationController;
   bool _firebaseReady = false;
 
   @override
   void initState() {
     super.initState();
     _mealAnalysisClient = OpenAiMealAnalysisClient.fromEnvironment();
-    _tastyRecipeClient = RapidApiTastyRecipeClient.fromEnvironment();
+    _tastyRecipeClient = ResilientTastyRecipeClient.fromEnvironment();
     _mealPlanRefreshNotifier = MealPlanRefreshNotifier();
     _mealLogRefreshNotifier = MealLogRefreshNotifier();
     _sleepLogRefreshNotifier = SleepLogRefreshNotifier();
+    _inAppNotificationController = InAppNotificationController();
     _bootstrapFuture = _initializeApp();
   }
 
@@ -307,10 +311,13 @@ class _AppBootstrapState extends State<AppBootstrap> {
                                 child: UserScope(
                                   repository: result.repository,
                                   uid: result.uid!,
-                                  child: AppSettingsScope(
-                                    repository: result.repository,
-                                    uid: result.uid!,
-                                    child: const NutriLensApp(),
+                                  child: InAppNotificationScope(
+                                    notifier: _inAppNotificationController,
+                                    child: AppSettingsScope(
+                                      repository: result.repository,
+                                      uid: result.uid!,
+                                      child: const NutriLensApp(),
+                                    ),
                                   ),
                                 ),
                               ),

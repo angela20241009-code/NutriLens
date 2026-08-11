@@ -14,6 +14,7 @@ class DailySummary {
     this.mealCount = 0,
     this.hydrationLiters = 0,
     this.sleepHours = 0,
+    this.sleepBedtimeMinutes,
     required this.updatedAt,
   });
 
@@ -34,6 +35,9 @@ class DailySummary {
   /// Hours slept (tracked independently of meals).
   final double sleepHours;
 
+  /// Minutes after midnight when the user went to sleep, in local time.
+  final int? sleepBedtimeMinutes;
+
   /// UTC timestamp of the last write to this document.
   final DateTime updatedAt;
 
@@ -50,6 +54,7 @@ class DailySummary {
       mealCount: parseInt(map['mealCount']) ?? 0,
       hydrationLiters: parseDouble(map['hydrationLiters']) ?? 0,
       sleepHours: parseDouble(map['sleepHours']) ?? 0,
+      sleepBedtimeMinutes: parseInt(map['sleepBedtimeMinutes']),
       updatedAt: parseRequiredDateTime(map['updatedAt']),
     );
   }
@@ -61,6 +66,7 @@ class DailySummary {
     'mealCount': mealCount,
     'hydrationLiters': hydrationLiters,
     'sleepHours': sleepHours,
+    if (sleepBedtimeMinutes != null) 'sleepBedtimeMinutes': sleepBedtimeMinutes,
     'updatedAt': updatedAt.toUtc().toIso8601String(),
   };
 
@@ -71,6 +77,7 @@ class DailySummary {
     int? mealCount,
     double? hydrationLiters,
     double? sleepHours,
+    int? sleepBedtimeMinutes,
     DateTime? updatedAt,
   }) {
     return DailySummary(
@@ -80,6 +87,7 @@ class DailySummary {
       mealCount: mealCount ?? this.mealCount,
       hydrationLiters: hydrationLiters ?? this.hydrationLiters,
       sleepHours: sleepHours ?? this.sleepHours,
+      sleepBedtimeMinutes: sleepBedtimeMinutes ?? this.sleepBedtimeMinutes,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }

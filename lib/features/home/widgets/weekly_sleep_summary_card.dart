@@ -11,15 +11,16 @@ class WeeklySleepSummaryCard extends StatelessWidget {
     required this.days,
     required this.targetHours,
     required this.onLogSleepTap,
+    this.onCardTap,
   });
 
   final List<WeeklySleepDay> days;
   final double targetHours;
   final VoidCallback onLogSleepTap;
+  final VoidCallback? onCardTap;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final loggedDays = days.where((day) => day.sleepHours > 0).length;
     final averageHours = loggedDays == 0
         ? 0.0
@@ -31,6 +32,49 @@ class WeeklySleepSummaryCard extends StatelessWidget {
       targetHours,
       ...days.map((day) => day.sleepHours),
     ].reduce((a, b) => a > b ? a : b).clamp(1.0, 16.0);
+
+    final card = _WeeklySleepCardBody(
+      days: days,
+      targetHours: targetHours,
+      onLogSleepTap: onLogSleepTap,
+      loggedDays: loggedDays,
+      averageHours: averageHours,
+      maxBarHours: maxBarHours,
+    );
+
+    return Material(
+      color: Colors.transparent,
+      child: onCardTap == null
+          ? card
+          : InkWell(
+              onTap: onCardTap,
+              borderRadius: BorderRadius.circular(24),
+              child: card,
+            ),
+    );
+  }
+}
+
+class _WeeklySleepCardBody extends StatelessWidget {
+  const _WeeklySleepCardBody({
+    required this.days,
+    required this.targetHours,
+    required this.onLogSleepTap,
+    required this.loggedDays,
+    required this.averageHours,
+    required this.maxBarHours,
+  });
+
+  final List<WeeklySleepDay> days;
+  final double targetHours;
+  final VoidCallback onLogSleepTap;
+  final int loggedDays;
+  final double averageHours;
+  final double maxBarHours;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       padding: const EdgeInsets.all(22),

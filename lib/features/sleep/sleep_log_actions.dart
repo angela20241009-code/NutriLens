@@ -13,6 +13,7 @@ Future<bool> showSleepLogDialogAndSave({
   required String title,
   String? description,
   double? initialSleepHours,
+  int? initialBedtimeMinutes,
 }) async {
   final result = await SleepCheckInDialog.show(
     context: context,
@@ -22,6 +23,7 @@ Future<bool> showSleepLogDialogAndSave({
         description ?? AppLocalizations.of(context)!.sleepCheckInDescription,
     allowDismiss: true,
     initialSleepHours: initialSleepHours,
+    initialBedtimeMinutes: initialBedtimeMinutes,
   );
   if (!context.mounted || result == null || result.skipped) {
     return false;
@@ -33,6 +35,7 @@ Future<bool> showSleepLogDialogAndSave({
       scope.uid,
       dateKey,
       sleepHours: result.sleepHours,
+      sleepBedtimeMinutes: result.bedtimeMinutes,
     );
     if (!context.mounted) {
       return false;

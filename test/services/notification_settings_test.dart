@@ -8,34 +8,50 @@ void main() {
 
   test('NotificationSettings round-trips through map', () {
     const settings = NotificationSettings(
+      eventRemindersEnabled: true,
+      hydrationRemindersEnabled: false,
+      sleepRemindersEnabled: true,
       mealRemindersEnabled: true,
-      bedtimeReminderEnabled: true,
-      wakeReminderEnabled: false,
       bedtimeReminderLeadMinutes: 45,
+      eventReminderLeadMinutes: 20,
     );
 
     final restored = NotificationSettings.fromMap(settings.toMap());
 
+    expect(restored.eventRemindersEnabled, true);
+    expect(restored.hydrationRemindersEnabled, false);
+    expect(restored.sleepRemindersEnabled, true);
     expect(restored.mealRemindersEnabled, true);
-    expect(restored.bedtimeReminderEnabled, true);
-    expect(restored.wakeReminderEnabled, false);
     expect(restored.bedtimeReminderLeadMinutes, 45);
+    expect(restored.eventReminderLeadMinutes, 20);
+  });
+
+  test('NotificationSettings migrates legacy bedtime and wake flags', () {
+    final restored = NotificationSettings.fromMap({
+      'bedtimeReminderEnabled': true,
+      'wakeReminderEnabled': false,
+      'mealRemindersEnabled': true,
+    });
+
+    expect(restored.sleepRemindersEnabled, isTrue);
   });
 
   test('UserProfile round-trips notification settings', () {
     final profile = UserProfile.demoAngela(userId: 'abc123', now: now).copyWith(
       notificationSettings: const NotificationSettings(
+        eventRemindersEnabled: false,
+        hydrationRemindersEnabled: true,
+        sleepRemindersEnabled: true,
         mealRemindersEnabled: false,
-        bedtimeReminderEnabled: true,
-        wakeReminderEnabled: true,
       ),
     );
 
     final restored = UserProfile.fromMap(profile.toMap(), userId: 'abc123');
 
+    expect(restored.notificationSettings.eventRemindersEnabled, false);
+    expect(restored.notificationSettings.hydrationRemindersEnabled, true);
+    expect(restored.notificationSettings.sleepRemindersEnabled, true);
     expect(restored.notificationSettings.mealRemindersEnabled, false);
-    expect(restored.notificationSettings.bedtimeReminderEnabled, true);
-    expect(restored.notificationSettings.wakeReminderEnabled, true);
   });
 
   test('NotificationScheduler distributes meal reminders across the day', () {
@@ -49,6 +65,19 @@ void main() {
 
     expect(minutes, hasLength(3));
     expect(minutes.first, greaterThan(7 * 60));
+    expect(minutes.last, lessThan(22 * 60));
+  });
+
+  test('NotificationScheduler distributes hydration reminders across the day', () {
+    final profile = UserProfile.demoAngela(userId: 'abc123', now: now).copyWith(
+      usualWakeTimeMinutes: 8 * 60,
+      usualBedtimeMinutes: 22 * 60,
+    );
+
+    final minutes = NotificationScheduler.hydrationReminderMinutes(profile);
+
+    expect(minutes, hasLength(3));
+    expect(minutes.first, greaterThan(8 * 60));
     expect(minutes.last, lessThan(22 * 60));
   });
 

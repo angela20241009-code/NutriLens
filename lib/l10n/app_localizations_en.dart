@@ -425,6 +425,52 @@ class AppLocalizationsEn extends AppLocalizations {
       'How long did you sleep? Enter hours and minutes, or skip for now.';
 
   @override
+  String get sleepWentToBed => 'Went to sleep';
+
+  @override
+  String get sleepWentToBedHint =>
+      'Tap to set when you fell asleep last night.';
+
+  @override
+  String get weeklySleepInsightTitle => 'Weekly sleep check-in';
+
+  @override
+  String get weeklySleepInsightIntro =>
+      'Answer 2 quick questions. We will combine your answers with your sleep data to estimate your ideal sleep schedule.';
+
+  @override
+  String get weeklySleepInsightSubmit => 'Get my sleep plan';
+
+  @override
+  String get weeklySleepInsightResultTitle => 'Your ideal sleep schedule';
+
+  @override
+  String weeklySleepInsightRecommendedHours(String hours) {
+    return 'Nightly target: $hours h';
+  }
+
+  @override
+  String weeklySleepInsightRecommendedBedtime(String time) {
+    return 'Bedtime: $time';
+  }
+
+  @override
+  String weeklySleepInsightRecommendedWake(String time) {
+    return 'Wake time: $time';
+  }
+
+  @override
+  String get weeklySleepInsightApply => 'Apply to my schedule';
+
+  @override
+  String get weeklySleepInsightApplied => 'Sleep schedule updated';
+
+  @override
+  String weeklySleepInsightFailed(String error) {
+    return 'Unable to analyze sleep: $error';
+  }
+
+  @override
   String sleepLogged(String duration, String advice) {
     return 'Logged $duration. $advice';
   }
@@ -1823,7 +1869,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationRemindersSection => 'Reminders';
 
   @override
-  String get notificationMealReminders => 'Meal times';
+  String get notificationEventReminders => 'Events';
+
+  @override
+  String get notificationHydrationReminders => 'Hydration';
+
+  @override
+  String get notificationSleepReminders => 'Sleep';
+
+  @override
+  String get notificationMealReminders => 'Meals';
 
   @override
   String get notificationBedtimeReminder => 'Bedtime';
@@ -1864,5 +1919,73 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String unableToUpdateNotifications(String error) {
     return 'Unable to update notifications: $error';
+  }
+
+  @override
+  String get inAppNotificationMealTitle => 'Time to fuel up';
+
+  @override
+  String get inAppNotificationMealBody =>
+      'Log your meal to stay on track with your nutrition plan.';
+
+  @override
+  String get inAppNotificationMealAction => 'Log meal';
+
+  @override
+  String get inAppNotificationHydrationTitle => 'Stay hydrated';
+
+  @override
+  String get inAppNotificationHydrationBody =>
+      'Take a moment to drink water and log your hydration.';
+
+  @override
+  String get inAppNotificationHydrationAction => 'Open home';
+
+  @override
+  String get inAppNotificationEventTitle => 'Upcoming event';
+
+  @override
+  String get inAppNotificationEventBody =>
+      'You have something on your schedule soon.';
+
+  @override
+  String get inAppNotificationEventAction => 'Open schedule';
+
+  @override
+  String get inAppNotificationBedtimeTitle => 'Wind down soon';
+
+  @override
+  String get inAppNotificationBedtimeBody =>
+      'Your bedtime is coming up. Start winding down for better recovery.';
+
+  @override
+  String get inAppNotificationBedtimeAction => 'Open sleep log';
+
+  @override
+  String get inAppNotificationWakeTitle => 'Good morning';
+
+  @override
+  String get inAppNotificationWakeBody =>
+      'Time to wake up and log how you slept.';
+
+  @override
+  String get inAppNotificationWakeAction => 'Log sleep';
+
+  @override
+  String get notificationReminderSettings => 'Notifications';
+
+  @override
+  String get notificationInboxSection => 'Recent notifications';
+
+  @override
+  String get notificationsEmptyTitle => 'No notifications yet';
+
+  @override
+  String get notificationsEmptyBody =>
+      'Event, hydration, sleep, and meal reminders will appear here for the last 7 days.';
+
+  @override
+  String notificationsLoadFailed(String error) {
+    return 'Unable to load notifications: $error';
   }
 }

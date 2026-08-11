@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:nutrilens/features/sleep/sleep_logging.dart';
+import 'package:nutrilens/features/sleep/widgets/sleep_time_field.dart';
 import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/theme/app_colors.dart';
@@ -8,16 +9,27 @@ import 'package:nutrilens/theme/app_colors.dart';
 enum SleepCheckInAction { saved, skipped }
 
 class SleepCheckInResult {
-  const SleepCheckInResult._({required this.action, this.sleepHours});
+  const SleepCheckInResult._({
+    required this.action,
+    this.sleepHours,
+    this.bedtimeMinutes,
+  });
 
-  const SleepCheckInResult.saved(double sleepHours)
-    : this._(action: SleepCheckInAction.saved, sleepHours: sleepHours);
+  const SleepCheckInResult.saved(
+    double sleepHours, {
+    int? bedtimeMinutes,
+  }) : this._(
+         action: SleepCheckInAction.saved,
+         sleepHours: sleepHours,
+         bedtimeMinutes: bedtimeMinutes,
+       );
 
   const SleepCheckInResult.skipped()
     : this._(action: SleepCheckInAction.skipped, sleepHours: null);
 
   final SleepCheckInAction action;
   final double? sleepHours;
+  final int? bedtimeMinutes;
 
   bool get skipped => action == SleepCheckInAction.skipped;
 }
@@ -30,6 +42,7 @@ class SleepCheckInDialog extends StatefulWidget {
     required this.description,
     required this.allowDismiss,
     this.initialSleepHours,
+    this.initialBedtimeMinutes,
   });
 
   final UserProfile profile;
@@ -37,6 +50,7 @@ class SleepCheckInDialog extends StatefulWidget {
   final String description;
   final bool allowDismiss;
   final double? initialSleepHours;
+  final int? initialBedtimeMinutes;
 
   static Future<SleepCheckInResult?> show({
     required BuildContext context,
@@ -45,6 +59,7 @@ class SleepCheckInDialog extends StatefulWidget {
     required String description,
     bool allowDismiss = true,
     double? initialSleepHours,
+    int? initialBedtimeMinutes,
   }) {
     return showDialog<SleepCheckInResult>(
       context: context,
@@ -56,6 +71,7 @@ class SleepCheckInDialog extends StatefulWidget {
           description: description,
           allowDismiss: allowDismiss,
           initialSleepHours: initialSleepHours,
+          initialBedtimeMinutes: initialBedtimeMinutes,
         );
       },
     );
@@ -68,11 +84,14 @@ class SleepCheckInDialog extends StatefulWidget {
 class _SleepCheckInDialogState extends State<SleepCheckInDialog> {
   late final TextEditingController _hoursController;
   late final TextEditingController _minutesController;
+  int? _bedtimeMinutes;
   String? _error;
 
   @override
   void initState() {
     super.initState();
+    _bedtimeMinutes =
+        widget.initialBedtimeMinutes ?? widget.profile.usualBedtimeMinutes;
     final initialMinutes = ((widget.initialSleepHours ?? 0) * 60).round();
     final hours = initialMinutes > 0 ? initialMinutes ~/ 60 : 8;
     final minutes = initialMinutes > 0 ? initialMinutes % 60 : 0;
@@ -96,6 +115,35 @@ class _SleepCheckInDialogState extends State<SleepCheckInDialog> {
     return hours * 60 + minutes;
   }
 
+  void _syncDurationFromBedtime() {
+    final wakeTime = widget.profile.usualWakeTimeMinutes;
+    if (_bedtimeMinutes == null || wakeTime == null) {
+      return;
+    }
+    final duration = sleepDurationMinutes(
+      bedtimeMinutes: _bedtimeMinutes!,
+      wakeTimeMinutes: wakeTime,
+    );
+    _hoursController.text = (duration ~/ 60).toString();
+    _minutesController.text = (duration % 60).toString();
+  }
+
+  Future<void> _pickBedtime() async {
+    final initial = TimeOfDay(
+      hour: normalizeMinutes(_bedtimeMinutes ?? 22 * 60) ~/ 60,
+      minute: normalizeMinutes(_bedtimeMinutes ?? 22 * 60) % 60,
+    );
+    final picked = await showTimePicker(context: context, initialTime: initial);
+    if (picked == null || !mounted) {
+      return;
+    }
+    setState(() {
+      _bedtimeMinutes = picked.hour * 60 + picked.minute;
+      _error = null;
+      _syncDurationFromBedtime();
+    });
+  }
+
   void _save() {
     final durationMinutes = _durationMinutes();
     if (durationMinutes == null) {
@@ -111,7 +159,12 @@ class _SleepCheckInDialogState extends State<SleepCheckInDialog> {
       return;
     }
 
-    Navigator.of(context).pop(SleepCheckInResult.saved(durationMinutes / 60));
+    Navigator.of(context).pop(
+      SleepCheckInResult.saved(
+        durationMinutes / 60,
+        bedtimeMinutes: _bedtimeMinutes,
+      ),
+    );
   }
 
   void _skip() {
@@ -129,53 +182,69 @@ class _SleepCheckInDialogState extends State<SleepCheckInDialog> {
       child: AlertDialog(
         backgroundColor: AppColors.cardDark,
         title: Text(widget.title),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(widget.description),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _DurationField(
-                    label: l10n.hours,
-                    controller: _hoursController,
-                    onChanged: (_) => setState(() => _error = null),
-                  ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(widget.description),
+              const SizedBox(height: 16),
+              SleepTimeField(
+                label: l10n.sleepWentToBed,
+                minutes: _bedtimeMinutes,
+                placeholder: l10n.add,
+                onTap: _pickBedtime,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.sleepWentToBedHint,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.textMuted,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _DurationField(
-                    label: l10n.minutes,
-                    controller: _minutesController,
-                    onChanged: (_) => setState(() => _error = null),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _DurationField(
+                      label: l10n.hours,
+                      controller: _hoursController,
+                      onChanged: (_) => setState(() => _error = null),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _DurationField(
+                      label: l10n.minutes,
+                      controller: _minutesController,
+                      onChanged: (_) => setState(() => _error = null),
+                    ),
+                  ),
+                ],
+              ),
+              if (durationMinutes != null && durationMinutes > 0) ...[
+                const SizedBox(height: 14),
+                Text(
+                  l10n.sleepTotal(formatDurationMinutes(durationMinutes)),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.sleepAccent,
                   ),
                 ),
               ],
-            ),
-            if (durationMinutes != null && durationMinutes > 0) ...[
-              const SizedBox(height: 14),
+              const SizedBox(height: 6),
               Text(
-                l10n.sleepTotal(formatDurationMinutes(durationMinutes)),
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.sleepAccent,
-                ),
+                l10n.sleepTargetHours(targetHours.toStringAsFixed(1)),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
               ),
+              if (_error != null) ...[
+                const SizedBox(height: 10),
+                Text(_error!, style: const TextStyle(color: AppColors.orange)),
+              ],
             ],
-            const SizedBox(height: 6),
-            Text(
-              l10n.sleepTargetHours(targetHours.toStringAsFixed(1)),
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
-            ),
-            if (_error != null) ...[
-              const SizedBox(height: 10),
-              Text(_error!, style: const TextStyle(color: AppColors.orange)),
-            ],
-          ],
+          ),
         ),
         actions: [
           TextButton(onPressed: _skip, child: Text(l10n.skipForNow)),

@@ -467,6 +467,7 @@ class FirestoreUserRepository implements UserRepository {
     String dateKey, {
     double? hydrationLiters,
     double? sleepHours,
+    int? sleepBedtimeMinutes,
   }) async {
     final ref = _firestore.doc(FirestorePaths.dailySummaryDoc(uid, dateKey));
     final snap = await ref.get();
@@ -481,6 +482,7 @@ class FirestoreUserRepository implements UserRepository {
         mealCount: 0,
         hydrationLiters: hydrationLiters ?? 0,
         sleepHours: sleepHours ?? 0,
+        sleepBedtimeMinutes: sleepBedtimeMinutes,
         updatedAt: now,
       );
       await ref.set(toFirestoreMap(created.toMap()));
@@ -489,6 +491,9 @@ class FirestoreUserRepository implements UserRepository {
       final updates = <String, dynamic>{'updatedAt': Timestamp.fromDate(now)};
       if (hydrationLiters != null) updates['hydrationLiters'] = hydrationLiters;
       if (sleepHours != null) updates['sleepHours'] = sleepHours;
+      if (sleepBedtimeMinutes != null) {
+        updates['sleepBedtimeMinutes'] = sleepBedtimeMinutes;
+      }
       await ref.set(updates, SetOptions(merge: true));
     }
   }
@@ -509,6 +514,80 @@ class FirestoreUserRepository implements UserRepository {
     await _firestore.doc(FirestorePaths.mealPlanDoc(uid)).set(
       toFirestoreMap(MealPlanSerializer.weekToMap(week)),
     );
+  }
+
+  @override
+  Future<List<StoredNotification>> getNotifications(String uid) async {
+    final snap = await _firestore
+        .collection(FirestorePaths.notifications(uid))
+        .orderBy('createdAt', descending: true)
+        .get();
+    return snap.docs
+        .map(
+          (doc) => StoredNotification.fromMap(
+            fromFirestoreMap(doc.data()),
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  @override
+  Future<int> getUnreadNotificationCount(String uid) async {
+    final snap = await _firestore
+        .collection(FirestorePaths.notifications(uid))
+        .where('read', isEqualTo: false)
+        .get();
+    return snap.docs.length;
+  }
+
+  @override
+  Future<StoredNotification?> saveNotification(
+    StoredNotification notification,
+  ) async {
+    final ref = _firestore.doc(
+      FirestorePaths.notificationDoc(notification.uid, notification.id),
+    );
+    final existing = await ref.get();
+    if (existing.exists) {
+      return StoredNotification.fromMap(fromFirestoreMap(existing.data()!));
+    }
+    await ref.set(toFirestoreMap(notification.toMap()));
+    return notification;
+  }
+
+  @override
+  Future<void> markNotificationRead(String uid, String notificationId) async {
+    await _firestore.doc(FirestorePaths.notificationDoc(uid, notificationId)).set(
+      {
+        'read': true,
+        'updatedAt': Timestamp.fromDate(firestoreNow()),
+      },
+      SetOptions(merge: true),
+    );
+  }
+
+  @override
+  Future<void> pruneNotifications(
+    String uid, {
+    required Duration maxAge,
+  }) async {
+    final cutoff = firestoreNow().subtract(maxAge);
+    final snap = await _firestore
+        .collection(FirestorePaths.notifications(uid))
+        .get();
+    if (snap.docs.isEmpty) {
+      return;
+    }
+    final batch = _firestore.batch();
+    for (final doc in snap.docs) {
+      final notification = StoredNotification.fromMap(
+        fromFirestoreMap(doc.data()),
+      );
+      if (notification.createdAt.isBefore(cutoff)) {
+        batch.delete(doc.reference);
+      }
+    }
+    await batch.commit();
   }
 
   @override
@@ -555,6 +634,9 @@ class FirestoreUserRepository implements UserRepository {
     await _deleteCollection(_firestore.collection(FirestorePaths.meals(uid)));
     await _deleteCollection(
       _firestore.collection(FirestorePaths.dailySummaries(uid)),
+    );
+    await _deleteCollection(
+      _firestore.collection(FirestorePaths.notifications(uid)),
     );
 
     final batch = _firestore.batch()

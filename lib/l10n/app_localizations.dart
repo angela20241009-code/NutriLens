@@ -820,6 +820,78 @@ abstract class AppLocalizations {
   /// **'How long did you sleep? Enter hours and minutes, or skip for now.'**
   String get sleepCheckInDescription;
 
+  /// No description provided for @sleepWentToBed.
+  ///
+  /// In en, this message translates to:
+  /// **'Went to sleep'**
+  String get sleepWentToBed;
+
+  /// No description provided for @sleepWentToBedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to set when you fell asleep last night.'**
+  String get sleepWentToBedHint;
+
+  /// No description provided for @weeklySleepInsightTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly sleep check-in'**
+  String get weeklySleepInsightTitle;
+
+  /// No description provided for @weeklySleepInsightIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer 2 quick questions. We will combine your answers with your sleep data to estimate your ideal sleep schedule.'**
+  String get weeklySleepInsightIntro;
+
+  /// No description provided for @weeklySleepInsightSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Get my sleep plan'**
+  String get weeklySleepInsightSubmit;
+
+  /// No description provided for @weeklySleepInsightResultTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your ideal sleep schedule'**
+  String get weeklySleepInsightResultTitle;
+
+  /// No description provided for @weeklySleepInsightRecommendedHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Nightly target: {hours} h'**
+  String weeklySleepInsightRecommendedHours(String hours);
+
+  /// No description provided for @weeklySleepInsightRecommendedBedtime.
+  ///
+  /// In en, this message translates to:
+  /// **'Bedtime: {time}'**
+  String weeklySleepInsightRecommendedBedtime(String time);
+
+  /// No description provided for @weeklySleepInsightRecommendedWake.
+  ///
+  /// In en, this message translates to:
+  /// **'Wake time: {time}'**
+  String weeklySleepInsightRecommendedWake(String time);
+
+  /// No description provided for @weeklySleepInsightApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply to my schedule'**
+  String get weeklySleepInsightApply;
+
+  /// No description provided for @weeklySleepInsightApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep schedule updated'**
+  String get weeklySleepInsightApplied;
+
+  /// No description provided for @weeklySleepInsightFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to analyze sleep: {error}'**
+  String weeklySleepInsightFailed(String error);
+
   /// No description provided for @sleepLogged.
   ///
   /// In en, this message translates to:
@@ -3316,10 +3388,28 @@ abstract class AppLocalizations {
   /// **'Reminders'**
   String get notificationRemindersSection;
 
+  /// No description provided for @notificationEventReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Events'**
+  String get notificationEventReminders;
+
+  /// No description provided for @notificationHydrationReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Hydration'**
+  String get notificationHydrationReminders;
+
+  /// No description provided for @notificationSleepReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep'**
+  String get notificationSleepReminders;
+
   /// No description provided for @notificationMealReminders.
   ///
   /// In en, this message translates to:
-  /// **'Meal times'**
+  /// **'Meals'**
   String get notificationMealReminders;
 
   /// No description provided for @notificationBedtimeReminder.
@@ -3387,6 +3477,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unable to update notifications: {error}'**
   String unableToUpdateNotifications(String error);
+
+  /// No description provided for @inAppNotificationMealTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Time to fuel up'**
+  String get inAppNotificationMealTitle;
+
+  /// No description provided for @inAppNotificationMealBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Log your meal to stay on track with your nutrition plan.'**
+  String get inAppNotificationMealBody;
+
+  /// No description provided for @inAppNotificationMealAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Log meal'**
+  String get inAppNotificationMealAction;
+
+  /// No description provided for @inAppNotificationHydrationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay hydrated'**
+  String get inAppNotificationHydrationTitle;
+
+  /// No description provided for @inAppNotificationHydrationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a moment to drink water and log your hydration.'**
+  String get inAppNotificationHydrationBody;
+
+  /// No description provided for @inAppNotificationHydrationAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Open home'**
+  String get inAppNotificationHydrationAction;
+
+  /// No description provided for @inAppNotificationEventTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming event'**
+  String get inAppNotificationEventTitle;
+
+  /// No description provided for @inAppNotificationEventBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You have something on your schedule soon.'**
+  String get inAppNotificationEventBody;
+
+  /// No description provided for @inAppNotificationEventAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Open schedule'**
+  String get inAppNotificationEventAction;
+
+  /// No description provided for @inAppNotificationBedtimeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Wind down soon'**
+  String get inAppNotificationBedtimeTitle;
+
+  /// No description provided for @inAppNotificationBedtimeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your bedtime is coming up. Start winding down for better recovery.'**
+  String get inAppNotificationBedtimeBody;
+
+  /// No description provided for @inAppNotificationBedtimeAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Open sleep log'**
+  String get inAppNotificationBedtimeAction;
+
+  /// No description provided for @inAppNotificationWakeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Good morning'**
+  String get inAppNotificationWakeTitle;
+
+  /// No description provided for @inAppNotificationWakeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Time to wake up and log how you slept.'**
+  String get inAppNotificationWakeBody;
+
+  /// No description provided for @inAppNotificationWakeAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Log sleep'**
+  String get inAppNotificationWakeAction;
+
+  /// No description provided for @notificationReminderSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notificationReminderSettings;
+
+  /// No description provided for @notificationInboxSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent notifications'**
+  String get notificationInboxSection;
+
+  /// No description provided for @notificationsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications yet'**
+  String get notificationsEmptyTitle;
+
+  /// No description provided for @notificationsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Event, hydration, sleep, and meal reminders will appear here for the last 7 days.'**
+  String get notificationsEmptyBody;
+
+  /// No description provided for @notificationsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load notifications: {error}'**
+  String notificationsLoadFailed(String error);
 }
 
 class _AppLocalizationsDelegate

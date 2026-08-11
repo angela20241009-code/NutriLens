@@ -427,6 +427,52 @@ class AppLocalizationsEs extends AppLocalizations {
       '¿Cuánto dormiste? Ingresa horas y minutos, u omite por ahora.';
 
   @override
+  String get sleepWentToBed => 'Me dormí';
+
+  @override
+  String get sleepWentToBedHint =>
+      'Toca para indicar a qué hora te dormiste anoche.';
+
+  @override
+  String get weeklySleepInsightTitle => 'Revisión semanal del sueño';
+
+  @override
+  String get weeklySleepInsightIntro =>
+      'Responde 2 preguntas rápidas. Combinaremos tus respuestas con tus datos de sueño para estimar tu horario ideal.';
+
+  @override
+  String get weeklySleepInsightSubmit => 'Obtener mi plan de sueño';
+
+  @override
+  String get weeklySleepInsightResultTitle => 'Tu horario de sueño ideal';
+
+  @override
+  String weeklySleepInsightRecommendedHours(String hours) {
+    return 'Meta nocturna: $hours h';
+  }
+
+  @override
+  String weeklySleepInsightRecommendedBedtime(String time) {
+    return 'Hora de dormir: $time';
+  }
+
+  @override
+  String weeklySleepInsightRecommendedWake(String time) {
+    return 'Hora de despertar: $time';
+  }
+
+  @override
+  String get weeklySleepInsightApply => 'Aplicar a mi horario';
+
+  @override
+  String get weeklySleepInsightApplied => 'Horario de sueño actualizado';
+
+  @override
+  String weeklySleepInsightFailed(String error) {
+    return 'No se pudo analizar el sueño: $error';
+  }
+
+  @override
   String sleepLogged(String duration, String advice) {
     return 'Registrado $duration. $advice';
   }
@@ -1843,7 +1889,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get notificationRemindersSection => 'Recordatorios';
 
   @override
-  String get notificationMealReminders => 'Horarios de comida';
+  String get notificationEventReminders => 'Eventos';
+
+  @override
+  String get notificationHydrationReminders => 'Hidratación';
+
+  @override
+  String get notificationSleepReminders => 'Sueño';
+
+  @override
+  String get notificationMealReminders => 'Comidas';
 
   @override
   String get notificationBedtimeReminder => 'Hora de dormir';
@@ -1884,5 +1939,72 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String unableToUpdateNotifications(String error) {
     return 'No se pudieron actualizar las notificaciones: $error';
+  }
+
+  @override
+  String get inAppNotificationMealTitle => 'Hora de recargar energía';
+
+  @override
+  String get inAppNotificationMealBody =>
+      'Registra tu comida para mantenerte en tu plan nutricional.';
+
+  @override
+  String get inAppNotificationMealAction => 'Registrar comida';
+
+  @override
+  String get inAppNotificationHydrationTitle => 'Mantente hidratado';
+
+  @override
+  String get inAppNotificationHydrationBody =>
+      'Tómate un momento para beber agua y registrar tu hidratación.';
+
+  @override
+  String get inAppNotificationHydrationAction => 'Abrir inicio';
+
+  @override
+  String get inAppNotificationEventTitle => 'Próximo evento';
+
+  @override
+  String get inAppNotificationEventBody => 'Tienes algo en tu agenda pronto.';
+
+  @override
+  String get inAppNotificationEventAction => 'Abrir agenda';
+
+  @override
+  String get inAppNotificationBedtimeTitle => 'Prepárate para dormir';
+
+  @override
+  String get inAppNotificationBedtimeBody =>
+      'Se acerca tu hora de dormir. Empieza a relajarte para recuperarte mejor.';
+
+  @override
+  String get inAppNotificationBedtimeAction => 'Abrir registro de sueño';
+
+  @override
+  String get inAppNotificationWakeTitle => 'Buenos días';
+
+  @override
+  String get inAppNotificationWakeBody =>
+      'Es hora de despertar y registrar cómo dormiste.';
+
+  @override
+  String get inAppNotificationWakeAction => 'Registrar sueño';
+
+  @override
+  String get notificationReminderSettings => 'Notificaciones';
+
+  @override
+  String get notificationInboxSection => 'Notificaciones recientes';
+
+  @override
+  String get notificationsEmptyTitle => 'Aún no hay notificaciones';
+
+  @override
+  String get notificationsEmptyBody =>
+      'Los recordatorios de eventos, hidratación, sueño y comidas aparecerán aquí durante 7 días.';
+
+  @override
+  String notificationsLoadFailed(String error) {
+    return 'No se pudieron cargar las notificaciones: $error';
   }
 }

@@ -411,6 +411,50 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sleepCheckInDescription => '您睡了多久？输入小时和分钟，或暂时跳过。';
 
   @override
+  String get sleepWentToBed => '入睡时间';
+
+  @override
+  String get sleepWentToBedHint => '点击设置昨晚入睡时间。';
+
+  @override
+  String get weeklySleepInsightTitle => '每周睡眠评估';
+
+  @override
+  String get weeklySleepInsightIntro => '回答 2 个简短问题。我们会结合您的回答和睡眠数据，估算理想作息时间。';
+
+  @override
+  String get weeklySleepInsightSubmit => '获取睡眠计划';
+
+  @override
+  String get weeklySleepInsightResultTitle => '您的理想作息';
+
+  @override
+  String weeklySleepInsightRecommendedHours(String hours) {
+    return '夜间目标：$hours 小时';
+  }
+
+  @override
+  String weeklySleepInsightRecommendedBedtime(String time) {
+    return '就寝时间：$time';
+  }
+
+  @override
+  String weeklySleepInsightRecommendedWake(String time) {
+    return '起床时间：$time';
+  }
+
+  @override
+  String get weeklySleepInsightApply => '应用到我的作息';
+
+  @override
+  String get weeklySleepInsightApplied => '睡眠作息已更新';
+
+  @override
+  String weeklySleepInsightFailed(String error) {
+    return '无法分析睡眠：$error';
+  }
+
+  @override
   String sleepLogged(String duration, String advice) {
     return '已记录 $duration。$advice';
   }
@@ -1778,7 +1822,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notificationRemindersSection => '提醒';
 
   @override
-  String get notificationMealReminders => '用餐时间';
+  String get notificationEventReminders => '活动';
+
+  @override
+  String get notificationHydrationReminders => '补水';
+
+  @override
+  String get notificationSleepReminders => '睡眠';
+
+  @override
+  String get notificationMealReminders => '用餐';
 
   @override
   String get notificationBedtimeReminder => '就寝时间';
@@ -1818,5 +1871,67 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String unableToUpdateNotifications(String error) {
     return '无法更新通知：$error';
+  }
+
+  @override
+  String get inAppNotificationMealTitle => '该补充能量了';
+
+  @override
+  String get inAppNotificationMealBody => '记录用餐，保持营养计划进度。';
+
+  @override
+  String get inAppNotificationMealAction => '记录用餐';
+
+  @override
+  String get inAppNotificationHydrationTitle => '记得补水';
+
+  @override
+  String get inAppNotificationHydrationBody => '喝杯水并记录补水情况。';
+
+  @override
+  String get inAppNotificationHydrationAction => '打开首页';
+
+  @override
+  String get inAppNotificationEventTitle => '即将开始的活动';
+
+  @override
+  String get inAppNotificationEventBody => '您的日程中很快有安排。';
+
+  @override
+  String get inAppNotificationEventAction => '打开日程';
+
+  @override
+  String get inAppNotificationBedtimeTitle => '准备休息';
+
+  @override
+  String get inAppNotificationBedtimeBody => '就寝时间快到了，开始放松以便更好恢复。';
+
+  @override
+  String get inAppNotificationBedtimeAction => '打开睡眠记录';
+
+  @override
+  String get inAppNotificationWakeTitle => '早上好';
+
+  @override
+  String get inAppNotificationWakeBody => '该起床了，记录一下睡眠情况。';
+
+  @override
+  String get inAppNotificationWakeAction => '记录睡眠';
+
+  @override
+  String get notificationReminderSettings => '通知';
+
+  @override
+  String get notificationInboxSection => '最近通知';
+
+  @override
+  String get notificationsEmptyTitle => '暂无通知';
+
+  @override
+  String get notificationsEmptyBody => '活动、补水、睡眠和用餐提醒会在这里显示，并保留 7 天。';
+
+  @override
+  String notificationsLoadFailed(String error) {
+    return '无法加载通知：$error';
   }
 }

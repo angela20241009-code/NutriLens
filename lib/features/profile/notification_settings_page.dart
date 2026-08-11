@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nutrilens/app/user_scope.dart';
+import 'package:nutrilens/features/profile/widgets/notification_reminder_switches.dart';
 import 'package:nutrilens/features/profile/widgets/settings_section.dart';
-import 'package:nutrilens/features/sleep/sleep_logging.dart';
 import 'package:nutrilens/features/sleep/sleep_logging.dart';
 import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/models/models.dart';
@@ -160,66 +160,6 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
     }
   }
 
-  Future<void> _updateNotificationSetting({
-    bool? mealRemindersEnabled,
-    bool? bedtimeReminderEnabled,
-    bool? wakeReminderEnabled,
-  }) async {
-    final profile = _profile;
-    if (profile == null || _saving) {
-      return;
-    }
-
-    final nextSettings = profile.notificationSettings.copyWith(
-      mealRemindersEnabled: mealRemindersEnabled,
-      bedtimeReminderEnabled: bedtimeReminderEnabled,
-      wakeReminderEnabled: wakeReminderEnabled,
-    );
-    final enablingAny = nextSettings.mealRemindersEnabled ||
-        nextSettings.bedtimeReminderEnabled ||
-        nextSettings.wakeReminderEnabled;
-
-    setState(() => _saving = true);
-    try {
-      if (enablingAny) {
-        final granted = await NotificationScheduler.instance.requestPermissions();
-        if (!granted && mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                AppLocalizations.of(context)!.notificationPermissionRequired,
-              ),
-            ),
-          );
-        }
-      }
-
-      final scope = UserScope.of(context);
-      final updated = profile.copyWith(notificationSettings: nextSettings);
-      await scope.repository.saveProfile(updated);
-      await NotificationScheduler.instance.syncFromProfile(updated);
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _profile = updated;
-        _saving = false;
-      });
-    } catch (error) {
-      if (!mounted) {
-        return;
-      }
-      setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context)!.unableToUpdateNotifications('$error'),
-          ),
-        ),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -241,74 +181,14 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
     }
 
     final profile = _profile!;
-    final settings = profile.notificationSettings;
     final isBusy = _saving;
     final aiTarget = _aiSleepTargetHours;
     final currentTarget = profile.dailyTargets.sleepHours;
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SettingsSection(
-          title: l10n.notificationRemindersSection,
-          children: [
-            SettingsRow(
-              label: l10n.notificationMealReminders,
-              trailing: Switch(
-                value: settings.mealRemindersEnabled,
-                activeThumbColor: AppColors.lime,
-                onChanged: isBusy
-                    ? null
-                    : (enabled) => _updateNotificationSetting(
-                        mealRemindersEnabled: enabled,
-                      ),
-              ),
-              showChevron: false,
-              onTap: isBusy
-                  ? null
-                  : () => _updateNotificationSetting(
-                      mealRemindersEnabled: !settings.mealRemindersEnabled,
-                    ),
-            ),
-            SettingsRow(
-              label: l10n.notificationBedtimeReminder,
-              trailing: Switch(
-                value: settings.bedtimeReminderEnabled,
-                activeThumbColor: AppColors.sleepAccent,
-                onChanged: isBusy
-                    ? null
-                    : (enabled) => _updateNotificationSetting(
-                        bedtimeReminderEnabled: enabled,
-                      ),
-              ),
-              showChevron: false,
-              onTap: isBusy
-                  ? null
-                  : () => _updateNotificationSetting(
-                      bedtimeReminderEnabled: !settings.bedtimeReminderEnabled,
-                    ),
-            ),
-            SettingsRow(
-              label: l10n.notificationWakeReminder,
-              trailing: Switch(
-                value: settings.wakeReminderEnabled,
-                activeThumbColor: AppColors.sleepAccent,
-                onChanged: isBusy
-                    ? null
-                    : (enabled) => _updateNotificationSetting(
-                        wakeReminderEnabled: enabled,
-                      ),
-              ),
-              showChevron: false,
-              showDivider: false,
-              onTap: isBusy
-                  ? null
-                  : () => _updateNotificationSetting(
-                      wakeReminderEnabled: !settings.wakeReminderEnabled,
-                    ),
-            ),
-          ],
-        ),
+        const NotificationReminderSwitches(),
         const SizedBox(height: 20),
         SettingsSection(
           title: l10n.notificationSleepTargetSection,

@@ -689,6 +689,18 @@
   },
   "saveSleep": "保存睡眠",
   "sleepCheckInDescription": "您睡了多久？输入小时和分钟，或暂时跳过。",
+  "sleepWentToBed": "入睡时间",
+  "sleepWentToBedHint": "点击设置昨晚入睡时间。",
+  "weeklySleepInsightTitle": "每周睡眠评估",
+  "weeklySleepInsightIntro": "回答 2 个简短问题。我们会结合您的回答和睡眠数据，估算理想作息时间。",
+  "weeklySleepInsightSubmit": "获取睡眠计划",
+  "weeklySleepInsightResultTitle": "您的理想作息",
+  "weeklySleepInsightRecommendedHours": "夜间目标：{hours} 小时",
+  "weeklySleepInsightRecommendedBedtime": "就寝时间：{time}",
+  "weeklySleepInsightRecommendedWake": "起床时间：{time}",
+  "weeklySleepInsightApply": "应用到我的作息",
+  "weeklySleepInsightApplied": "睡眠作息已更新",
+  "weeklySleepInsightFailed": "无法分析睡眠：{error}",
   "sleepLogged": "已记录 {duration}。{advice}",
   "@sleepLogged": {
     "placeholders": {
@@ -1137,7 +1149,10 @@
   "mealTypeDinner": "晚餐",
   "mealTypeSnack": "加餐",
   "notificationRemindersSection": "提醒",
-  "notificationMealReminders": "用餐时间",
+  "notificationEventReminders": "活动",
+  "notificationHydrationReminders": "补水",
+  "notificationSleepReminders": "睡眠",
+  "notificationMealReminders": "用餐",
   "notificationBedtimeReminder": "就寝时间",
   "notificationWakeReminder": "起床时间",
   "notificationSleepTargetSection": "睡眠目标",
@@ -1164,6 +1179,33 @@
   "notificationPermissionRequired": "请在系统设置中启用通知以接收提醒。",
   "unableToUpdateNotifications": "无法更新通知：{error}",
   "@unableToUpdateNotifications": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "inAppNotificationMealTitle": "该补充能量了",
+  "inAppNotificationMealBody": "记录用餐，保持营养计划进度。",
+  "inAppNotificationMealAction": "记录用餐",
+  "inAppNotificationHydrationTitle": "记得补水",
+  "inAppNotificationHydrationBody": "喝杯水并记录补水情况。",
+  "inAppNotificationHydrationAction": "打开首页",
+  "inAppNotificationEventTitle": "即将开始的活动",
+  "inAppNotificationEventBody": "您的日程中很快有安排。",
+  "inAppNotificationEventAction": "打开日程",
+  "inAppNotificationBedtimeTitle": "准备休息",
+  "inAppNotificationBedtimeBody": "就寝时间快到了，开始放松以便更好恢复。",
+  "inAppNotificationBedtimeAction": "打开睡眠记录",
+  "inAppNotificationWakeTitle": "早上好",
+  "inAppNotificationWakeBody": "该起床了，记录一下睡眠情况。",
+  "inAppNotificationWakeAction": "记录睡眠",
+  "notificationReminderSettings": "通知",
+  "notificationInboxSection": "最近通知",
+  "notificationsEmptyTitle": "暂无通知",
+  "notificationsEmptyBody": "活动、补水、睡眠和用餐提醒会在这里显示，并保留 7 天。",
+  "notificationsLoadFailed": "无法加载通知：{error}",
+  "@notificationsLoadFailed": {
     "placeholders": {
       "error": {
         "type": "String"

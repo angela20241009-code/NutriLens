@@ -20,6 +20,7 @@ class InMemoryUserRepository implements UserRepository {
   // uid → (dateKey → DailySummary)
   final Map<String, Map<String, DailySummary>> _dailySummaries = {};
   final Map<String, MealPlanWeek> _mealPlans = {};
+  final Map<String, List<StoredNotification>> _notifications = {};
   int _accountCounter = 0;
   int _mealCounter = 0;
 
@@ -341,6 +342,7 @@ class InMemoryUserRepository implements UserRepository {
     String dateKey, {
     double? hydrationLiters,
     double? sleepHours,
+    int? sleepBedtimeMinutes,
   }) async {
     final summaries = _dailySummaries.putIfAbsent(uid, () => {});
     final now = firestoreNow();
@@ -349,6 +351,7 @@ class InMemoryUserRepository implements UserRepository {
       summaries[dateKey] = existing.copyWith(
         hydrationLiters: hydrationLiters ?? existing.hydrationLiters,
         sleepHours: sleepHours ?? existing.sleepHours,
+        sleepBedtimeMinutes: sleepBedtimeMinutes ?? existing.sleepBedtimeMinutes,
         updatedAt: now,
       );
     } else {
@@ -359,6 +362,7 @@ class InMemoryUserRepository implements UserRepository {
         mealCount: 0,
         hydrationLiters: hydrationLiters ?? 0,
         sleepHours: sleepHours ?? 0,
+        sleepBedtimeMinutes: sleepBedtimeMinutes,
         updatedAt: now,
       );
     }
@@ -375,6 +379,60 @@ class InMemoryUserRepository implements UserRepository {
   }
 
   @override
+  Future<List<StoredNotification>> getNotifications(String uid) async {
+    final items = [...?_notifications[uid]];
+    items.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return items;
+  }
+
+  @override
+  Future<int> getUnreadNotificationCount(String uid) async {
+    final items = _notifications[uid] ?? const [];
+    return items.where((item) => !item.read).length;
+  }
+
+  @override
+  Future<StoredNotification?> saveNotification(
+    StoredNotification notification,
+  ) async {
+    final items = _notifications.putIfAbsent(notification.uid, () => []);
+    final existingIndex = items.indexWhere(
+      (item) => item.sourceKey == notification.sourceKey,
+    );
+    if (existingIndex >= 0) {
+      return items[existingIndex];
+    }
+    items.add(notification);
+    return notification;
+  }
+
+  @override
+  Future<void> markNotificationRead(String uid, String notificationId) async {
+    final items = _notifications[uid];
+    if (items == null) {
+      return;
+    }
+    final index = items.indexWhere((item) => item.id == notificationId);
+    if (index < 0) {
+      return;
+    }
+    items[index] = items[index].copyWith(read: true);
+  }
+
+  @override
+  Future<void> pruneNotifications(
+    String uid, {
+    required Duration maxAge,
+  }) async {
+    final items = _notifications[uid];
+    if (items == null) {
+      return;
+    }
+    final cutoff = DateTime.now().toUtc().subtract(maxAge);
+    items.removeWhere((item) => item.createdAt.isBefore(cutoff));
+  }
+
+  @override
   Future<void> deleteAccount(String uid, {String? password}) async {
     final account = _accounts[uid];
     final email = account?.email?.trim().toLowerCase();
@@ -387,6 +445,7 @@ class InMemoryUserRepository implements UserRepository {
     _meals.remove(uid);
     _dailySummaries.remove(uid);
     _mealPlans.remove(uid);
+    _notifications.remove(uid);
     if (_uid == uid) {
       _uid = null;
     }

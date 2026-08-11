@@ -27,6 +27,7 @@ import 'package:nutrilens/models/app_language.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/models/tasty_recipe.dart';
 import 'package:nutrilens/services/meal_plan_client.dart';
+import 'package:nutrilens/services/resilient_tasty_recipe_client.dart';
 import 'package:nutrilens/services/tasty_recipe_client.dart';
 import 'package:nutrilens/services/in_memory_user_repository.dart';
 import 'package:nutrilens/services/date_key.dart';
@@ -315,7 +316,7 @@ void main() {
     expect(find.text('Log sleep'), findsOneWidget);
   });
 
-  testWidgets('Settings shows Sleep Mode toggle off and enables it', (
+  testWidgets('Settings opens Notifications from the hub', (
     WidgetTester tester,
   ) async {
     final repository = InMemoryUserRepository();
@@ -330,11 +331,46 @@ void main() {
       ),
     );
 
-    await _pumpAccountSettings(tester, repository, account.uid, openAppSection: false);
+    await _pumpAccountSettings(
+      tester,
+      repository,
+      account.uid,
+      openNotificationsSection: false,
+    );
     expect(find.text('Delete account'), findsOneWidget);
+    expect(find.text('App'), findsNothing);
+    expect(find.text('Sleep Mode'), findsNothing);
 
-    await tester.tap(find.text('App'));
+    await tester.tap(find.text('Notifications'));
     await tester.pumpAndSettle();
+
+    expect(find.text('Events'), findsOneWidget);
+    expect(find.text('Hydration'), findsOneWidget);
+    expect(find.text('Sleep'), findsOneWidget);
+    expect(find.text('Meals'), findsOneWidget);
+  });
+
+  testWidgets('Display settings shows Sleep Mode toggle off and enables it', (
+    WidgetTester tester,
+  ) async {
+    final repository = InMemoryUserRepository();
+    final account = await repository.signInAnonymously(
+      timezone: 'America/Los_Angeles',
+    );
+    await repository.completeOnboarding(
+      uid: account.uid,
+      profile: UserProfile.demoAngela(
+        userId: account.uid,
+        now: DateTime.now().toUtc(),
+      ),
+    );
+
+    await _pumpAccountSettings(
+      tester,
+      repository,
+      account.uid,
+      openDisplaySection: true,
+    );
 
     final sleepModeSwitch = find.descendant(
       of: find.ancestor(
@@ -345,9 +381,6 @@ void main() {
     );
     expect(find.text('Sleep Mode'), findsOneWidget);
     expect(tester.widget<Switch>(sleepModeSwitch).value, false);
-    expect(find.text('Mode switcher'), findsNothing);
-    expect(find.text('Notifications'), findsOneWidget);
-    expect(find.text('Units'), findsOneWidget);
 
     await tester.tap(sleepModeSwitch);
     await tester.pumpAndSettle();
@@ -355,10 +388,9 @@ void main() {
     final profile = await repository.getProfile(account.uid);
     expect(profile?.sleepModeEnabled, true);
     expect(tester.widget<Switch>(sleepModeSwitch).value, true);
-    expect(find.text('Mode switcher'), findsNothing);
   });
 
-  testWidgets('Settings shows Sleep Mode toggle on and disables it', (
+  testWidgets('Display settings shows Sleep Mode toggle on and disables it', (
     WidgetTester tester,
   ) async {
     final repository = InMemoryUserRepository();
@@ -373,7 +405,12 @@ void main() {
       ).copyWith(sleepModeEnabled: true),
     );
 
-    await _pumpAccountSettings(tester, repository, account.uid);
+    await _pumpAccountSettings(
+      tester,
+      repository,
+      account.uid,
+      openDisplaySection: true,
+    );
 
     final sleepModeSwitch = find.descendant(
       of: find.ancestor(
@@ -384,7 +421,6 @@ void main() {
     );
     expect(find.text('Sleep Mode'), findsOneWidget);
     expect(tester.widget<Switch>(sleepModeSwitch).value, true);
-    expect(find.text('Mode switcher'), findsNothing);
 
     await tester.tap(sleepModeSwitch);
     await tester.pumpAndSettle();
@@ -392,7 +428,6 @@ void main() {
     final profile = await repository.getProfile(account.uid);
     expect(profile?.sleepModeEnabled, false);
     expect(tester.widget<Switch>(sleepModeSwitch).value, false);
-    expect(find.text('Mode switcher'), findsNothing);
   });
 
   testWidgets(
@@ -1183,7 +1218,27 @@ void main() {
     expect(event?.fuelingHints.single.label, 'Hydrate');
   });
 
-  testWidgets('Meals tab shows an error state when Tasty API fails', (
+  testWidgets('Meals tab falls back when Tasty API fails', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      TastyRecipeScope(
+        client: ResilientTastyRecipeClient(
+          primary: _FailingTastyRecipeClient(),
+          fallback: _FakeTastyRecipeClient(),
+        ),
+        child: testMaterialApp(
+          home: const Scaffold(body: MealsScreen()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Unable to load dishes'), findsNothing);
+    expect(find.text('One-Pan Chicken'), findsOneWidget);
+  });
+
+  testWidgets('Meals tab shows an error state when all recipe sources fail', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
@@ -1556,7 +1611,8 @@ Future<void> _pumpAccountSettings(
   WidgetTester tester,
   InMemoryUserRepository repository,
   String uid, {
-  bool openAppSection = true,
+  bool openNotificationsSection = false,
+  bool openDisplaySection = false,
 }) async {
   await tester.pumpWidget(
     wrapLocalized(
@@ -1577,8 +1633,13 @@ Future<void> _pumpAccountSettings(
   await tester.pump();
   await tester.pumpAndSettle();
 
-  if (openAppSection) {
-    await tester.tap(find.text('App'));
+  if (openNotificationsSection) {
+    await tester.tap(find.text('Notifications'));
+    await tester.pumpAndSettle();
+  }
+
+  if (openDisplaySection) {
+    await tester.tap(find.text('Display'));
     await tester.pumpAndSettle();
   }
 }

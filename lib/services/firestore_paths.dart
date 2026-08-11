@@ -32,4 +32,10 @@ abstract final class FirestorePaths {
 
   /// Current cached weekly meal plan: `mealPlans/{uid}`
   static String mealPlanDoc(String uid) => 'mealPlans/$uid';
+
+  /// Notification inbox messages: `notifications/{uid}/messages`
+  static String notifications(String uid) => 'notifications/$uid/messages';
+
+  static String notificationDoc(String uid, String notificationId) =>
+      'notifications/$uid/messages/$notificationId';
 }

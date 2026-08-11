@@ -4,6 +4,7 @@ import 'package:nutrilens/app/tasty_recipe_scope.dart';
 import 'package:nutrilens/features/meals/widgets/recipe_detail_sheet.dart';
 import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/models/tasty_recipe.dart';
+import 'package:nutrilens/services/resilient_tasty_recipe_client.dart';
 import 'package:nutrilens/services/tasty_recipe_client.dart';
 import 'package:nutrilens/theme/app_colors.dart';
 
@@ -67,7 +68,7 @@ class _MealsScreenState extends State<MealsScreen> {
 
   TastyRecipeClient _client(BuildContext context) {
     return TastyRecipeScope.maybeOf(context)?.client ??
-        RapidApiTastyRecipeClient.fromEnvironment();
+        ResilientTastyRecipeClient.fromEnvironment();
   }
 
   void _dismissKeyboard() {

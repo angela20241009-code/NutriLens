@@ -12,6 +12,7 @@ export 'package:nutrilens/models/meal_source.dart';
 export 'package:nutrilens/models/nutrition_entry.dart';
 export 'package:nutrilens/models/nutrition_settings.dart';
 export 'package:nutrilens/models/notification_settings.dart';
+export 'package:nutrilens/models/stored_notification.dart';
 export 'package:nutrilens/models/schedule_event.dart';
 export 'package:nutrilens/models/segment_control_style.dart';
 export 'package:nutrilens/models/sport_profile.dart';

@@ -271,6 +271,46 @@
   "skipForNow": "Skip for now",
   "saveSleep": "Save sleep",
   "sleepCheckInDescription": "How long did you sleep? Enter hours and minutes, or skip for now.",
+  "sleepWentToBed": "Went to sleep",
+  "sleepWentToBedHint": "Tap to set when you fell asleep last night.",
+  "weeklySleepInsightTitle": "Weekly sleep check-in",
+  "weeklySleepInsightIntro": "Answer 2 quick questions. We will combine your answers with your sleep data to estimate your ideal sleep schedule.",
+  "weeklySleepInsightSubmit": "Get my sleep plan",
+  "weeklySleepInsightResultTitle": "Your ideal sleep schedule",
+  "weeklySleepInsightRecommendedHours": "Nightly target: {hours} h",
+  "@weeklySleepInsightRecommendedHours": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "weeklySleepInsightRecommendedBedtime": "Bedtime: {time}",
+  "@weeklySleepInsightRecommendedBedtime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "weeklySleepInsightRecommendedWake": "Wake time: {time}",
+  "@weeklySleepInsightRecommendedWake": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "weeklySleepInsightApply": "Apply to my schedule",
+  "weeklySleepInsightApplied": "Sleep schedule updated",
+  "weeklySleepInsightFailed": "Unable to analyze sleep: {error}",
+  "@weeklySleepInsightFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "sleepLogged": "Logged {duration}. {advice}",
   "@sleepLogged": {
     "placeholders": {
@@ -1137,7 +1177,10 @@
   "mealTypeDinner": "DINNER",
   "mealTypeSnack": "SNACK",
   "notificationRemindersSection": "Reminders",
-  "notificationMealReminders": "Meal times",
+  "notificationEventReminders": "Events",
+  "notificationHydrationReminders": "Hydration",
+  "notificationSleepReminders": "Sleep",
+  "notificationMealReminders": "Meals",
   "notificationBedtimeReminder": "Bedtime",
   "notificationWakeReminder": "Wake-up time",
   "notificationSleepTargetSection": "Sleep target",
@@ -1164,6 +1207,33 @@
   "notificationPermissionRequired": "Enable notifications in system settings to receive reminders.",
   "unableToUpdateNotifications": "Unable to update notifications: {error}",
   "@unableToUpdateNotifications": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "inAppNotificationMealTitle": "Time to fuel up",
+  "inAppNotificationMealBody": "Log your meal to stay on track with your nutrition plan.",
+  "inAppNotificationMealAction": "Log meal",
+  "inAppNotificationHydrationTitle": "Stay hydrated",
+  "inAppNotificationHydrationBody": "Take a moment to drink water and log your hydration.",
+  "inAppNotificationHydrationAction": "Open home",
+  "inAppNotificationEventTitle": "Upcoming event",
+  "inAppNotificationEventBody": "You have something on your schedule soon.",
+  "inAppNotificationEventAction": "Open schedule",
+  "inAppNotificationBedtimeTitle": "Wind down soon",
+  "inAppNotificationBedtimeBody": "Your bedtime is coming up. Start winding down for better recovery.",
+  "inAppNotificationBedtimeAction": "Open sleep log",
+  "inAppNotificationWakeTitle": "Good morning",
+  "inAppNotificationWakeBody": "Time to wake up and log how you slept.",
+  "inAppNotificationWakeAction": "Log sleep",
+  "notificationReminderSettings": "Notifications",
+  "notificationInboxSection": "Recent notifications",
+  "notificationsEmptyTitle": "No notifications yet",
+  "notificationsEmptyBody": "Event, hydration, sleep, and meal reminders will appear here for the last 7 days.",
+  "notificationsLoadFailed": "Unable to load notifications: {error}",
+  "@notificationsLoadFailed": {
     "placeholders": {
       "error": {
         "type": "String"

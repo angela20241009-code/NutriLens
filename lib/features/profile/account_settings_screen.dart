@@ -690,9 +690,6 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       case '/display':
         title = l10n.sectionDisplay;
         body = _DisplaySettingsPage(host: this);
-      case '/app':
-        title = l10n.sectionApp;
-        body = _AppSettingsPage(host: this);
       case '/app/notifications':
         title = l10n.notifications;
         body = const NotificationSettingsPage();
@@ -925,9 +922,9 @@ class _SettingsHubPage extends StatelessWidget {
               onTap: isBusy ? null : () => onSectionTap('/display'),
             ),
             SettingsRow(
-              label: l10n.sectionApp,
+              label: l10n.notifications,
               showDivider: false,
-              onTap: isBusy ? null : () => onSectionTap('/app'),
+              onTap: isBusy ? null : () => onSectionTap('/app/notifications'),
             ),
           ],
         ),
@@ -1305,16 +1302,18 @@ class _DisplaySettingsPage extends StatelessWidget {
           trailing: Switch(
             value: appSettings.accessibilityModeEnabled,
             activeThumbColor: AppColors.lime,
-            onChanged: isBusy || appSettings.saving
-                ? null
-                : host._toggleAccessibilityMode,
+            onChanged: isBusy ? null : host._toggleAccessibilityMode,
           ),
           showChevron: false,
-          onTap: isBusy || appSettings.saving
-              ? null
-              : () => host._toggleAccessibilityMode(
-                  !appSettings.accessibilityModeEnabled,
-                ),
+        ),
+        SettingsRow(
+          label: l10n.sleepMode,
+          trailing: Switch(
+            value: appSettings.sleepModeEnabled,
+            activeThumbColor: AppColors.sleepAccent,
+            onChanged: isBusy ? null : host._toggleSleepMode,
+          ),
+          showChevron: false,
         ),
         SettingsRow(
           label: l10n.textSize,
@@ -1330,50 +1329,6 @@ class _DisplaySettingsPage extends StatelessWidget {
           onTap: isBusy || appSettings.saving
               ? null
               : host._showThemePalettePicker,
-        ),
-      ],
-    );
-  }
-}
-
-class _AppSettingsPage extends StatelessWidget {
-  const _AppSettingsPage({required this.host});
-
-  final _AccountSettingsScreenState host;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final appSettings = AppSettingsScope.of(context);
-    final isBusy = host._saving || host._busy;
-
-    return SettingsSection(
-      title: '',
-      children: [
-        SettingsRow(
-          label: l10n.sleepMode,
-          trailing: Switch(
-            value: appSettings.sleepModeEnabled,
-            activeThumbColor: AppColors.sleepAccent,
-            onChanged: isBusy || appSettings.saving
-                ? null
-                : host._toggleSleepMode,
-          ),
-          showChevron: false,
-          onTap: isBusy || appSettings.saving
-              ? null
-              : () => host._toggleSleepMode(!appSettings.sleepModeEnabled),
-        ),
-        SettingsRow(
-          label: l10n.notifications,
-          onTap: isBusy
-              ? null
-              : () => host._openSettingsSection('/app/notifications'),
-        ),
-        SettingsRow(
-          label: l10n.units,
-          showDivider: false,
-          onTap: isBusy ? null : () => host._showComingSoon(l10n.units),
         ),
       ],
     );

@@ -416,7 +416,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           sleepModeRecommendationReasons: sleepRecommendation.reasons,
           notificationSettings: NotificationSettings(
             mealRemindersEnabled: true,
-            bedtimeReminderEnabled: _sleepReminderAnswer == l10n.yes,
+            sleepRemindersEnabled: _sleepReminderAnswer == l10n.yes,
           ),
         );
 

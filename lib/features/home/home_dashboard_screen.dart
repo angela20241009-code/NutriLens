@@ -17,6 +17,7 @@ import 'package:nutrilens/features/meals/favorite_meal_sheet.dart';
 import 'package:nutrilens/features/profile/meal_preferences_sheet.dart';
 import 'package:nutrilens/features/meals/log_meal_sheet.dart';
 import 'package:nutrilens/features/sleep/sleep_log_actions.dart';
+import 'package:nutrilens/features/sleep/weekly_sleep_insight_page.dart';
 import 'package:nutrilens/l10n/app_localizations.dart';
 import 'package:nutrilens/models/models.dart';
 import 'package:nutrilens/services/date_key.dart';
@@ -464,8 +465,31 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
       initialSleepHours: data.summary.sleepHours > 0
           ? data.summary.sleepHours
           : null,
+      initialBedtimeMinutes: data.summary.sleepBedtimeMinutes,
     );
     if (saved && mounted) {
+      await _refresh();
+    }
+  }
+
+  Future<void> _openWeeklySleepInsight() async {
+    final data = _dashboardData;
+    if (!mounted || data == null) {
+      return;
+    }
+
+    final applied = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (context) => WeeklySleepInsightPage(
+          weeklyDays: data.weeklySleepDays,
+          targetHours: data.sleepTargetHours,
+        ),
+      ),
+    );
+
+    if (applied == true && mounted) {
+      _cachedSleepTargetHours = null;
+      _cachedSleepTargetUid = null;
       await _refresh();
     }
   }
@@ -546,6 +570,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
                 days: data.weeklySleepDays,
                 targetHours: data.sleepTargetHours,
                 onLogSleepTap: _openSleepLogDialog,
+                onCardTap: _openWeeklySleepInsight,
               ),
             ],
             const SizedBox(height: 24),
