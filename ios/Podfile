@@ -2,7 +2,8 @@
 platform :ios, '16.0'
 
 # Firebase iOS SDK requires iOS 15+. Flutter's generated Swift package defaults
-# to 13.0 until flutter build ios updates it, which breaks Xcode-only builds.
+# to 13.0 after `flutter pub get`, which breaks Xcode builds before the first
+# `flutter build ios`.
 def fix_flutter_swift_package_ios_deployment
   package_swift = File.expand_path(
     'Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage/Package.swift',
@@ -10,11 +11,12 @@ def fix_flutter_swift_package_ios_deployment
   )
   return unless File.exist?(package_swift)
 
-  deployment_target = '15.0'
+  deployment_target = '16.0'
   contents = File.read(package_swift)
-  return if contents.match?(/\.iOS\("(1[5-9]|[2-9][0-9])\.\d+"\)/)
-
-  updated = contents.gsub(/\.iOS\("13\.0"\)/, ".iOS(\"#{deployment_target}\")")
+  updated = contents.gsub(/\.iOS\("(\d+\.\d+)"\)/) do |match|
+    version = Gem::Version.new(Regexp.last_match(1))
+    version < Gem::Version.new('15.0') ? ".iOS(\"#{deployment_target}\")" : match
+  end
   return if updated == contents
 
   File.write(package_swift, updated)
@@ -62,8 +64,8 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
     target.build_configurations.each do |config|
-      if config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'].to_f < 15.0
-        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+      if config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'].to_f < 16.0
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '16.0'
       end
     end
   end
