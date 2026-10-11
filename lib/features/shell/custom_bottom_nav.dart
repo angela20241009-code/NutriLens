@@ -29,6 +29,7 @@ class CustomBottomNav extends StatelessWidget {
     final onPrimary = ThemePaletteScope.onPrimary(context);
     final inactive = ThemePaletteScope.navInactive(context);
     final l10n = AppLocalizations.of(context)!;
+    final languageCode = Localizations.localeOf(context).languageCode;
 
     return Container(
       height: _navHeight + bottomPadding,
@@ -75,6 +76,7 @@ class CustomBottomNav extends StatelessWidget {
               activeColor: primary,
               onActiveColor: onPrimary,
               inactiveColor: inactive,
+              label: _scanTabLabel(languageCode),
               labelSize: labelSize,
               iconSize: scanIconSize,
               buttonSize: _scanButtonSize,
@@ -93,7 +95,7 @@ class CustomBottomNav extends StatelessWidget {
             ),
             _NavItem(
               icon: CupertinoIcons.eyeglasses,
-              label: 'Lens',
+              label: _lensTabLabel(languageCode),
               selected: selectedIndex == 4,
               onTap: () => onTap(4),
               iconSize: iconSize,
@@ -122,6 +124,7 @@ class CustomBottomNav extends StatelessWidget {
 
 class _ScanNavItem extends StatelessWidget {
   const _ScanNavItem({
+    required this.label,
     required this.selected,
     required this.onTap,
     required this.activeColor,
@@ -134,6 +137,7 @@ class _ScanNavItem extends StatelessWidget {
   });
 
   final bool selected;
+  final String label;
   final VoidCallback onTap;
   final Color activeColor;
   final Color onActiveColor;
@@ -177,7 +181,7 @@ class _ScanNavItem extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              'Scan',
+              label,
               style: TextStyle(
                 fontSize: labelSize,
                 fontWeight: boldLabels ? FontWeight.w700 : FontWeight.w600,
@@ -189,6 +193,22 @@ class _ScanNavItem extends StatelessWidget {
       ),
     );
   }
+}
+
+String _scanTabLabel(String languageCode) {
+  return switch (languageCode) {
+    'es' => 'Escanear',
+    'zh' => '扫描',
+    _ => 'Scan',
+  };
+}
+
+String _lensTabLabel(String languageCode) {
+  return switch (languageCode) {
+    'es' => 'Lente',
+    'zh' => '镜头',
+    _ => 'Lens',
+  };
 }
 
 class _NavItem extends StatelessWidget {

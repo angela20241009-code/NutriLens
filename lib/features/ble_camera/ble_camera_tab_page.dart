@@ -88,6 +88,8 @@ class _BleCameraTabPageState extends State<BleCameraTabPage> {
   Widget build(BuildContext context) {
     final primary = ThemePaletteScope.primary(context);
     final onPrimary = ThemePaletteScope.onPrimary(context);
+    final strings = _LensStrings.of(context);
+    cam.setLanguageCode(strings.languageCode);
 
     return Scaffold(
       body: SafeArea(
@@ -100,8 +102,8 @@ class _BleCameraTabPageState extends State<BleCameraTabPage> {
                 children: [
                   Icon(Icons.auto_awesome, color: primary, size: 20),
                   const SizedBox(width: 8),
-                  const Text(
-                    'Lens Capture',
+                  Text(
+                    strings.lensCaptureTitle,
                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
                   ),
                 ],
@@ -117,7 +119,7 @@ class _BleCameraTabPageState extends State<BleCameraTabPage> {
                 children: [
                   Expanded(
                     child: _ActionPillButton(
-                      label: _captureLabel(cam, _busy),
+                      label: _captureLabel(cam, _busy, strings),
                       onPressed: _busy || cam.isCapturing
                           ? null
                           : _captureOrConnect,
@@ -129,7 +131,9 @@ class _BleCameraTabPageState extends State<BleCameraTabPage> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: _ActionPillButton(
-                      label: mode == _LayoutMode.camera ? 'History' : 'Camera',
+                      label: mode == _LayoutMode.camera
+                          ? strings.history
+                          : strings.camera,
                       onPressed: () {
                         setState(() {
                           mode = mode == _LayoutMode.camera
@@ -186,15 +190,16 @@ class _ConnectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final primary = ThemePaletteScope.primary(context);
+    final strings = _LensStrings.of(context);
     final muted = ThemePaletteScope.navInactive(
       context,
     ).withValues(alpha: 0.75);
 
     final statusText = cam.isConnected
-        ? 'Connected · MTU ${cam.mtu}'
+        ? strings.connectedMtu(cam.mtu)
         : busy
-        ? 'Connecting to $kDeviceName...'
-        : 'Not connected';
+        ? strings.connectingToDevice(kDeviceName)
+        : strings.notConnected;
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -230,7 +235,7 @@ class _ConnectionCard extends StatelessWidget {
           const SizedBox(width: 8),
           TextButton(
             onPressed: busy ? null : onConnectToggle,
-            child: Text(cam.isConnected ? 'Disconnect' : 'Connect'),
+            child: Text(cam.isConnected ? strings.disconnect : strings.connect),
           ),
         ],
       ),
@@ -254,12 +259,13 @@ class _CameraPane extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = _LensStrings.of(context);
     return Column(
       children: [
         Expanded(
           child: _PhotoCard(
             photo: latest,
-            label: 'Last photo',
+            label: strings.lastPhoto,
             heroTag: 'latest-photo',
             onTap: latest == null
                 ? null
@@ -287,6 +293,7 @@ class _HistoryPane extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = _LensStrings.of(context);
     if (cam.photos.isEmpty) {
       return Container(
         decoration: BoxDecoration(
@@ -294,11 +301,8 @@ class _HistoryPane extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         ),
-        child: const Center(
-          child: Text(
-            'No photos yet. Capture one from Camera mode.',
-            textAlign: TextAlign.center,
-          ),
+        child: Center(
+          child: Text(strings.noPhotosYet, textAlign: TextAlign.center),
         ),
       );
     }
@@ -392,6 +396,7 @@ class _DescriptionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final primary = ThemePaletteScope.primary(context);
+    final strings = _LensStrings.of(context);
     final hasPhoto = photo != null;
 
     return Container(
@@ -406,16 +411,16 @@ class _DescriptionCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            'AI nutrition note',
+          Text(
+            strings.aiNutritionNote,
             style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
           ),
           const SizedBox(height: 8),
           if (!Vision.isConfigured)
-            const Text('OPENAI_API_KEY not configured in assets/.env')
+            Text(strings.openAiKeyMissing)
           else if (!hasPhoto)
             Text(
-              'Capture a photo to generate nutrition details.',
+              strings.capturePrompt,
               style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
             )
           else
@@ -426,7 +431,7 @@ class _DescriptionCard extends StatelessWidget {
               child: TextButton.icon(
                 onPressed: () => onRetry(photo!),
                 icon: Icon(Icons.refresh, color: primary, size: 18),
-                label: Text('Retry', style: TextStyle(color: primary)),
+                label: Text(strings.retry, style: TextStyle(color: primary)),
               ),
             ),
         ],
@@ -443,40 +448,42 @@ class _DescriptionBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = _LensStrings.of(context);
+    final formattedDescription = formatAiDescription(
+      photo.description,
+      languageCode: strings.languageCode,
+    );
     final textStyle = TextStyle(
       color: Colors.white.withValues(alpha: 0.9),
       height: 1.35,
     );
 
     return switch (photo.descState) {
-      DescState.pending => const Row(
+      DescState.pending => Row(
         children: [
-          SizedBox(
+          const SizedBox(
             width: 16,
             height: 16,
             child: CircularProgressIndicator(strokeWidth: 2),
           ),
-          SizedBox(width: 10),
-          Text('Describing...'),
+          const SizedBox(width: 10),
+          Text(strings.describing),
         ],
       ),
       DescState.done => Text(
-        formatAiDescription(photo.description).isEmpty
-            ? 'No description available.'
-            : formatAiDescription(photo.description),
+        formattedDescription.isEmpty
+            ? strings.noDescriptionAvailable
+            : formattedDescription,
         style: textStyle,
       ),
       DescState.failed => InkWell(
         onTap: onRetry,
         child: Text(
-          '${photo.descError}\nTap retry to try again.',
+          '${photo.descError}\n${strings.tapRetryToTryAgain}',
           style: textStyle,
         ),
       ),
-      DescState.none => Text(
-        'Tap Retry to describe this photo.',
-        style: textStyle,
-      ),
+      DescState.none => Text(strings.tapRetryToDescribe, style: textStyle),
     };
   }
 }
@@ -496,6 +503,7 @@ class _HistoryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = _LensStrings.of(context);
     return Material(
       color: AppColors.cardDark,
       borderRadius: BorderRadius.circular(16),
@@ -541,7 +549,7 @@ class _HistoryTile extends StatelessWidget {
               IconButton(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),
-                tooltip: 'Retry description',
+                tooltip: strings.retryDescription,
               ),
             ],
           ),
@@ -596,18 +604,173 @@ class _ActionPillButton extends StatelessWidget {
   }
 }
 
-String _captureLabel(BleCamera cam, bool busy) {
+String _captureLabel(BleCamera cam, bool busy, _LensStrings strings) {
   if (busy) {
-    return 'Connecting...';
+    return strings.connecting;
   }
   if (cam.isCapturing) {
     return switch (cam.capturePhase) {
-      CapturePhase.requested => 'Waiting for camera...',
-      CapturePhase.receiving =>
-        'Receiving ${(cam.progress * 100).toStringAsFixed(0)}%',
-      CapturePhase.describing => 'Describing...',
-      CapturePhase.idle => 'Capture photo',
+      CapturePhase.requested => strings.waitingForCamera,
+      CapturePhase.receiving => strings.receiving(cam.progress),
+      CapturePhase.describing => strings.describing,
+      CapturePhase.idle => strings.capturePhoto,
     };
   }
-  return cam.isConnected ? 'Capture photo' : 'Connect & capture';
+  return cam.isConnected ? strings.capturePhoto : strings.connectAndCapture;
+}
+
+class _LensStrings {
+  const _LensStrings._({required this.languageCode});
+
+  final String languageCode;
+
+  static _LensStrings of(BuildContext context) {
+    return _LensStrings._(
+      languageCode: Localizations.localeOf(context).languageCode,
+    );
+  }
+
+  String get lensCaptureTitle => switch (languageCode) {
+    'es' => 'Captura de lente',
+    'zh' => '镜头拍摄',
+    _ => 'Lens Capture',
+  };
+
+  String get history => switch (languageCode) {
+    'es' => 'Historial',
+    'zh' => '历史',
+    _ => 'History',
+  };
+
+  String get camera => switch (languageCode) {
+    'es' => 'Cámara',
+    'zh' => '相机',
+    _ => 'Camera',
+  };
+
+  String connectedMtu(int mtu) => switch (languageCode) {
+    'es' => 'Conectado · MTU $mtu',
+    'zh' => '已连接 · MTU $mtu',
+    _ => 'Connected · MTU $mtu',
+  };
+
+  String connectingToDevice(String deviceName) => switch (languageCode) {
+    'es' => 'Conectando a $deviceName...',
+    'zh' => '正在连接到 $deviceName...',
+    _ => 'Connecting to $deviceName...',
+  };
+
+  String get notConnected => switch (languageCode) {
+    'es' => 'Sin conexión',
+    'zh' => '未连接',
+    _ => 'Not connected',
+  };
+
+  String get connect => switch (languageCode) {
+    'es' => 'Conectar',
+    'zh' => '连接',
+    _ => 'Connect',
+  };
+
+  String get disconnect => switch (languageCode) {
+    'es' => 'Desconectar',
+    'zh' => '断开',
+    _ => 'Disconnect',
+  };
+
+  String get lastPhoto => switch (languageCode) {
+    'es' => 'Última foto',
+    'zh' => '最新照片',
+    _ => 'Last photo',
+  };
+
+  String get noPhotosYet => switch (languageCode) {
+    'es' => 'Aún no hay fotos. Toma una desde el modo Cámara.',
+    'zh' => '还没有照片。请在相机模式下拍摄一张。',
+    _ => 'No photos yet. Capture one from Camera mode.',
+  };
+
+  String get aiNutritionNote => switch (languageCode) {
+    'es' => 'Nota nutricional de IA',
+    'zh' => 'AI 营养说明',
+    _ => 'AI nutrition note',
+  };
+
+  String get openAiKeyMissing => switch (languageCode) {
+    'es' => 'OPENAI_API_KEY no está configurada en assets/.env',
+    'zh' => 'assets/.env 中未配置 OPENAI_API_KEY',
+    _ => 'OPENAI_API_KEY not configured in assets/.env',
+  };
+
+  String get capturePrompt => switch (languageCode) {
+    'es' => 'Toma una foto para generar detalles nutricionales.',
+    'zh' => '拍摄一张照片以生成营养详情。',
+    _ => 'Capture a photo to generate nutrition details.',
+  };
+
+  String get retry => switch (languageCode) {
+    'es' => 'Reintentar',
+    'zh' => '重试',
+    _ => 'Retry',
+  };
+
+  String get describing => switch (languageCode) {
+    'es' => 'Describiendo...',
+    'zh' => '描述中...',
+    _ => 'Describing...',
+  };
+
+  String get noDescriptionAvailable => switch (languageCode) {
+    'es' => 'No hay descripción disponible.',
+    'zh' => '暂无描述。',
+    _ => 'No description available.',
+  };
+
+  String get tapRetryToTryAgain => switch (languageCode) {
+    'es' => 'Toca Reintentar para intentarlo de nuevo.',
+    'zh' => '点击重试以再次尝试。',
+    _ => 'Tap retry to try again.',
+  };
+
+  String get tapRetryToDescribe => switch (languageCode) {
+    'es' => 'Toca Reintentar para describir esta foto.',
+    'zh' => '点击重试以描述这张照片。',
+    _ => 'Tap Retry to describe this photo.',
+  };
+
+  String get retryDescription => switch (languageCode) {
+    'es' => 'Reintentar descripción',
+    'zh' => '重试描述',
+    _ => 'Retry description',
+  };
+
+  String get connecting => switch (languageCode) {
+    'es' => 'Conectando...',
+    'zh' => '连接中...',
+    _ => 'Connecting...',
+  };
+
+  String get waitingForCamera => switch (languageCode) {
+    'es' => 'Esperando la cámara...',
+    'zh' => '等待相机中...',
+    _ => 'Waiting for camera...',
+  };
+
+  String receiving(double progress) => switch (languageCode) {
+    'es' => 'Recibiendo ${(progress * 100).toStringAsFixed(0)}%',
+    'zh' => '接收中 ${(progress * 100).toStringAsFixed(0)}%',
+    _ => 'Receiving ${(progress * 100).toStringAsFixed(0)}%',
+  };
+
+  String get capturePhoto => switch (languageCode) {
+    'es' => 'Capturar foto',
+    'zh' => '拍摄照片',
+    _ => 'Capture photo',
+  };
+
+  String get connectAndCapture => switch (languageCode) {
+    'es' => 'Conectar y capturar',
+    'zh' => '连接并拍摄',
+    _ => 'Connect & capture',
+  };
 }

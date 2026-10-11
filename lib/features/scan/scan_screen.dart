@@ -170,11 +170,13 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
     setState(() => _analyzing = true);
 
     try {
+      final analysisClient = MealAnalysisScope.of(context);
+      final languageCode = AppLocaleScope.of(context).language.code;
       final bytes = await image.readAsBytes();
-      final analysis = await MealAnalysisScope.of(context).analyzeMealPhoto(
+      final analysis = await analysisClient.analyzeMealPhoto(
         imageBytes: bytes,
         mimeType: _mimeTypeForPath(image.path),
-        languageCode: AppLocaleScope.of(context).language.code,
+        languageCode: languageCode,
       );
 
       if (!mounted) {
@@ -197,9 +199,9 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
     } catch (error) {
       if (!mounted) {
         return;
@@ -352,7 +354,9 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
                   style: TextStyle(
                     color: AppColors.textPrimary.withValues(alpha: 0.88),
                     fontSize: 13,
-                    shadows: const [Shadow(color: Colors.black54, blurRadius: 8)],
+                    shadows: const [
+                      Shadow(color: Colors.black54, blurRadius: 8),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -369,7 +373,11 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
                         border: Border.all(color: Colors.white, width: 4),
                         color: accent.withValues(alpha: 0.35),
                       ),
-                      child: Icon(Icons.camera_alt_rounded, color: accent, size: 30),
+                      child: Icon(
+                        Icons.camera_alt_rounded,
+                        color: accent,
+                        size: 30,
+                      ),
                     ),
                   ),
                 ),
@@ -381,9 +389,7 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
     }
 
     if (_initializingCamera) {
-      return Center(
-        child: CircularProgressIndicator(color: accent),
-      );
+      return Center(child: CircularProgressIndicator(color: accent));
     }
 
     return Center(
@@ -429,7 +435,10 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(l10n.scanMeal, style: Theme.of(context).textTheme.headlineLarge),
+            Text(
+              l10n.scanMeal,
+              style: Theme.of(context).textTheme.headlineLarge,
+            ),
             const SizedBox(height: 20),
             Expanded(
               child: Container(
@@ -506,9 +515,7 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
                     final logged = await ScanPreviousMealsSheet.open(context);
                     if (logged == true && mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(l10n.scanMealAdded),
-                        ),
+                        SnackBar(content: Text(l10n.scanMealAdded)),
                       );
                     }
                   },

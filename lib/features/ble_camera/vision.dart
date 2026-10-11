@@ -21,6 +21,11 @@ class VisionException implements Exception {
 
 class Vision {
   static const _endpoint = 'https://api.openai.com/v1/chat/completions';
+  static const _languageByCode = {
+    'en': 'English',
+    'es': 'Spanish',
+    'zh': 'Chinese',
+  };
 
   static String get _key => dotenv.env['OPENAI_API_KEY']?.trim() ?? '';
   static String get _model =>
@@ -32,17 +37,28 @@ class Vision {
       ? dotenv.env['OPENAI_PROMPT']!.trim()
       : 'Identify the main food in this photo and estimate nutrition for one serving. Return ONLY JSON with keys: item, calories, fat_g, carbohydrate_g, protein_g, high_salt (Yes or No).';
 
+  static String _promptForLanguage(String languageCode) {
+    final normalizedCode = languageCode.trim().toLowerCase();
+    final responseLanguage =
+        _languageByCode[normalizedCode] ?? _languageByCode['en']!;
+    return '$_prompt Respond in $responseLanguage. If returning JSON, localize text fields such as "item" to $responseLanguage.';
+  }
+
   /// True when a key is present, so the UI can hide the feature entirely
   /// rather than showing an error on every photo.
   static bool get isConfigured => _key.isNotEmpty;
 
   /// Describes [jpeg]. Throws [VisionException] with a readable message.
-  static Future<String> describe(Uint8List jpeg) async {
+  static Future<String> describe(
+    Uint8List jpeg, {
+    String languageCode = 'en',
+  }) async {
     if (!isConfigured) {
       throw VisionException('No OPENAI_API_KEY in .env');
     }
 
     final dataUrl = 'data:image/jpeg;base64,${base64Encode(jpeg)}';
+    final prompt = _promptForLanguage(languageCode);
 
     final http.Response res;
     try {
@@ -60,7 +76,7 @@ class Vision {
                 {
                   'role': 'user',
                   'content': [
-                    {'type': 'text', 'text': _prompt},
+                    {'type': 'text', 'text': prompt},
                     {
                       'type': 'image_url',
                       // "low" detail is plenty for an 800x600 frame and keeps

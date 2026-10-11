@@ -103,6 +103,15 @@ class BleCamera extends ChangeNotifier {
 
   CapturePhase capturePhase = CapturePhase.idle;
   bool get isCapturing => capturePhase != CapturePhase.idle;
+  String _languageCode = 'en';
+
+  void setLanguageCode(String languageCode) {
+    final normalized = languageCode.trim().toLowerCase();
+    if (normalized == _languageCode) {
+      return;
+    }
+    _languageCode = normalized;
+  }
 
   /// The photo whose description finishes the current cycle. A retry on an
   /// older photo must not end a cycle that is still running.
@@ -492,8 +501,11 @@ class BleCamera extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final text = await Vision.describe(photo.bytes);
-      final formatted = formatAiDescription(text);
+      final text = await Vision.describe(
+        photo.bytes,
+        languageCode: _languageCode,
+      );
+      final formatted = formatAiDescription(text, languageCode: _languageCode);
       photo.description = formatted;
       photo.descState = DescState.done;
       notifyListeners();

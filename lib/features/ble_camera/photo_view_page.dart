@@ -91,7 +91,11 @@ class _Description extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final formattedDescription = formatAiDescription(photo.description);
+    final languageCode = Localizations.localeOf(context).languageCode;
+    final formattedDescription = formatAiDescription(
+      photo.description,
+      languageCode: languageCode,
+    );
     // Hide the panel entirely when there's no key, rather than nagging.
     if (!Vision.isConfigured) return const SizedBox.shrink();
 
