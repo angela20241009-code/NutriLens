@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:nutrilens/app/app_locale_scope.dart';
 import 'package:nutrilens/app/meal_analysis_scope.dart';
 import 'package:nutrilens/features/meals/log_meal_sheet.dart';
 import 'package:nutrilens/features/scan/scan_previous_meals_sheet.dart';
@@ -173,6 +174,7 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
       final analysis = await MealAnalysisScope.of(context).analyzeMealPhoto(
         imageBytes: bytes,
         mimeType: _mimeTypeForPath(image.path),
+        languageCode: AppLocaleScope.of(context).language.code,
       );
 
       if (!mounted) {

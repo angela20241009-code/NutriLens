@@ -34,6 +34,7 @@ void main() {
         () => client.analyzeMealPhoto(
           imageBytes: const [1, 2, 3],
           mimeType: 'image/jpeg',
+          languageCode: 'en',
         ),
         throwsA(
           isA<MealAnalysisException>().having(
@@ -83,6 +84,7 @@ void main() {
       final result = await client.analyzeMealPhoto(
         imageBytes: const [9, 8, 7],
         mimeType: 'image/jpeg',
+        languageCode: 'es',
       );
 
       expect(result.name, 'Avocado toast');
@@ -94,6 +96,7 @@ void main() {
       final messages = requestBody!['messages'] as List;
       final userContent = (messages.last as Map)['content'] as List;
       expect(userContent.first['type'], 'text');
+      expect(userContent.first['text'], contains('mealName in Spanish'));
       expect(userContent.last['type'], 'image_url');
       expect(
         userContent.last['image_url']['url'],

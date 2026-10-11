@@ -40,6 +40,12 @@ class OpenAiMealAnalysisClient implements MealAnalysisClient {
       '}\n\n'
       'Use non-negative integers. Round reasonably. If unsure, give your best estimate.';
 
+  static const _languageByCode = {
+    'en': 'English',
+    'es': 'Spanish',
+    'zh': 'Chinese',
+  };
+
   final String _apiKey;
   final http.Client _client;
   final String model;
@@ -48,12 +54,17 @@ class OpenAiMealAnalysisClient implements MealAnalysisClient {
   Future<MealAnalysisResult> analyzeMealPhoto({
     required List<int> imageBytes,
     required String mimeType,
+    String languageCode = 'en',
   }) async {
     if (_apiKey.isEmpty) {
       throw MealAnalysisException(
         'OpenAI API key is missing. Add OPENAI_API_KEY to assets/.env.',
       );
     }
+
+    final normalizedLanguageCode = languageCode.trim().toLowerCase();
+    final responseLanguage =
+        _languageByCode[normalizedLanguageCode] ?? _languageByCode['en']!;
 
     final base64Image = base64Encode(imageBytes);
     final response = await _client.post(
@@ -73,7 +84,8 @@ class OpenAiMealAnalysisClient implements MealAnalysisClient {
               {
                 'type': 'text',
                 'text':
-                    'Analyze this meal photo and return the JSON nutrition estimate.',
+                    'Analyze this meal photo and return the JSON nutrition estimate. '
+                    'Set mealName in $responseLanguage.',
               },
               {
                 'type': 'image_url',

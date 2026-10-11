@@ -70,5 +70,7 @@
 	<string>NutriLens uses the camera to scan and log your meals.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>NutriLens uses your photo library so you can select meal pictures to scan.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>NutriLens uses Bluetooth to connect to your BLE camera device.</string>
 </dict>
 </plist>

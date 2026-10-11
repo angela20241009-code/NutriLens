@@ -5,6 +5,7 @@ abstract class MealAnalysisClient {
   Future<MealAnalysisResult> analyzeMealPhoto({
     required List<int> imageBytes,
     required String mimeType,
+    String languageCode = 'en',
   });
 }
 

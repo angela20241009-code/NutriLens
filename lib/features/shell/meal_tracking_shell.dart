@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nutrilens/features/ble_camera/ble_camera_tab_page.dart';
 import 'package:nutrilens/features/home/home_dashboard_screen.dart';
 import 'package:nutrilens/features/meals/meals_screen.dart';
 import 'package:nutrilens/features/profile/profile_screen.dart';
@@ -23,7 +24,7 @@ class MealTrackingShell extends StatelessWidget {
     final screens = [
       HomeDashboardScreen(
         isActive: selectedIndex == 0,
-        onProfileTap: () => onIndexChanged(4),
+        onProfileTap: () => onIndexChanged(5),
       ),
       const MealsScreen(),
       ScanScreen(isActive: selectedIndex == 2),
@@ -31,6 +32,7 @@ class MealTrackingShell extends StatelessWidget {
         isActive: selectedIndex == 3,
         onMealPlanMealTap: onMealPlanMealTap,
       ),
+      const BleCameraTabPage(),
       const ProfileScreen(),
     ];
 
